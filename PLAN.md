@@ -6,17 +6,17 @@ The fundamental data structure is a **plain diagnostic object** — serializable
 
 ```ts
 interface Diagnostic {
-  code: string              // e.g., 'B2011'
-  prefix?: string           // e.g., 'NUXT' → [NUXT_B2011]
+  code: string // e.g., 'B2011'
+  prefix?: string // e.g., 'NUXT' → [NUXT_B2011]
   level: 'error' | 'warn' | 'suggestion' | 'deprecation'
-  message: string           // resolved message (already interpolated)
-  why?: string              // why it happened
-  fix?: string              // how to fix it
-  hint?: string             // additional hint
-  docs?: string             // documentation URL
+  message: string // resolved message (already interpolated)
+  why?: string // why it happened
+  fix?: string // how to fix it
+  hint?: string // additional hint
+  docs?: string // documentation URL
   sources?: SourceLocation[]
   cause?: unknown
-  context?: Record<string, unknown>  // machine-readable details
+  context?: Record<string, unknown> // machine-readable details
 }
 ```
 
@@ -80,15 +80,15 @@ const diag = diagnostics.B2011({ src: pluginPath })
 ```ts
 type DiagnosticsResult<T> = {
   [K in keyof T]: T[K] extends { message: (p: infer P) => string }
-    ? (params: P, overrides?: Overrides) => Diagnostic    // params required
-    : (overrides?: Overrides) => Diagnostic                // no params
+    ? (params: P, overrides?: Overrides) => Diagnostic // params required
+    : (overrides?: Overrides) => Diagnostic // no params
 } & DiagnosticsMethods<T>
 
 interface DiagnosticsMethods<T> {
-  codes(): (keyof T)[]
-  has(code: string): boolean
-  get(code: keyof T): DiagnosticDefinition
-  extend<U>(defs: U): DiagnosticsResult<T & U>
+  codes: () => (keyof T)[]
+  has: (code: string) => boolean
+  get: (code: keyof T) => DiagnosticDefinition
+  extend: <U>(defs: U) => DiagnosticsResult<T & U>
 }
 ```
 
@@ -122,7 +122,7 @@ const log = createLogger({
 ```ts
 log.B2011({ src: pluginPath }).throw()
 log.B1001().warn()
-log.B5001({ date: '2025-01-01' }).log()  // uses the level from the definition ('warn')
+log.B5001({ date: '2025-01-01' }).log() // uses the level from the definition ('warn')
 ```
 
 **Multiple diagnostic sets:**
@@ -145,8 +145,8 @@ const log = createLogger({
   reporter: consoleReporter,
 })
 
-log.B2011({ src: pluginPath }).throw()   // [NUXT_B2011] ...
-log.I001({ locale: 'fr' }).warn()        // [I18N_I001] ...
+log.B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
+log.I001({ locale: 'fr' }).warn() // [I18N_I001] ...
 ```
 
 **What `createLogger()` returns:**
@@ -155,11 +155,11 @@ log.I001({ locale: 'fr' }).warn()        // [I18N_I001] ...
 type Logger<Diagnostics> = MergedFactories<Diagnostics> & LoggerMethods
 
 interface LoggerMethods {
-  throw(diagnostic: Diagnostic): never
-  warn(diagnostic: Diagnostic): void
-  error(diagnostic: Diagnostic): void
-  log(diagnostic: Diagnostic): void
-  format(diagnostic: Diagnostic): string
+  throw: (diagnostic: Diagnostic) => never
+  warn: (diagnostic: Diagnostic) => void
+  error: (diagnostic: Diagnostic) => void
+  log: (diagnostic: Diagnostic) => void
+  format: (diagnostic: Diagnostic) => string
 }
 ```
 
@@ -167,11 +167,11 @@ Each merged code key becomes a factory returning `DiagnosticActions`:
 
 ```ts
 interface DiagnosticActions extends Diagnostic {
-  throw(): never
-  warn(): void
-  error(): void
-  log(): void              // uses diagnostic's own level
-  format(): string
+  throw: () => never
+  warn: () => void
+  error: () => void
+  log: () => void // uses diagnostic's own level
+  format: () => string
 }
 ```
 
@@ -190,11 +190,11 @@ If no formatter/reporter specified, defaults to `plainFormatter` + `consoleRepor
 
 ```ts
 interface Formatter {
-  format(diagnostic: Diagnostic): string
+  format: (diagnostic: Diagnostic) => string
 }
 
 interface Reporter {
-  report(diagnostic: Diagnostic, formatted: string): void
+  report: (diagnostic: Diagnostic, formatted: string) => void
 }
 ```
 
@@ -211,8 +211,8 @@ interface Reporter {
 
 ```ts
 class CodedError extends Error {
-  readonly diagnostic: Diagnostic  // the full object, always available
-  readonly code: string            // shorthand for diagnostic.code
+  readonly diagnostic: Diagnostic // the full object, always available
+  readonly code: string // shorthand for diagnostic.code
   readonly docsUrl?: string
   readonly fix?: string
   readonly why?: string
