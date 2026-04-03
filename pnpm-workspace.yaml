@@ -1,0 +1,39 @@
+catalogMode: prefer
+
+ignoreWorkspaceRootCheck: true
+
+shellEmulator: true
+
+trustPolicy: no-downgrade
+packages:
+  - playground
+  - docs
+  - packages/*
+  - examples/*
+catalog:
+  rolldown-plugin-dts-snapshot: ^0.3.2
+catalogs:
+  cli:
+    '@antfu/eslint-config': ^7.0.1
+    '@antfu/ni': ^28.2.0
+    bumpp: ^10.4.0
+    eslint: ^9.39.2
+    lint-staged: ^16.2.7
+    publint: ^0.3.16
+    simple-git-hooks: ^2.13.1
+    tsdown: ^0.17.3
+    tsx: ^4.21.0
+    typescript: ^5.9.3
+    vite: ^7.3.1
+  inlined:
+    '@antfu/utils': ^9.3.0
+  testing:
+    tinyexec: ^1.0.2
+    vitest: ^4.0.17
+    vitest-package-exports: ^1.1.2
+    yaml: ^2.8.2
+  types:
+    '@types/node': ^25.0.9
+onlyBuiltDependencies:
+  - esbuild
+  - simple-git-hooks

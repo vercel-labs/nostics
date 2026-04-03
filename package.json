@@ -1,0 +1,66 @@
+{
+  "name": "logs-sdk",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Structured diagnostic code library",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/antfu/logs-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antfu/logs-sdk.git"
+  },
+  "bugs": "https://github.com/antfu/logs-sdk/issues",
+  "keywords": [],
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./formatters/ansi": "./dist/formatters/ansi.mjs",
+    "./formatters/json": "./dist/formatters/json.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint",
+    "prepublishOnly": "nr build",
+    "release": "bumpp",
+    "start": "tsx src/index.ts",
+    "test": "vitest",
+    "typecheck": "tsc",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:cli",
+    "@antfu/ni": "catalog:cli",
+    "@antfu/utils": "catalog:inlined",
+    "@types/node": "catalog:types",
+    "bumpp": "catalog:cli",
+    "eslint": "catalog:cli",
+    "lint-staged": "catalog:cli",
+    "publint": "catalog:cli",
+    "rolldown-plugin-dts-snapshot": "catalog:",
+    "simple-git-hooks": "catalog:cli",
+    "tinyexec": "catalog:testing",
+    "tsdown": "catalog:cli",
+    "tsx": "catalog:cli",
+    "typescript": "catalog:cli",
+    "vite": "catalog:cli",
+    "vitest": "catalog:testing",
+    "vitest-package-exports": "catalog:testing",
+    "yaml": "catalog:testing"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
