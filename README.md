@@ -13,13 +13,13 @@ Structured diagnostic codes for JavaScript/TypeScript libraries and frameworks.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
 
-Every diagnostic has a **stable code**, a **human-readable explanation**, and structured fields — `fix`, `why`, `hint`, `docs` — that tell you what happened and how to resolve it. The `see` link points to a dedicated documentation page for that error code, with detailed explanations, examples, and common solutions.
+Every diagnostic has a **stable code**, a **human-readable explanation**, and structured fields — `fix`, `why`, `hint`, `docs` — that tell you what happened and how to resolve it. The `see` link points to a dedicated documentation page for that error code, with detailed explanations, examples, and common solutions. It should be visited only if more context is needed beyond the concise inline message.
 
 These error messages are designed to be **actionable** — not just telling you what went wrong, but guiding you toward the fix.
 
 ## For humans
 
-A code like `NUXT_B2011` is stable and searchable — look it up in docs, find it in source, share it in issues. The structured fields give you immediate guidance: you don't need to search for the error message to find the fix, it's right there. And when you need more detail, the docs link takes you to a dedicated page for that specific error code — with full context, examples, and walkthroughs.
+A code like `NUXT_B2011` is stable and searchable — look it up in docs, find it in source, share it in issues. The structured fields give you immediate guidance: you don't need to search for the error message to find the fix, it's right there. And when you need more detail, the docs link takes you to a dedicated page for that specific error code — with explanations and examples to understand the root cause and how to resolve it.
 
 When library authors define diagnostics in one place, messages stay consistent. Every occurrence of `B2011` produces the same explanation, the same fix, the same docs link.
 
@@ -100,7 +100,7 @@ const log = createLogger({
 
 ## Features
 
-- Typed diagnostic factories — cmd+clickable, hover shows params, TypeScript enforces correctness
+- Typed diagnostic factories — cmd+clickable (go to definition), hover shows params, TypeScript enforces correctness
 - Structured `Diagnostic` objects — serializable, transportable across process boundaries
 - Chainable actions — `.throw()`, `.warn()`, `.error()`, `.log()`
 - Pluggable formatters — plain text, ANSI colors, JSON
