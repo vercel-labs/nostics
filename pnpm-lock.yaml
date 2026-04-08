@@ -163,7 +163,7 @@ importers:
 
   playground-lib:
     dependencies:
-      logs-sdk:
+      '@antfu/experimental-logs-sdk':
         specifier: workspace:*
         version: link:..
     devDependencies:
