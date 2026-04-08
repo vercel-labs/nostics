@@ -16,17 +16,13 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
-    "./code-transform/esbuild": "./dist/code-transform/esbuild.mjs",
-    "./code-transform/rollup": "./dist/code-transform/rollup.mjs",
-    "./code-transform/unplugin": "./dist/code-transform/unplugin.mjs",
-    "./code-transform/vite": "./dist/code-transform/vite.mjs",
-    "./code-transform/webpack": "./dist/code-transform/webpack.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
+    "./rolldown": "./dist/rolldown.mjs",
+    "./unplugin": "./dist/unplugin.mjs",
+    "./vite": "./dist/vite.mjs",
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
     "dist"

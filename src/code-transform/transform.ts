@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import MagicString from 'magic-string'
 import { parseSync } from 'oxc-parser'
 
@@ -15,21 +17,32 @@ export interface TransformOptions {
 }
 
 /**
+ * Cross-file state: maps file paths to sets of exported variable names
+ * that are derived from logs-sdk function calls (createLogger, defineDiagnostics, etc.)
+ */
+export type TrackedExportsMap = Map<string, Set<string>>
+
+/**
  * Transforms code that imports from `logs-sdk`:
  * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` and `createLogger()` call expressions
  * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using logger variables
+ *
+ * Also handles cross-file patterns: if a file imports a variable that was
+ * created from `createLogger()` or `defineDiagnostics()` in another file,
+ * the usage is tracked and wrapped.
  */
-export function transform(code: string, id: string, options?: TransformOptions): TransformResult | undefined {
+export function transform(
+  code: string,
+  id: string,
+  options?: TransformOptions,
+  trackedExportsMap?: TrackedExportsMap,
+): TransformResult | undefined {
   const packageName = options?.packageName ?? 'logs-sdk'
-
-  // Fast filter
-  if (!code.includes(packageName))
-    return undefined
 
   const result = parseSync(id, code)
   const ast = result.program
 
-  // Step 1: Find imports from the package
+  // Step 1: Find direct imports from the package
   const importedNames = new Map<string, string>() // localName -> importedName
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
@@ -42,17 +55,68 @@ export function transform(code: string, id: string, options?: TransformOptions):
     }
   }
 
-  if (importedNames.size === 0)
+  // Step 2: Find cross-file tracked imports
+  const crossFileTracked = new Set<string>()
+  if (trackedExportsMap) {
+    for (const node of ast.body) {
+      if (node.type === 'ImportDeclaration' && node.source.value !== packageName) {
+        const source = node.source.value as string
+        // Only resolve relative imports
+        if (!source.startsWith('.'))
+          continue
+
+        const resolvedPath = resolveModulePath(source, id)
+        if (!resolvedPath)
+          continue
+
+        // Analyze the imported module if not already cached
+        if (!trackedExportsMap.has(resolvedPath)) {
+          analyzeModule(resolvedPath, packageName, trackedExportsMap)
+        }
+
+        const trackedNames = trackedExportsMap.get(resolvedPath)
+        if (trackedNames) {
+          for (const spec of node.specifiers) {
+            if (spec.type === 'ImportSpecifier') {
+              const importedName = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+              if (trackedNames.has(importedName)) {
+                crossFileTracked.add(spec.local.name)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (importedNames.size === 0 && crossFileTracked.size === 0)
     return undefined
 
   const s = new MagicString(code)
-  const trackedVars = new Set<string>()
+  const trackedVars = new Set<string>(crossFileTracked)
 
-  // Step 2: Walk all statements recursively
+  // Step 3: Walk all statements recursively
   walkStatements(ast.body, s, importedNames, trackedVars)
 
   if (!s.hasChanged())
     return undefined
+
+  // Step 4: Record exported tracked vars for cross-file tracking
+  if (trackedExportsMap) {
+    const exportedTracked = new Set<string>()
+    for (const node of ast.body) {
+      if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+        for (const decl of node.declaration.declarations) {
+          if (decl.id?.type === 'Identifier' && trackedVars.has(decl.id.name)) {
+            exportedTracked.add(decl.id.name)
+          }
+        }
+      }
+    }
+    if (exportedTracked.size > 0) {
+      trackedExportsMap.set(id, exportedTracked)
+    }
+  }
 
   return {
     code: s.toString(),
@@ -61,6 +125,92 @@ export function transform(code: string, id: string, options?: TransformOptions):
 }
 
 const CONDITION = 'process.env.NODE_ENV !== \'production\''
+
+const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs']
+
+function resolveModulePath(source: string, importer: string): string | undefined {
+  const dir = dirname(importer)
+  const base = join(dir, source)
+
+  // Try exact path (for imports with extension)
+  if (existsSync(base))
+    return base
+
+  // Try with extensions
+  for (const ext of EXTENSIONS) {
+    const candidate = base + ext
+    if (existsSync(candidate))
+      return candidate
+  }
+
+  // Try index files
+  for (const ext of EXTENSIONS) {
+    const candidate = join(base, `index${ext}`)
+    if (existsSync(candidate))
+      return candidate
+  }
+
+  return undefined
+}
+
+/**
+ * Analyze a module to find exported variables derived from logs-sdk calls.
+ * Results are cached in trackedExportsMap.
+ */
+function analyzeModule(filePath: string, packageName: string, trackedExportsMap: TrackedExportsMap): void {
+  // Mark as analyzed (even if no tracked exports) to avoid re-analysis
+  trackedExportsMap.set(filePath, new Set())
+
+  let source: string
+  try {
+    source = readFileSync(filePath, 'utf-8')
+  }
+  catch {
+    return
+  }
+
+  if (!source.includes(packageName))
+    return
+
+  const result = parseSync(filePath, source)
+  const ast = result.program
+
+  // Find imports from the package
+  const importedNames = new Set<string>()
+  for (const node of ast.body) {
+    if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
+      for (const spec of node.specifiers) {
+        if (spec.type === 'ImportSpecifier') {
+          importedNames.add(spec.local.name)
+        }
+      }
+    }
+  }
+
+  if (importedNames.size === 0)
+    return
+
+  // Find exported variables assigned from imported function calls
+  const trackedExports = new Set<string>()
+  for (const node of ast.body) {
+    if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+      for (const decl of node.declaration.declarations) {
+        if (
+          decl.init?.type === 'CallExpression'
+          && decl.init.callee?.type === 'Identifier'
+          && importedNames.has(decl.init.callee.name)
+          && decl.id?.type === 'Identifier'
+        ) {
+          trackedExports.add(decl.id.name)
+        }
+      }
+    }
+  }
+
+  if (trackedExports.size > 0) {
+    trackedExportsMap.set(filePath, trackedExports)
+  }
+}
 
 function walkStatements(
   body: any[],

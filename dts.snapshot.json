@@ -1,39 +1,4 @@
 {
-  "code-transform/esbuild.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "#exports": [
-      "default"
-    ]
-  },
-  "code-transform/rollup.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "#exports": [
-      "default"
-    ]
-  },
-  "code-transform/unplugin.d.mts": {
-    "#exports": [
-      "LogsSdkPluginOptions",
-      "default",
-      "unplugin"
-    ]
-  },
-  "code-transform/vite.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "#exports": [
-      "default"
-    ]
-  },
-  "code-transform/webpack.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "#exports": [
-      "default"
-    ]
-  },
   "formatters/ansi.d.mts": {
     "ansiFormatter": "declare function ansiFormatter(_: Colors): Formatter",
     "Colors": "interface Colors {\n red: (_: string) => string\n yellow: (_: string) => string\n cyan: (_: string) => string\n gray: (_: string) => string\n bold: (_: string) => string\n dim: (_: string) => string\n}",
@@ -84,6 +49,13 @@
       "renderFrame"
     ]
   },
+  "rolldown.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
   "types-!~{003}~.d.mts": {
     "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
@@ -112,5 +84,19 @@
     "LogsSdkPluginOptions": "type LogsSdkPluginOptions = TransformOptions",
     "TransformOptions": "interface TransformOptions {\n packageName?: string\n}",
     "unplugin": "_$unplugin.UnpluginInstance<TransformOptions | undefined, boolean>"
+  },
+  "unplugin.d.mts": {
+    "#exports": [
+      "LogsSdkPluginOptions",
+      "default",
+      "unplugin"
+    ]
+  },
+  "vite.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
   }
 }
