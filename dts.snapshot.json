@@ -49,7 +49,7 @@
       "renderFrame"
     ]
   },
-  "types-!~{005}~.d.mts": {
+  "types-!~{001}~.d.mts": {
     "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
     "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter\n}",
@@ -58,7 +58,7 @@
     "DiagnosticActions": "interface DiagnosticActions extends Diagnostic {\n throw: () => never\n warn: () => void\n error: () => void\n log: () => void\n format: () => string\n}",
     "DiagnosticDefinition": "interface DiagnosticDefinition {\n message: MessageTemplate\n fix?: MessageTemplate\n why?: MessageTemplate\n hint?: MessageTemplate\n level?: DiagnosticLevel\n}",
     "DiagnosticLevel": "type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'",
-    "DiagnosticsMethods": "interface DiagnosticsMethods<C> {\n codes: () => (keyof C & string)[]\n has: (_: string) => boolean\n get: <K$1 extends keyof C>(_: K$1) => C[K$1]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
+    "DiagnosticsMethods": "interface DiagnosticsMethods<C> {\n codes: () => (keyof C & string)[]\n has: (_: string) => boolean\n get: <K extends keyof C>(_: K) => C[K]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
     "DiagnosticsResult": "type DiagnosticsResult<C> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>",
     "ExtractFieldParams": "type ExtractFieldParams<T> = T extends ((_: infer P) => string) ? P : Record<never, never>",
     "ExtractParams": "type ExtractParams<T> = (T extends { message: infer M } ? ExtractFieldParams<M> : Record<never, never>) & (T extends { fix: infer F } ? ExtractFieldParams<F> : Record<never, never>) & (T extends { why: infer W } ? ExtractFieldParams<W> : Record<never, never>) & (T extends { hint: infer H } ? ExtractFieldParams<H> : Record<never, never>)",
