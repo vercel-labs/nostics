@@ -97,12 +97,11 @@ describe('createLogger', () => {
   })
 
   it('defaults to plainFormatter and consoleReporter', () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => { })
     const log = createLogger({ diagnostics: [i18nDiags] })
     log.I001({ locale: 'fr' }).log()
-    expect(spy).toHaveBeenCalled()
-    const output = spy.mock.calls[0][0] as string
-    expect(output).toContain('[I18N_I001]')
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('[I18N_I001]'))
     spy.mockRestore()
   })
 })
