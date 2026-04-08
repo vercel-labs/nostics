@@ -1,4 +1,39 @@
 {
+  "code-transform/esbuild.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
+  "code-transform/rollup.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
+  "code-transform/unplugin.d.mts": {
+    "#exports": [
+      "LogsSdkPluginOptions",
+      "default",
+      "unplugin"
+    ]
+  },
+  "code-transform/vite.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
+  "code-transform/webpack.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
   "formatters/ansi.d.mts": {
     "ansiFormatter": "declare function ansiFormatter(_: Colors): Formatter",
     "Colors": "interface Colors {\n red: (_: string) => string\n yellow: (_: string) => string\n cyan: (_: string) => string\n gray: (_: string) => string\n bold: (_: string) => string\n dim: (_: string) => string\n}",
@@ -49,7 +84,7 @@
       "renderFrame"
     ]
   },
-  "types-!~{001}~.d.mts": {
+  "types-!~{003}~.d.mts": {
     "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
     "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter\n}",
@@ -72,5 +107,10 @@
     "Reporter": "interface Reporter {\n report: (_: Diagnostic, _: string) => void\n}",
     "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
     "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
+  },
+  "unplugin-!~{002}~.d.mts": {
+    "LogsSdkPluginOptions": "type LogsSdkPluginOptions = TransformOptions",
+    "TransformOptions": "interface TransformOptions {\n packageName?: string\n}",
+    "unplugin": "_$unplugin.UnpluginInstance<TransformOptions | undefined, boolean>"
   }
 }
