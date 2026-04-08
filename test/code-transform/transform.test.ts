@@ -182,6 +182,188 @@ function setup() {
     })
   })
 
+  describe('compound expression wrapping', () => {
+    it('wraps logical AND with logger on right', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+someCondition && log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && someCondition && log.E1().warn()`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps logical OR with logger on left', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+log.E1().warn() || fallback()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && (log.E1().warn() || fallback())`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps ternary with logger in consequent', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+condition ? log.E1().warn() : null`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && (condition ? log.E1().warn() : null)`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps ternary with logger in alternate', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+condition ? null : log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && (condition ? null : log.E1().warn())`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps void expression', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+void log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && void log.E1().warn()`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps await expression', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+async function handler() {
+  await log.E1().warn()
+}`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+async function handler() {
+  process.env.NODE_ENV !== 'production' && await log.E1().warn()
+}`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps negation expression', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+!log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+process.env.NODE_ENV !== 'production' && !log.E1().warn()`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps sequence expression with logger last', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+;(a(), log.E1().warn())`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+;process.env.NODE_ENV !== 'production' && (a(), log.E1().warn())`
+
+      expectTransform(input, expected)
+    })
+
+    it('wraps sequence expression with logger first', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+;(log.E1().warn(), a())`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+;process.env.NODE_ENV !== 'production' && (log.E1().warn(), a())`
+
+      expectTransform(input, expected)
+    })
+  })
+
+  describe('value-passing patterns', () => {
+    it('does not wrap variable declaration', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+const x = log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+const x = log.E1().warn()`
+
+      expectTransform(input, expected)
+    })
+
+    it('does not wrap return statement', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+function handler() {
+  return log.E1().warn()
+}`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+function handler() {
+  return log.E1().warn()
+}`
+
+      expectTransform(input, expected)
+    })
+
+    it('does not wrap logger passed as function argument', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+fn(log.E1().warn())`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+fn(log.E1().warn())`
+
+      expectTransform(input, expected)
+    })
+
+    it('does not wrap logger passed as method argument', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+arr.push(log.E1().warn())`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+arr.push(log.E1().warn())`
+
+      expectTransform(input, expected)
+    })
+
+    it('does not wrap assignment expression', () => {
+      const input = `import { createLogger } from 'logs-sdk'
+const log = createLogger({})
+let x
+x = log.E1().warn()`
+
+      const expected = `import { createLogger } from 'logs-sdk'
+const log = /*#__PURE__*/ createLogger({})
+let x
+x = log.E1().warn()`
+
+      expectTransform(input, expected)
+    })
+  })
+
   describe('does not transform non-logging code', () => {
     it('does not wrap unrelated expression statements', () => {
       const input = `import { createLogger } from 'logs-sdk'

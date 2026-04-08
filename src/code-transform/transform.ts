@@ -126,6 +126,22 @@ export function transform(
 
 const CONDITION = 'process.env.NODE_ENV !== \'production\''
 
+/**
+ * Check if an expression has lower precedence than `&&` and needs inner parens
+ * when used as the right-hand side of `guard && expr`.
+ */
+function expressionNeedsParens(node: any): boolean {
+  if (node.type === 'ConditionalExpression')
+    return true
+  if (node.type === 'LogicalExpression' && (node.operator === '||' || node.operator === '??'))
+    return true
+  if (node.type === 'SequenceExpression')
+    return true
+  if (node.type === 'AssignmentExpression')
+    return true
+  return false
+}
+
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs']
 
 function resolveModulePath(source: string, importer: string): string | undefined {
@@ -239,7 +255,14 @@ function walkStatements(
     // Expression statement using a tracked variable
     if (stmt.type === 'ExpressionStatement') {
       if (expressionUsesTrackedVar(stmt.expression, trackedVars)) {
-        s.appendLeft(stmt.expression.start, `${CONDITION} && `)
+        const needsParens = expressionNeedsParens(stmt.expression)
+        if (needsParens) {
+          s.appendLeft(stmt.expression.start, `${CONDITION} && (`)
+          s.appendRight(stmt.expression.end, `)`)
+        }
+        else {
+          s.appendLeft(stmt.expression.start, `${CONDITION} && `)
+        }
       }
     }
 
@@ -292,6 +315,38 @@ function expressionUsesTrackedVar(node: any, trackedVars: Set<string>): boolean 
   // Call expression: check the callee
   if (node.type === 'CallExpression') {
     return expressionUsesTrackedVar(node.callee, trackedVars)
+  }
+
+  // Logical expression: check either side
+  if (node.type === 'LogicalExpression') {
+    return expressionUsesTrackedVar(node.left, trackedVars)
+      || expressionUsesTrackedVar(node.right, trackedVars)
+  }
+
+  // Conditional (ternary): check consequent or alternate
+  if (node.type === 'ConditionalExpression') {
+    return expressionUsesTrackedVar(node.consequent, trackedVars)
+      || expressionUsesTrackedVar(node.alternate, trackedVars)
+  }
+
+  // Unary expression: check argument
+  if (node.type === 'UnaryExpression') {
+    return expressionUsesTrackedVar(node.argument, trackedVars)
+  }
+
+  // Await expression: check argument
+  if (node.type === 'AwaitExpression') {
+    return expressionUsesTrackedVar(node.argument, trackedVars)
+  }
+
+  // Sequence expression: check any element
+  if (node.type === 'SequenceExpression') {
+    return node.expressions.some((expr: any) => expressionUsesTrackedVar(expr, trackedVars))
+  }
+
+  // Parenthesized expression: unwrap
+  if (node.type === 'ParenthesizedExpression') {
+    return expressionUsesTrackedVar(node.expression, trackedVars)
   }
 
   return false
