@@ -1,5 +1,5 @@
 import type { UnpluginFactory } from 'unplugin'
-import type { TrackedExportsMap, TransformOptions } from './transform'
+import type { TransformOptions } from './transform'
 import { createUnplugin } from 'unplugin'
 import { transform } from './transform'
 
@@ -9,8 +9,6 @@ const JS_EXTENSIONS_RE = /\.[jt]sx?$/
 const NODE_MODULES_RE = /\/node_modules\//
 
 const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (options) => {
-  const trackedExportsMap: TrackedExportsMap = new Map()
-
   return {
     name: 'logs-sdk',
 
@@ -22,7 +20,7 @@ const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (opti
         },
       },
       handler(code, id) {
-        const result = transform(code, id, options, trackedExportsMap)
+        const result = transform(code, id, options)
         if (!result)
           return
         return {
@@ -36,3 +34,4 @@ const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (opti
 
 export const unplugin = /* #__PURE__ */ createUnplugin(unpluginFactory)
 export default unplugin
+
