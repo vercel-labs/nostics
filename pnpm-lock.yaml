@@ -149,6 +149,10 @@ importers:
         version: 2.8.3
 
   playground:
+    dependencies:
+      playground-lib:
+        specifier: workspace:*
+        version: link:../playground-lib
     devDependencies:
       typescript:
         specifier: catalog:cli
@@ -156,6 +160,16 @@ importers:
       vite:
         specifier: catalog:cli
         version: 8.0.7(@types/node@25.5.2)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
+
+  playground-lib:
+    dependencies:
+      logs-sdk:
+        specifier: workspace:*
+        version: link:..
+    devDependencies:
+      tsdown:
+        specifier: catalog:cli
+        version: 0.21.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(publint@0.3.18)(synckit@0.11.12)(typescript@6.0.2)
 
 packages:
 
