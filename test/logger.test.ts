@@ -111,4 +111,42 @@ describe('createLogger', () => {
     expect(reporter1).toHaveBeenCalledTimes(1)
     expect(reporter2).toHaveBeenCalledTimes(1)
   })
+
+  describe('stack capture', () => {
+    it('captures stack on action methods pointing to call site', () => {
+      const reporter = vi.fn()
+      const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+      log.NUXT_B1001().warn()
+      const [diagnostic] = reporter.mock.calls[0]
+      expect(diagnostic.stack).toBeDefined()
+      expect(diagnostic.stack).toContain('logger.test.ts')
+      // No internal SDK frames leaked
+      expect(diagnostic.stack).not.toContain('captureStack')
+      expect(diagnostic.stack).not.toContain('formatAndReport')
+    })
+
+    it('does not capture stack on .format()', () => {
+      const log = createLogger({ diagnostics: [nuxtDiags] })
+      const actions = log.NUXT_B1001()
+      actions.format()
+      expect(actions.stack).toBeUndefined()
+    })
+
+    it('captures stack on raw logger methods', () => {
+      const reporter = vi.fn()
+      const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+      log.warn(nuxtDiags.NUXT_B1001())
+      const [diagnostic] = reporter.mock.calls[0]
+      expect(diagnostic.stack).toBeDefined()
+      expect(diagnostic.stack).toContain('logger.test.ts')
+    })
+
+    it('does not capture stack when captureStack is false', () => {
+      const reporter = vi.fn()
+      const log = createLogger({ diagnostics: [nuxtDiags], reporter, captureStack: false })
+      log.NUXT_B1001().warn()
+      const [diagnostic] = reporter.mock.calls[0]
+      expect(diagnostic.stack).toBeUndefined()
+    })
+  })
 })

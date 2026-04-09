@@ -42,6 +42,39 @@ export interface CreateLoggerOptions<D extends readonly any[]> {
   diagnostics: [...D]
   formatter?: Formatter
   reporter?: Reporter | Reporter[]
+  captureStack?: boolean
+}
+
+function captureStackTrace(): string | undefined {
+  const err: { stack?: string } = {}
+  if (typeof Error.captureStackTrace === 'function') {
+    Error.captureStackTrace(err, captureStackTrace)
+  }
+  else {
+    // eslint-disable-next-line unicorn/error-message -- only used for stack capture
+    err.stack = new Error().stack
+  }
+  if (!err.stack)
+    return undefined
+
+  const lines = err.stack.split('\n')
+
+  // Find where "at " frames begin (skip "Error" header)
+  let frameStart = 0
+  while (frameStart < lines.length && !lines[frameStart].trimStart().startsWith('at ')) {
+    frameStart++
+  }
+
+  // V8 captureStackTrace already strips captureStackTrace itself,
+  // fallback needs to skip captureStackTrace + the action method (2 frames)
+  const skipInternal = typeof Error.captureStackTrace === 'function' ? 1 : 2
+
+  const frames = lines
+    .slice(frameStart + skipInternal)
+    .filter(line => !line.includes('/node_modules/') && !line.includes('(node:'))
+    .map(line => line.trim())
+
+  return frames.length > 0 ? frames.join('\n') : undefined
 }
 
 function formatAndReport(formatter: Formatter, reporters: Reporter[], diagnostic: Diagnostic): string {
@@ -55,20 +88,27 @@ function createActions(
   diagnostic: Diagnostic,
   formatter: Formatter,
   reporters: Reporter[],
+  shouldCaptureStack: boolean,
 ): DiagnosticActions {
   return Object.assign({}, diagnostic, {
     throw(): never {
-      formatAndReport(formatter, reporters, diagnostic)
-      throw new CodedError(diagnostic)
+      const stack = shouldCaptureStack ? captureStackTrace() : undefined
+      const d = stack ? { ...diagnostic, stack } : diagnostic
+      formatAndReport(formatter, reporters, d)
+      throw new CodedError(d)
     },
     warn() {
-      formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const })
+      const stack = shouldCaptureStack ? captureStackTrace() : undefined
+      formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const, ...(stack && { stack }) })
     },
     error() {
-      formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const })
+      const stack = shouldCaptureStack ? captureStackTrace() : undefined
+      formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const, ...(stack && { stack }) })
     },
     log() {
-      formatAndReport(formatter, reporters, diagnostic)
+      const stack = shouldCaptureStack ? captureStackTrace() : undefined
+      const d = stack ? { ...diagnostic, stack } : diagnostic
+      formatAndReport(formatter, reporters, d)
     },
     format() {
       return formatter(diagnostic)
@@ -83,6 +123,7 @@ export function createLogger<const D extends readonly any[]>(
   const reporters = Array.isArray(options.reporter)
     ? options.reporter
     : [options.reporter ?? consoleReporter]
+  const shouldCaptureStack = options.captureStack !== false
 
   const result = {} as any
 
@@ -96,7 +137,7 @@ export function createLogger<const D extends readonly any[]>(
       if (typeof diagnostics[code] === 'function') {
         result[code] = (...args: any[]) => {
           const diagnostic = diagnostics[code](...args)
-          return createActions(diagnostic, formatter, reporters)
+          return createActions(diagnostic, formatter, reporters, shouldCaptureStack)
         }
       }
     }
@@ -104,17 +145,23 @@ export function createLogger<const D extends readonly any[]>(
 
   // Raw logger methods
   result.throw = (diagnostic: Diagnostic): never => {
-    formatAndReport(formatter, reporters, diagnostic)
-    throw new CodedError(diagnostic)
+    const stack = shouldCaptureStack ? captureStackTrace() : undefined
+    const d = stack ? { ...diagnostic, stack } : diagnostic
+    formatAndReport(formatter, reporters, d)
+    throw new CodedError(d)
   }
   result.warn = (diagnostic: Diagnostic): void => {
-    formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const })
+    const stack = shouldCaptureStack ? captureStackTrace() : undefined
+    formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const, ...(stack && { stack }) })
   }
   result.error = (diagnostic: Diagnostic): void => {
-    formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const })
+    const stack = shouldCaptureStack ? captureStackTrace() : undefined
+    formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const, ...(stack && { stack }) })
   }
   result.log = (diagnostic: Diagnostic): void => {
-    formatAndReport(formatter, reporters, diagnostic)
+    const stack = shouldCaptureStack ? captureStackTrace() : undefined
+    const d = stack ? { ...diagnostic, stack } : diagnostic
+    formatAndReport(formatter, reporters, d)
   }
   result.format = (diagnostic: Diagnostic): string => {
     return formatter(diagnostic)

@@ -19,6 +19,7 @@ export interface Diagnostic {
   sources?: SourceLocation[]
   cause?: unknown
   context?: Record<string, unknown>
+  stack?: string
 }
 
 export type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>
