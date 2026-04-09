@@ -19,9 +19,7 @@
     "./dev-reporter": "./dist/dev-reporter.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
-    "./rolldown": "./dist/rolldown.mjs",
     "./unplugin": "./dist/unplugin.mjs",
-    "./vite": "./dist/vite.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",

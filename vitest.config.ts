@@ -7,5 +7,8 @@ export default defineConfig({
         inline: ['vitest-package-exports'],
       },
     },
+    typecheck: {
+      enabled: true,
+    },
   },
 })
