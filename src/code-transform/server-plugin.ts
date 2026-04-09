@@ -5,13 +5,13 @@ import { createUnplugin } from 'unplugin'
 export interface LogsSdkServerOptions {
   /**
    * Path to the log file.
-   * @default '.logs-sdk.log'
+   * @default '.nostics.log'
    */
   logFile?: string
 }
 
 export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> = createUnplugin((options) => {
-  const logFile = options?.logFile ?? '.logs-sdk.log'
+  const logFile = options?.logFile ?? '.nostics.log'
 
   return {
     name: 'logs-sdk-server',
