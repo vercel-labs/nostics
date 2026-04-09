@@ -8,7 +8,7 @@ Structured diagnostic codes for JavaScript/TypeScript libraries and frameworks.
 
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ see: https://nuxt.com/e/b2011
+├▶ see: https://nuxt.com/e/nuxt_b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -21,7 +21,7 @@ These error messages are designed to be **actionable** — not just telling you 
 
 A code like `NUXT_B2011` is stable and searchable — look it up in docs, find it in source, share it in issues. The structured fields give you immediate guidance: you don't need to search for the error message to find the fix, it's right there. And when you need more detail, the docs link takes you to a dedicated page for that specific error code — with explanations and examples to understand the root cause and how to resolve it.
 
-When library authors define diagnostics in one place, messages stay consistent. Every occurrence of `B2011` produces the same explanation, the same fix, the same docs link.
+When library authors define diagnostics in one place, messages stay consistent. Every occurrence of `NUXT_B2011` produces the same explanation, the same fix, the same docs link.
 
 ## For AI agents
 
@@ -41,14 +41,13 @@ An agent can resolve the issue without asking the user for more information. Use
 import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  prefix: 'NUXT',
   docsBase: 'https://nuxt.com/e',
   codes: {
-    B2011: {
+    NUXT_B2011: {
       message: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
     },
-    B5001: {
+    NUXT_B5001: {
       message: 'Missing compatibilityDate in nuxt.config.',
       fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your nuxt.config.`,
       hint: 'This ensures consistent behavior across Nuxt versions.',
@@ -69,11 +68,11 @@ const log = createLogger({
   diagnostics: [diagnostics],
 })
 
-log.B2011({ src: pluginPath }).throw()
-log.B5001({ date: '2025-01-01' }).warn()
+log.NUXT_B2011({ src: pluginPath }).throw()
+log.NUXT_B5001({ date: '2025-01-01' }).warn()
 ```
 
-`log.B2011` is cmd+clickable, TypeScript enforces params, and actions are chainable — `.throw()`, `.warn()`, `.error()`, `.log()`.
+`log.NUXT_B2011` is cmd+clickable, TypeScript enforces params, and actions are chainable — `.throw()`, `.warn()`, `.error()`, `.log()`.
 
 ### Multiple diagnostic sets
 
@@ -82,8 +81,8 @@ const log = createLogger({
   diagnostics: [nuxtDiagnostics, i18nDiagnostics],
 })
 
-log.B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
-log.I001({ locale: 'fr' }).warn() // [I18N_I001] ...
+log.NUXT_B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
+log.I18N_I001({ locale: 'fr' }).warn() // [I18N_I001] ...
 ```
 
 ### Custom reporters

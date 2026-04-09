@@ -9,9 +9,7 @@ export class CodedError extends Error {
   readonly hint?: string
 
   constructor(diagnostic: Diagnostic) {
-    const tag = diagnostic.prefix
-      ? `[${diagnostic.prefix}_${diagnostic.code}]`
-      : `[${diagnostic.code}]`
+    const tag = `[${diagnostic.code}]`
     super(`${tag} ${diagnostic.message}`)
     this.name = 'CodedError'
     this.diagnostic = diagnostic

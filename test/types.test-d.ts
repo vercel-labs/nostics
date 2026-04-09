@@ -5,7 +5,6 @@ import { createLogger } from '../src/logger'
 
 describe('type tests', () => {
   const diagnostics = defineDiagnostics({
-    prefix: 'TEST',
     codes: {
       E001: {
         message: 'No params needed.',

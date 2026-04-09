@@ -4,11 +4,10 @@ import { CodedError } from '../src/error'
 
 describe('codedError', () => {
   const diagnostic: Diagnostic = {
-    code: 'B2011',
-    prefix: 'NUXT',
+    code: 'NUXT_B2011',
     level: 'error',
     message: 'Invalid plugin.',
-    docs: 'https://nuxt.com/e/b2011',
+    docs: 'https://nuxt.com/e/nuxt_b2011',
     fix: 'Pass a src property.',
     why: 'Missing src.',
     hint: 'Check addPlugin() calls.',
@@ -33,8 +32,8 @@ describe('codedError', () => {
   it('carries the full diagnostic', () => {
     const err = new CodedError(diagnostic)
     expect(err.diagnostic).toEqual(diagnostic)
-    expect(err.code).toBe('B2011')
-    expect(err.docsUrl).toBe('https://nuxt.com/e/b2011')
+    expect(err.code).toBe('NUXT_B2011')
+    expect(err.docsUrl).toBe('https://nuxt.com/e/nuxt_b2011')
     expect(err.fix).toBe('Pass a src property.')
     expect(err.why).toBe('Missing src.')
     expect(err.hint).toBe('Check addPlugin() calls.')
@@ -45,11 +44,5 @@ describe('codedError', () => {
     const d: Diagnostic = { ...diagnostic, cause }
     const err = new CodedError(d)
     expect(err.cause).toBe(cause)
-  })
-
-  it('works without prefix', () => {
-    const d: Diagnostic = { code: 'E001', level: 'error', message: 'Oops.' }
-    const err = new CodedError(d)
-    expect(err.message).toBe('[E001] Oops.')
   })
 })

@@ -12,26 +12,13 @@ describe('plainFormatter', () => {
     expect(plainFormatter.format(d)).toBe('[E001] Something went wrong.')
   })
 
-  it('formats with prefix', () => {
-    const d: Diagnostic = {
-      code: 'B2011',
-      prefix: 'NUXT',
-      level: 'error',
-      message: 'Invalid plugin `/plugins/bad.ts`. src option is required.',
-    }
-    expect(plainFormatter.format(d)).toBe(
-      '[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.',
-    )
-  })
-
   it('formats full diagnostic with box-drawing', () => {
     const d: Diagnostic = {
-      code: 'B2011',
-      prefix: 'NUXT',
+      code: 'NUXT_B2011',
       level: 'error',
       message: 'Invalid plugin `/plugins/bad.ts`. src option is required.',
       why: 'The plugin object was passed without a src path',
-      docs: 'https://nuxt.com/e/b2011',
+      docs: 'https://nuxt.com/e/nuxt_b2011',
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
       hint: 'Check your module\'s addPlugin() calls',
     }
@@ -39,7 +26,7 @@ describe('plainFormatter', () => {
     const expected = [
       '[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.',
       '├▶ why: The plugin object was passed without a src path',
-      '├▶ see: https://nuxt.com/e/b2011',
+      '├▶ see: https://nuxt.com/e/nuxt_b2011',
       '├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.',
       '╰▶ hint: Check your module\'s addPlugin() calls',
     ].join('\n')

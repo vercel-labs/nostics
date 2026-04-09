@@ -1,9 +1,7 @@
 import type { Diagnostic, Formatter } from './types'
 
 export function formatTag(d: Diagnostic): string {
-  return d.prefix
-    ? `[${d.prefix}_${d.code}]`
-    : `[${d.code}]`
+  return `[${d.code}]`
 }
 
 export function renderFrame(d: Diagnostic): string {

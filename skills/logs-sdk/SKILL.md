@@ -15,8 +15,7 @@ The fundamental unit is a plain `Diagnostic` object — serializable, transporta
 
 ```ts
 interface Diagnostic {
-  code: string // e.g. 'B2011'
-  prefix?: string // e.g. 'NUXT' → [NUXT_B2011]
+  code: string // e.g. 'NUXT_B2011'
   level: 'error' | 'warn' | 'suggestion' | 'deprecation'
   message: string // human-readable, already interpolated
   why?: string // why this happened
@@ -46,18 +45,17 @@ Creates typed factory functions that produce plain `Diagnostic` objects. No side
 import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  prefix: 'NUXT',
   docsBase: 'https://nuxt.com/e',
   codes: {
-    B1001: {
+    NUXT_B1001: {
       message: 'Could not compile template.',
       fix: 'Check the template for syntax errors.',
     },
-    B2011: {
+    NUXT_B2011: {
       message: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
     },
-    B5001: {
+    NUXT_B5001: {
       message: 'Missing compatibilityDate in nuxt.config.',
       fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your nuxt.config.`,
       hint: 'This ensures consistent behavior across Nuxt versions.',
@@ -71,7 +69,6 @@ const diagnostics = defineDiagnostics({
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `prefix` | `string?` | Namespace prefix (e.g. `'NUXT'` produces `[NUXT_B2011]`) |
 | `docsBase` | `string?` | Base URL for docs. Auto-generates `docs` field as `${docsBase}/${code.toLowerCase()}` |
 | `codes` | `Record<string, DiagnosticDefinition>` | Map of code keys to their definitions |
 
@@ -91,22 +88,22 @@ const diagnostics = defineDiagnostics({
 
 ```ts
 // No params — factory takes optional overrides only
-diagnostics.B1001()
-diagnostics.B1001({ level: 'warn' })
+diagnostics.NUXT_B1001()
+diagnostics.NUXT_B1001({ level: 'warn' })
 
 // With params — first arg is params, second is optional overrides
-diagnostics.B2011({ src: '/plugins/bad.ts' })
-diagnostics.B2011({ src: '/plugins/bad.ts' }, { cause: originalError })
+diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' })
+diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' }, { cause: originalError })
 ```
 
 **Registry methods** (non-enumerable on the result):
 
 ```ts
-diagnostics.codes() // → ['B1001', 'B2011', 'B5001']
-diagnostics.has('B1001') // → true
-diagnostics.get('B1001') // → the raw DiagnosticDefinition
+diagnostics.codes() // → ['NUXT_B1001', 'NUXT_B2011', 'NUXT_B5001']
+diagnostics.has('NUXT_B1001') // → true
+diagnostics.get('NUXT_B1001') // → the raw DiagnosticDefinition
 diagnostics.extend({ // → new diagnostics set with additional codes merged in
-  B9999: { message: 'New code.' }
+  NUXT_B9999: { message: 'New code.' }
 })
 ```
 
@@ -128,14 +125,14 @@ const log = createLogger({
 **Usage:**
 
 ```ts
-log.B2011({ src: pluginPath }).throw() // formats, reports, then throws CodedError
-log.B1001().warn() // overrides level to 'warn', formats, reports
-log.B5001({ date: '2025-01-01' }).log() // uses the definition's level ('warn')
-log.B1001().format() // returns the formatted string only
+log.NUXT_B2011({ src: pluginPath }).throw() // formats, reports, then throws CodedError
+log.NUXT_B1001().warn() // overrides level to 'warn', formats, reports
+log.NUXT_B5001({ date: '2025-01-01' }).log() // uses the definition's level ('warn')
+log.NUXT_B1001().format() // returns the formatted string only
 
 // Raw methods for pre-built Diagnostic objects
-log.throw(diagnostics.B2011({ src: pluginPath }))
-log.warn(diagnostics.B1001())
+log.throw(diagnostics.NUXT_B2011({ src: pluginPath }))
+log.warn(diagnostics.NUXT_B1001())
 ```
 
 **Multiple diagnostic sets:**
@@ -145,8 +142,8 @@ const log = createLogger({
   diagnostics: [nuxtDiagnostics, i18nDiagnostics],
 })
 
-log.B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
-log.I001({ locale: 'fr' }).warn() // [I18N_I001] ...
+log.NUXT_B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
+log.I18N_I001({ locale: 'fr' }).warn() // [I18N_I001] ...
 ```
 
 ### `CodedError` — Error class
@@ -164,18 +161,18 @@ class CodedError extends Error {
 }
 ```
 
-The `message` is formatted as `[PREFIX_CODE] message text`. If the diagnostic has a `cause`, it is set as `Error.cause`.
+The `message` is formatted as `[CODE] message text`.
 
 **Catch and inspect:**
 
 ```ts
 try {
-  log.B2011({ src: pluginPath }).throw()
+  log.NUXT_B2011({ src: pluginPath }).throw()
 }
 catch (err) {
   if (err instanceof CodedError) {
-    console.log(err.code) // 'B2011'
-    console.log(err.docsUrl) // 'https://nuxt.com/e/b2011'
+    console.log(err.code) // 'NUXT_B2011'
+    console.log(err.docsUrl) // 'https://nuxt.com/e/nuxt_b2011'
     console.log(err.diagnostic) // full Diagnostic object
   }
 }
@@ -209,7 +206,7 @@ interface Colors {
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/b2011
+├▶ see: https://nuxt.com/e/nuxt_b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -232,7 +229,7 @@ const myFormatter: Formatter = {
 
 Two lower-level functions are exported for building custom formatters:
 
-- `formatTag(d: Diagnostic)` — returns the `[PREFIX_CODE]` tag string (e.g. `[NUXT_B2011]` or `[B2011]` if no prefix)
+- `formatTag(d: Diagnostic)` — returns the `[CODE]` tag string (e.g. `[NUXT_B2011]`)
 - `renderFrame(d: Diagnostic)` — returns the full box-drawing formatted string (same as `plainFormatter.format`)
 
 ### Reporters
@@ -265,7 +262,7 @@ type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'conte
 ```
 
 ```ts
-diagnostics.B2011({ src: pluginPath }, {
+diagnostics.NUXT_B2011({ src: pluginPath }, {
   cause: originalError,
   sources: [{ file: 'nuxt.config.ts', line: 42 }],
   context: { moduleName: 'my-module' },
@@ -276,10 +273,9 @@ diagnostics.B2011({ src: pluginPath }, {
 
 ### Code naming conventions
 
-- Use short, stable code identifiers (e.g. `B1001`, `B2011`)
-- Group by domain using a letter prefix: `B` for build, `R` for runtime, `C` for config, etc.
+- Use fully qualified, stable code identifiers (e.g. `NUXT_B1001`, `I18N_I001`)
+- Group by domain using a letter prefix within the code: `B` for build, `R` for runtime, `C` for config, etc.
 - Never reuse or reassign a code once published — codes are permanent identifiers
-- Use the `prefix` option to namespace codes by project (e.g. `NUXT`, `VITE`, `I18N`)
 
 ### Structuring diagnostic definitions
 
@@ -297,13 +293,13 @@ For large projects, split diagnostics by domain:
 ```
 src/
   diagnostics/
-    build.ts       # B-series codes
-    runtime.ts     # R-series codes
-    config.ts      # C-series codes
+    build.ts       # NUXT_B-series codes
+    runtime.ts     # NUXT_R-series codes
+    config.ts      # NUXT_C-series codes
     index.ts       # re-exports and merges all sets
 ```
 
-Each file calls `defineDiagnostics()` with the same `prefix` and `docsBase` but different code ranges.
+Each file calls `defineDiagnostics()` with the same `docsBase` but different code ranges.
 
 ## Documentation Site
 
