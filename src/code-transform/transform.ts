@@ -11,7 +11,7 @@ export interface TransformResult {
 export interface TransformOptions {
   /**
    * The package name to detect imports from.
-   * @default 'logs-sdk'
+   * @default '@antfu/experimental-logs-sdk'
    */
   packageName?: string
 }
@@ -37,7 +37,7 @@ export function transform(
   options?: TransformOptions,
   trackedExportsMap?: TrackedExportsMap,
 ): TransformResult | undefined {
-  const packageName = options?.packageName ?? 'logs-sdk'
+  const packageName = options?.packageName ?? '@antfu/experimental-logs-sdk'
 
   const result = parseSync(id, code)
   const ast = result.program

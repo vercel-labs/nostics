@@ -35,7 +35,6 @@
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "bumpp",
-    "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
@@ -56,8 +55,14 @@
       "optional": true
     }
   },
+  "dependencies": {
+    "magic-string": "catalog:deps",
+    "oxc-parser": "catalog:deps",
+    "unplugin": "catalog:deps"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
+    "@antfu/experimental-logs-sdk": "workspace:*",
     "@antfu/ni": "catalog:cli",
     "@antfu/utils": "catalog:inlined",
     "@types/node": "catalog:types",
@@ -65,16 +70,12 @@
     "esbuild": "catalog:",
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
-    "magic-string": "catalog:",
-    "oxc-parser": "catalog:",
     "publint": "catalog:cli",
     "rolldown-plugin-dts-snapshot": "catalog:",
     "simple-git-hooks": "catalog:cli",
     "tinyexec": "catalog:testing",
     "tsdown": "catalog:cli",
-    "tsx": "catalog:cli",
     "typescript": "catalog:cli",
-    "unplugin": "catalog:",
     "vite": "catalog:cli",
     "vitest": "catalog:testing",
     "vitest-package-exports": "catalog:testing",
