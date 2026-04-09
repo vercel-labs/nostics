@@ -17,10 +17,9 @@ export function factorial(n: number): number {
   }
   if (n > 170) {
     log.MATH_W002({ n }).warn()
-    log.W001({ n }).warn()
   }
   if (n > 170) {
-    log.W002({ n }).warn()
+    log.MATH_W002({ n }).warn()
   }
   if (n <= 1)
     return 1
@@ -30,6 +29,5 @@ export function factorial(n: number): number {
 /** @deprecated Use add() instead */
 export function sum(a: number, b: number): number {
   log.MATH_D001().warn()
-  log.D001().warn()
   return add(a, b)
 }
