@@ -4,7 +4,7 @@ import { CodedError } from '../src/error'
 import { createLogger } from '../src/logger'
 
 const nuxtDiags = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B1001: {
       message: 'Could not compile template.',

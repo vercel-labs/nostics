@@ -45,7 +45,7 @@ Creates typed factory functions that produce plain `Diagnostic` objects. No side
 import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B1001: {
       message: 'Could not compile template.',
@@ -69,7 +69,7 @@ const diagnostics = defineDiagnostics({
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `docsBase` | `string?` | Base URL for docs. Auto-generates `docs` field as `${docsBase}/${code.toLowerCase()}` |
+| `docsBase` | `string \| ((code: string) => string \| undefined)?` | Docs URL source. As a string, auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. As a function, receives the code key and returns the full URL (or `undefined` to omit). |
 | `codes` | `Record<string, DiagnosticDefinition>` | Map of code keys to their definitions |
 
 **DiagnosticDefinition fields:**
@@ -172,7 +172,7 @@ try {
 catch (err) {
   if (err instanceof CodedError) {
     console.log(err.code) // 'NUXT_B2011'
-    console.log(err.docsUrl) // 'https://nuxt.com/e/nuxt_b2011'
+    console.log(err.docsUrl) // 'https://nuxt.com/e/b2011'
     console.log(err.diagnostic) // full Diagnostic object
   }
 }
@@ -206,7 +206,7 @@ interface Colors {
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/nuxt_b2011
+├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -229,7 +229,7 @@ const myFormatter: Formatter = {
 
 Two lower-level functions are exported for building custom formatters:
 
-- `formatTag(d: Diagnostic)` — returns the `[CODE]` tag string (e.g. `[NUXT_B2011]`)
+- `formatTag(d: Diagnostic)` — returns the `[CODE]` tag string (e.g. `[NUXT_B2011]` for code `'NUXT_B2011'`)
 - `renderFrame(d: Diagnostic)` — returns the full box-drawing formatted string (same as `plainFormatter.format`)
 
 ### Reporters

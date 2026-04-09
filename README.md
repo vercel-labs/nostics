@@ -8,7 +8,7 @@ Structured diagnostic codes for JavaScript/TypeScript libraries and frameworks.
 
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ see: https://nuxt.com/e/nuxt_b2011
+├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -37,11 +37,14 @@ An agent can resolve the issue without asking the user for more information. Use
 
 `defineDiagnostics()` declares the diagnostic codes for a domain — pure data, no side effects.
 
+`docsBase` can be a string (auto-appends `/${code.toLowerCase()}`) or a function for full control over the URL:
+
 ```ts
 import { defineDiagnostics } from 'logs-sdk'
 
+// Function form — strip the project prefix for cleaner URLs
 const diagnostics = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B2011: {
       message: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
@@ -55,6 +58,18 @@ const diagnostics = defineDiagnostics({
     },
   },
 })
+// diagnostics.NUXT_B2011({ src: '...' }).docs → 'https://nuxt.com/e/b2011'
+```
+
+```ts
+// String form — simple base URL, code appended automatically
+const diagnostics = defineDiagnostics({
+  docsBase: 'https://example.com/errors',
+  codes: {
+    MY_E001: { message: 'Something went wrong.' },
+  },
+})
+// diagnostics.MY_E001().docs → 'https://example.com/errors/my_e001'
 ```
 
 ### Create a logger
