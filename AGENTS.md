@@ -1,6 +1,6 @@
-# AGENTS.md
+# Agentic Diagnostics
 
-This file provides guidance to AI coding agents working with code in this repository.
+Structured diagnostic for libraries and frameworks to keep code agents in the loop.
 
 ## Commands
 
