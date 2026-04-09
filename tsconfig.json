@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ESNext",
     "lib": ["ESNext"],
     "module": "ESNext",
@@ -9,6 +10,7 @@
     "strictNullChecks": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "isolatedDeclarations": false,
     "verbatimModuleSyntax": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
