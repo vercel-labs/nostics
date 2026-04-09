@@ -1,4 +1,4 @@
-import type { UnpluginFactory } from 'unplugin'
+import type { UnpluginFactory, UnpluginInstance } from 'unplugin'
 import type { TrackedExportsMap, TransformOptions } from './transform'
 import { createUnplugin } from 'unplugin'
 import { transform } from './transform'
@@ -34,6 +34,8 @@ const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (opti
   }
 }
 
-export const unplugin = /* #__PURE__ */ createUnplugin(unpluginFactory)
-export default unplugin
+export const logsSDK: UnpluginInstance<LogsSdkPluginOptions | undefined> = /* #__PURE__ */ createUnplugin<LogsSdkPluginOptions | undefined>(unpluginFactory)
+export default logsSDK
 
+export { logsSDKServer } from './server-plugin'
+export type { LogsSdkServerOptions } from './server-plugin'
