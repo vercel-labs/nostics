@@ -75,7 +75,7 @@ describe('createLogger', () => {
   })
 
   it('.format() returns formatted string', () => {
-    const formatter = { format: vi.fn().mockReturnValue('formatted output') }
+    const formatter = vi.fn().mockReturnValue('formatted output')
     const log = createLogger({ diagnostics: [nuxtDiags], formatter })
     const result = log.NUXT_B1001().format()
     expect(result).toBe('formatted output')

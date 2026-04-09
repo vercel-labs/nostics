@@ -136,9 +136,9 @@ Link to related documentation, changelog entries, or related diagnostic codes.
 \```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-╰▶ hint: Check your module's addPlugin() calls
+├▶ hint: Check your module's addPlugin() calls
+╰▶ see: https://nuxt.com/e/b2011
 \```
 ```
 

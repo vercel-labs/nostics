@@ -10,12 +10,12 @@ export function renderFrame(d: Diagnostic): string {
   const details: string[] = []
   if (d.why)
     details.push(`why: ${d.why}`)
-  if (d.docs)
-    details.push(`see: ${d.docs}`)
   if (d.fix)
     details.push(`fix: ${d.fix}`)
   if (d.hint)
     details.push(`hint: ${d.hint}`)
+  if (d.docs)
+    details.push(`see: ${d.docs}`)
 
   if (details.length === 0)
     return header
@@ -28,6 +28,4 @@ export function renderFrame(d: Diagnostic): string {
   return [header, ...lines].join('\n')
 }
 
-export const plainFormatter: Formatter = {
-  format: renderFrame,
-}
+export const plainFormatter: Formatter = renderFrame

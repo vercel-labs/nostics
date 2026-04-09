@@ -31,9 +31,7 @@ export interface DiagnosticDefinition {
   level?: DiagnosticLevel
 }
 
-export interface Formatter {
-  format: (diagnostic: Diagnostic) => string
-}
+export type Formatter = (diagnostic: Diagnostic) => string
 
 export type Reporter = (diagnostic: Diagnostic, formatted: string) => void
 
@@ -64,14 +62,14 @@ export type CodeFactory<T>
     ? (overrides?: Overrides) => Diagnostic
     : (params: Simplify<ExtractParams<T>>, overrides?: Overrides) => Diagnostic
 
-export interface DiagnosticsMethods<C> {
+export interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {
   codes: () => (keyof C & string)[]
-  has: (code: string) => boolean
+  has: (code: string) => code is Extract<keyof C, string>
   get: <K extends keyof C>(code: K) => C[K]
   extend: <U extends Record<string, DiagnosticDefinition>>(defs: U) => DiagnosticsResult<C & U>
 }
 
-export type DiagnosticsResult<C> = {
+export type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = {
   [K in keyof C]: CodeFactory<C[K]>
 } & DiagnosticsMethods<C>
 

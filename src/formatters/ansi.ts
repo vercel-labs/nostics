@@ -25,33 +25,31 @@ function levelColor(colors: Colors, level: string): (s: string) => string {
 }
 
 export function ansiFormatter(colors: Colors): Formatter {
-  return {
-    format(d: Diagnostic): string {
-      const colorize = levelColor(colors, d.level)
-      const tag = colors.bold(colorize(formatTag(d)))
-      const header = `${tag} ${d.message}`
+  return (d: Diagnostic): string => {
+    const colorize = levelColor(colors, d.level)
+    const tag = colors.bold(colorize(formatTag(d)))
+    const header = `${tag} ${d.message}`
 
-      const details: string[] = []
-      if (d.why)
-        details.push(`${colors.dim('why:')} ${d.why}`)
-      if (d.docs)
-        details.push(`${colors.dim('see:')} ${colors.cyan(d.docs)}`)
-      if (d.fix)
-        details.push(`${colors.dim('fix:')} ${d.fix}`)
-      if (d.hint)
-        details.push(`${colors.dim('hint:')} ${colors.gray(d.hint)}`)
+    const details: string[] = []
+    if (d.why)
+      details.push(`${colors.dim('why:')} ${d.why}`)
+    if (d.fix)
+      details.push(`${colors.dim('fix:')} ${d.fix}`)
+    if (d.hint)
+      details.push(`${colors.dim('hint:')} ${colors.gray(d.hint)}`)
+    if (d.docs)
+      details.push(`${colors.dim('see:')} ${colors.cyan(d.docs)}`)
 
-      if (details.length === 0)
-        return header
+    if (details.length === 0)
+      return header
 
-      const lines = details.map((detail, i) => {
-        const connector = i < details.length - 1
-          ? colors.dim('├▶')
-          : colors.dim('╰▶')
-        return `${connector} ${detail}`
-      })
+    const lines = details.map((detail, i) => {
+      const connector = i < details.length - 1
+        ? colors.dim('├▶')
+        : colors.dim('╰▶')
+      return `${connector} ${detail}`
+    })
 
-      return [header, ...lines].join('\n')
-    },
+    return [header, ...lines].join('\n')
   }
 }

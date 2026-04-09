@@ -100,7 +100,7 @@ diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' }, { cause: originalError })
 
 ```ts
 diagnostics.codes() // → ['NUXT_B1001', 'NUXT_B2011', 'NUXT_B5001']
-diagnostics.has('NUXT_B1001') // → true
+diagnostics.has('NUXT_B1001') // → true (type guard: narrows to known code key)
 diagnostics.get('NUXT_B1001') // → the raw DiagnosticDefinition
 diagnostics.extend({ // → new diagnostics set with additional codes merged in
   NUXT_B9999: { message: 'New code.' }
@@ -118,7 +118,7 @@ import { ansiFormatter } from 'logs-sdk/formatters/ansi'
 const log = createLogger({
   diagnostics: [diagnostics],
   formatter: ansiFormatter(colors), // or plainFormatter (default)
-  reporter: consoleReporter, // default
+  reporter: consoleReporter, // default — pass a single function or an array
 })
 ```
 
@@ -153,15 +153,10 @@ Created only when `.throw()` is called. Extends `Error` with `name: 'CodedError'
 ```ts
 class CodedError extends Error {
   readonly diagnostic: Diagnostic // the full object
-  readonly code: string
-  readonly docsUrl?: string
-  readonly fix?: string
-  readonly why?: string
-  readonly hint?: string
 }
 ```
 
-The `message` is formatted as `[CODE] message text`.
+The `message` is formatted as `[CODE] message text`. Access all diagnostic fields via `err.diagnostic`.
 
 **Catch and inspect:**
 
@@ -171,16 +166,16 @@ try {
 }
 catch (err) {
   if (err instanceof CodedError) {
-    console.log(err.code) // 'NUXT_B2011'
-    console.log(err.docsUrl) // 'https://nuxt.com/e/b2011'
-    console.log(err.diagnostic) // full Diagnostic object
+    console.log(err.diagnostic.code) // 'NUXT_B2011'
+    console.log(err.diagnostic.docs) // 'https://nuxt.com/e/b2011'
+    console.log(err.diagnostic.fix) // 'Pass a string path...'
   }
 }
 ```
 
 ### Formatters
 
-All implement `Formatter` interface: `{ format: (d: Diagnostic) => string }`.
+All are plain functions: `(d: Diagnostic) => string`.
 
 | Formatter | Import | Description |
 |-----------|--------|-------------|
@@ -206,22 +201,20 @@ interface Colors {
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-╰▶ hint: Check your module's addPlugin() calls
+├▶ hint: Check your module's addPlugin() calls
+╰▶ see: https://nuxt.com/e/b2011
 ```
 
-Detail line order is fixed: `why` → `see` (docs URL) → `fix` → `hint`. Missing fields are omitted.
+Detail line order is fixed: `why` → `fix` → `hint` → `see` (docs URL). Missing fields are omitted.
 
 **Writing a custom formatter:**
 
 ```ts
 import type { Formatter } from 'logs-sdk'
 
-const myFormatter: Formatter = {
-  format(d) {
-    return `[${d.code}] ${d.message}${d.fix ? ` (fix: ${d.fix})` : ''}`
-  },
+const myFormatter: Formatter = (d) => {
+  return `[${d.code}] ${d.message}${d.fix ? ` (fix: ${d.fix})` : ''}`
 }
 ```
 
@@ -230,11 +223,11 @@ const myFormatter: Formatter = {
 Two lower-level functions are exported for building custom formatters:
 
 - `formatTag(d: Diagnostic)` — returns the `[CODE]` tag string (e.g. `[NUXT_B2011]` for code `'NUXT_B2011'`)
-- `renderFrame(d: Diagnostic)` — returns the full box-drawing formatted string (same as `plainFormatter.format`)
+- `renderFrame(d: Diagnostic)` — returns the full box-drawing formatted string (same as `plainFormatter`)
 
 ### Reporters
 
-All implement `Reporter` interface: `{ report: (d: Diagnostic, formatted: string) => void }`.
+All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a single reporter or an array.
 
 | Reporter | Import | Description |
 |----------|--------|-------------|
@@ -246,10 +239,8 @@ All implement `Reporter` interface: `{ report: (d: Diagnostic, formatted: string
 ```ts
 import type { Reporter } from 'logs-sdk'
 
-const fileReporter: Reporter = {
-  report(diagnostic, formatted) {
-    fs.appendFileSync('errors.log', `${formatted}\n`)
-  },
+const fileReporter: Reporter = (diagnostic, formatted) => {
+  fs.appendFileSync('errors.log', `${formatted}\n`)
 }
 ```
 

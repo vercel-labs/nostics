@@ -8,9 +8,9 @@ Structured diagnostic codes for JavaScript/TypeScript libraries and frameworks.
 
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-╰▶ hint: Check your module's addPlugin() calls
+├▶ hint: Check your module's addPlugin() calls
+╰▶ see: https://nuxt.com/e/b2011
 ```
 
 Every diagnostic has a **stable code**, a **human-readable explanation**, and structured fields — `fix`, `why`, `hint`, `docs` — that tell you what happened and how to resolve it. The `see` link points to a dedicated documentation page for that error code, with detailed explanations, examples, and common solutions. It should be visited only if more context is needed beyond the concise inline message.
@@ -102,13 +102,17 @@ log.I18N_I001({ locale: 'fr' }).warn() // [I18N_I001] ...
 
 ### Custom reporters
 
+Pass a single reporter function or an array:
+
 ```ts
 const log = createLogger({
   diagnostics: [diagnostics],
-  reporter: (diagnostic, formatted) => {
-    console.error(formatted)
-    sentry.captureMessage(formatted, { tags: { code: diagnostic.code } })
-  },
+  reporter: [
+    consoleReporter,
+    (diagnostic, formatted) => {
+      sentry.captureMessage(formatted, { tags: { code: diagnostic.code } })
+    },
+  ],
 })
 ```
 
