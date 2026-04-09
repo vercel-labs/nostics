@@ -5,6 +5,6 @@ export default antfu(
   {
     type: 'lib',
     pnpm: true,
-    ignores: ['PLAN.md', '.context/**'],
+    ignores: ['PLAN.md', '.context/**', 'skills/**/*.md'],
   },
 )
