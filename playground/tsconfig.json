@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2023",
+    "jsx": "preserve",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "module": "esnext",

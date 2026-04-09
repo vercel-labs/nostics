@@ -20,6 +20,7 @@ catalogs:
     '@antfu/eslint-config': ^8.1.0
     '@antfu/ni': ^30.0.0
     '@vitejs/devtools': ^0.1.13
+    '@vitejs/plugin-vue': ^5.2.4
     bumpp: ^11.0.1
     eslint: ^10.2.0
     lint-staged: ^16.4.0
@@ -29,6 +30,7 @@ catalogs:
     typescript: ^6.0.2
     vite: ^8.0.7
     vite-plugin-inspect: ^11.0.0
+    vue: ^3.5.13
   deps:
     magic-string: ^0.30.21
     oxc-parser: ^0.124.0
