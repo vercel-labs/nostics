@@ -23,7 +23,6 @@ export function factorial(n: number): number {
   return n * factorial(n - 1)
 }
 
-/** @deprecated Use add() instead */
 export function sum(a: number, b: number): number {
   log.MATH_D001().warn()
   return add(a, b)

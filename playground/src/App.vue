@@ -76,14 +76,11 @@ function runSum(a?: number, b?: number) {
   </section>
 
   <section>
-    <h2><code>sum(a, b)</code> <small>(deprecated)</small></h2>
+    <h2><code>sum(a, b)</code></h2>
     <label>a <input v-model.number="sumA" type="number"></label>
     <label>b <input v-model.number="sumB" type="number"></label>
     <button @click="runSum()">
       Run
-    </button>
-    <button class="warn" @click="runSum(1, 2)">
-      Call sum(1, 2)
     </button>
     <span v-if="sumResult !== undefined" class="result">= {{ sumResult }}</span>
   </section>
