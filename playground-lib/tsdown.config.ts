@@ -1,4 +1,4 @@
-import logsSdk from 'logs-sdk/rolldown'
+import logsSdk from '@antfu/experimental-logs-sdk/unplugin'
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
@@ -9,6 +9,6 @@ export default defineConfig({
     oxc: true,
   },
   plugins: [
-    logsSdk(),
+    logsSdk.rolldown(),
   ],
 })
