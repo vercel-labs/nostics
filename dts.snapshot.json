@@ -49,7 +49,14 @@
       "renderFrame"
     ]
   },
-  "types-!~{001}~.d.mts": {
+  "rolldown.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
+  },
+  "types-!~{003}~.d.mts": {
     "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
     "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter\n}",
@@ -72,5 +79,24 @@
     "Reporter": "interface Reporter {\n report: (_: Diagnostic, _: string) => void\n}",
     "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
     "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
+  },
+  "unplugin-!~{002}~.d.mts": {
+    "LogsSdkPluginOptions": "type LogsSdkPluginOptions = TransformOptions",
+    "TransformOptions": "interface TransformOptions {\n packageName?: string\n}",
+    "unplugin": "_$unplugin.UnpluginInstance<TransformOptions | undefined, boolean>"
+  },
+  "unplugin.d.mts": {
+    "#exports": [
+      "LogsSdkPluginOptions",
+      "default",
+      "unplugin"
+    ]
+  },
+  "vite.d.mts": {
+    "_default": ";((_: LogsSdkPluginOptions) => any)",
+    "default": ";((_: LogsSdkPluginOptions) => any)",
+    "#exports": [
+      "default"
+    ]
   }
 }

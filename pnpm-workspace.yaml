@@ -5,13 +5,19 @@ ignoreWorkspaceRootCheck: true
 shellEmulator: true
 
 trustPolicy: no-downgrade
+
 packages:
   - playground
+  - playground-lib
   - docs
   - packages/*
   - examples/*
 catalog:
+  esbuild: ^0.28.0
+  magic-string: ^0.30.21
+  oxc-parser: ^0.124.0
   rolldown-plugin-dts-snapshot: ^0.4.0
+  unplugin: ^3.0.0
 catalogs:
   cli:
     '@antfu/eslint-config': ^8.1.0

@@ -18,10 +18,11 @@
     ".": "./dist/index.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
+    "./rolldown": "./dist/rolldown.mjs",
+    "./unplugin": "./dist/unplugin.mjs",
+    "./vite": "./dist/vite.mjs",
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
     "dist",
@@ -38,14 +39,33 @@
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },
+  "peerDependencies": {
+    "magic-string": ">=0.30.0",
+    "oxc-parser": ">=0.50.0",
+    "unplugin": ">=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "magic-string": {
+      "optional": true
+    },
+    "oxc-parser": {
+      "optional": true
+    },
+    "unplugin": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
     "@antfu/ni": "catalog:cli",
     "@antfu/utils": "catalog:inlined",
     "@types/node": "catalog:types",
     "bumpp": "catalog:cli",
+    "esbuild": "catalog:",
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
+    "magic-string": "catalog:",
+    "oxc-parser": "catalog:",
     "publint": "catalog:cli",
     "rolldown-plugin-dts-snapshot": "catalog:",
     "simple-git-hooks": "catalog:cli",
@@ -53,6 +73,7 @@
     "tsdown": "catalog:cli",
     "tsx": "catalog:cli",
     "typescript": "catalog:cli",
+    "unplugin": "catalog:",
     "vite": "catalog:cli",
     "vitest": "catalog:testing",
     "vitest-package-exports": "catalog:testing",

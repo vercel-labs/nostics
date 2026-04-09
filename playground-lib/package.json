@@ -1,0 +1,23 @@
+{
+  "name": "playground-lib",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "logs-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:cli"
+  }
+}
