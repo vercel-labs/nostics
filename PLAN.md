@@ -6,8 +6,7 @@ The fundamental data structure is a **plain diagnostic object** — serializable
 
 ```ts
 interface Diagnostic {
-  code: string // e.g., 'B2011'
-  prefix?: string // e.g., 'NUXT' → [NUXT_B2011]
+  code: string // e.g., 'NUXT_B2011'
   level: 'error' | 'warn' | 'suggestion' | 'deprecation'
   message: string // resolved message (already interpolated)
   why?: string // why it happened
@@ -33,24 +32,23 @@ This object is what gets:
 
 ### 1. `defineDiagnostics()` — Pure data + typed factories
 
-Defines the diagnostic codes for a domain. Owns identity (prefix, docsBase) and produces plain `Diagnostic` objects. No side effects, no logging.
+Defines the diagnostic codes for a domain. Owns identity (docsBase) and produces plain `Diagnostic` objects. No side effects, no logging.
 
 ```ts
 import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  prefix: 'NUXT',
   docsBase: 'https://nuxt.com/e',
   codes: {
-    B1001: {
+    NUXT_B1001: {
       message: 'Could not compile template.',
       fix: 'Check the template for syntax errors.',
     },
-    B2011: {
+    NUXT_B2011: {
       message: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
     },
-    B5001: {
+    NUXT_B5001: {
       message: 'Missing compatibilityDate in nuxt.config.',
       fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your nuxt.config.`,
       hint: 'This ensures consistent behavior across Nuxt versions.',
@@ -63,16 +61,16 @@ const diagnostics = defineDiagnostics({
 Each code key is a factory function returning a plain `Diagnostic`:
 
 ```ts
-// diagnostics.B2011 is: (params: { src: string }, overrides?) => Diagnostic
-// diagnostics.B1001 is: (overrides?) => Diagnostic
+// diagnostics.NUXT_B2011 is: (params: { src: string }, overrides?) => Diagnostic
+// diagnostics.NUXT_B1001 is: (overrides?) => Diagnostic
 
-const diag = diagnostics.B2011({ src: pluginPath })
-// → { code: 'B2011', prefix: 'NUXT', docs: 'https://nuxt.com/e/b2011', message: '...', ... }
+const diag = diagnostics.NUXT_B2011({ src: pluginPath })
+// → { code: 'NUXT_B2011', docs: 'https://nuxt.com/e/nuxt_b2011', message: '...', ... }
 ```
 
-- **`diagnostics.B2011` is cmd+clickable** — navigates straight to the definition
+- **`diagnostics.NUXT_B2011` is cmd+clickable** — navigates straight to the definition
 - **Hover shows the type** — `(params: { src: string }, overrides?: Overrides) => Diagnostic`
-- **TypeScript enforces params** — `diagnostics.B2011()` is a type error
+- **TypeScript enforces params** — `diagnostics.NUXT_B2011()` is a type error
 - **The result is a plain `Diagnostic` object** — fully serializable, no methods
 
 **Typing under the hood:**
@@ -96,11 +94,11 @@ interface DiagnosticsMethods<T> {
 
 The type extracts params from ALL template fields (`message`, `fix`, `why`, `hint`) and unions them:
 ```ts
-B5001: {
-  message: 'Missing compatibilityDate.',                              // no params
-  fix: (p: { date: string }) => `Add compatibilityDate: '${p.date}'`, // needs { date }
+NUXT_B5001: {
+  message: 'Missing compatibilityDate.',
+  fix: (p: { date: string }) => `Add compatibilityDate: '${p.date}'`,
 }
-// → diagnostics.B5001 requires (params: { date: string }) because fix needs it
+// → diagnostics.NUXT_B5001 requires (params: { date: string }) because fix needs it
 ```
 
 ### 2. `createLogger()` — Bind diagnostics to output
@@ -120,19 +118,18 @@ const log = createLogger({
 **Usage — chainable actions:**
 
 ```ts
-log.B2011({ src: pluginPath }).throw()
-log.B1001().warn()
-log.B5001({ date: '2025-01-01' }).log() // uses the level from the definition ('warn')
+log.NUXT_B2011({ src: pluginPath }).throw()
+log.NUXT_B1001().warn()
+log.NUXT_B5001({ date: '2025-01-01' }).log() // uses the level from the definition ('warn')
 ```
 
 **Multiple diagnostic sets:**
 
 ```ts
 const i18nDiagnostics = defineDiagnostics({
-  prefix: 'I18N',
   docsBase: 'https://i18n.nuxtjs.org/e',
   codes: {
-    I001: {
+    I18N_I001: {
       message: (p: { locale: string }) => `Missing translations for locale "${p.locale}".`,
       fix: 'Add a translation file for this locale.',
     },
@@ -145,8 +142,8 @@ const log = createLogger({
   reporter: consoleReporter,
 })
 
-log.B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
-log.I001({ locale: 'fr' }).warn() // [I18N_I001] ...
+log.NUXT_B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
+log.I18N_I001({ locale: 'fr' }).warn() // [I18N_I001] ...
 ```
 
 **What `createLogger()` returns:**
@@ -178,8 +175,8 @@ interface DiagnosticActions extends Diagnostic {
 **Logger also works with raw `Diagnostic` objects** for ad-hoc use:
 
 ```ts
-log.warn(diagnostics.B1001())
-log.throw(diagnostics.B2011({ src: pluginPath }))
+log.warn(diagnostics.NUXT_B1001())
+log.throw(diagnostics.NUXT_B2011({ src: pluginPath }))
 ```
 
 **Default behavior:**
@@ -229,7 +226,7 @@ The `diagnostic` property carries the full structured object. Error handlers can
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/b2011
+├▶ see: https://nuxt.com/e/nuxt_b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -247,7 +244,7 @@ buildErrorUtils.throw({
 })
 
 // NEW — concise, typed, cmd+clickable, chainable
-log.B2011({ src: pluginPath }).throw()
+log.NUXT_B2011({ src: pluginPath }).throw()
 ```
 
 ---
@@ -275,7 +272,7 @@ Zero runtime dependencies.
 ## Implementation Steps
 
 1. **`src/types.ts`** — `Diagnostic`, `DiagnosticActions`, `DiagnosticDefinition`, `MessageTemplate`, `SourceLocation`, `Formatter`, `Reporter`, `Overrides`, type utilities (`ExtractParams<T>`)
-2. **`src/diagnostics.ts`** — `defineDiagnostics({ prefix, docsBase, codes })` — typed factory functions per code, each producing plain `Diagnostic`. Utility methods: `codes()`, `has()`, `get()`, `extend()`.
+2. **`src/diagnostics.ts`** — `defineDiagnostics({ docsBase, codes })` — typed factory functions per code, each producing plain `Diagnostic`. Utility methods: `codes()`, `has()`, `get()`, `extend()`.
 3. **`src/format.ts`** — Port `wrapLine()` / `renderFrame()`. Implement `plainFormatter`.
 4. **`src/error.ts`** — `CodedError` class, constructed from a `Diagnostic` object
 5. **`src/reporter.ts`** — `consoleReporter`, `createFetchReporter()`
@@ -291,11 +288,11 @@ Zero runtime dependencies.
 | Decision | Rationale |
 |----------|-----------|
 | **`defineDiagnostics()` is pure data** | No side effects, no logger binding. Just factories → plain `Diagnostic` objects. Fully serializable, testable, transportable. |
-| **prefix/docsBase on diagnostics** | These are identity — they belong with the code definitions. |
+| **Codes are fully qualified identifiers** | `NUXT_B2011`, `I18N_I001` — the code string is the complete, stable identifier. No runtime prefix composition. |
 | **`createLogger()` binds diagnostics + output** | One call sets up everything. No intermediate binding step. |
-| **Multiple diagnostics via array** | `diagnostics: [nuxt, i18n]` — flat namespace, each code keeps its own prefix. |
-| **Logger has both code keys and raw methods** | `log.B2011({...}).throw()` for typed use, `log.throw(diag)` for ad-hoc use. |
-| **Actions are fire-and-forget** | `log.B2011({...}).throw()` — no holding references. Transport (dev server, Sentry) is handled by reporters. |
+| **Multiple diagnostics via array** | `diagnostics: [nuxt, i18n]` — flat namespace, each code is globally unique. |
+| **Logger has both code keys and raw methods** | `log.NUXT_B2011({...}).throw()` for typed use, `log.throw(diag)` for ad-hoc use. |
+| **Actions are fire-and-forget** | `log.NUXT_B2011({...}).throw()` — no holding references. Transport (dev server, Sentry) is handled by reporters. |
 | **Params unioned from all template fields** | If `fix` needs `{ date }` and `message` needs `{ src }`, the factory requires both. |
 | **Levels beyond error** | `warn`, `suggestion`, `deprecation` — not just an error library. |
 
@@ -307,10 +304,10 @@ Zero runtime dependencies.
 2. Type tests: TS errors for invalid codes, missing params, wrong param types
 3. Type tests: cmd+click navigation works (factory references, not strings)
 4. `extend()` on diagnostics merges correctly, preserves type safety
-5. Multiple diagnostics in `createLogger()` merge correctly, each keeps own prefix
+5. Multiple diagnostics in `createLogger()` merge correctly
 6. Formatted output matches expected box-drawing format
 7. `CodedError.diagnostic` carries full structured data
 8. Reporter receives full `Diagnostic` object for transport (fetch, Sentry, etc.)
 9. Tree-shaking: unused diagnostics excluded from bundle
-10. Chained API: `log.B2011({ src }).throw()` throws `CodedError`
-11. Logger raw methods: `log.warn(diagnostics.B2011({ src }))` works
+10. Chained API: `log.NUXT_B2011({ src }).throw()` throws `CodedError`
+11. Logger raw methods: `log.warn(diagnostics.NUXT_B2011({ src }))` works

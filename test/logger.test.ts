@@ -4,22 +4,20 @@ import { CodedError } from '../src/error'
 import { createLogger } from '../src/logger'
 
 const nuxtDiags = defineDiagnostics({
-  prefix: 'NUXT',
   docsBase: 'https://nuxt.com/e',
   codes: {
-    B1001: {
+    NUXT_B1001: {
       message: 'Could not compile template.',
     },
-    B2011: {
+    NUXT_B2011: {
       message: (p: { src: string }) => `Invalid plugin \`${p.src}\`.`,
     },
   },
 })
 
 const i18nDiags = defineDiagnostics({
-  prefix: 'I18N',
   codes: {
-    I001: {
+    I18N_I001: {
       message: (p: { locale: string }) => `Missing translations for "${p.locale}".`,
       level: 'warn',
     },
@@ -29,24 +27,24 @@ const i18nDiags = defineDiagnostics({
 describe('createLogger', () => {
   it('merges multiple diagnostic sets', () => {
     const log = createLogger({ diagnostics: [nuxtDiags, i18nDiags] })
-    expect(typeof log.B1001).toBe('function')
-    expect(typeof log.B2011).toBe('function')
-    expect(typeof log.I001).toBe('function')
+    expect(typeof log.NUXT_B1001).toBe('function')
+    expect(typeof log.NUXT_B2011).toBe('function')
+    expect(typeof log.I18N_I001).toBe('function')
   })
 
   it('.throw() throws CodedError', () => {
     const log = createLogger({ diagnostics: [nuxtDiags] })
-    expect(() => log.B1001().throw()).toThrow(CodedError)
+    expect(() => log.NUXT_B1001().throw()).toThrow(CodedError)
   })
 
   it('.throw() error has correct diagnostic', () => {
     const log = createLogger({ diagnostics: [nuxtDiags] })
     try {
-      log.B2011({ src: '/bad.ts' }).throw()
+      log.NUXT_B2011({ src: '/bad.ts' }).throw()
     }
     catch (err) {
       expect(err).toBeInstanceOf(CodedError)
-      expect((err as CodedError).code).toBe('B2011')
+      expect((err as CodedError).code).toBe('NUXT_B2011')
       expect((err as CodedError).diagnostic.message).toBe('Invalid plugin `/bad.ts`.')
     }
   })
@@ -54,7 +52,7 @@ describe('createLogger', () => {
   it('.warn() calls reporter', () => {
     const reporter = { report: vi.fn() }
     const log = createLogger({ diagnostics: [nuxtDiags], reporter })
-    log.B1001().warn()
+    log.NUXT_B1001().warn()
     expect(reporter.report).toHaveBeenCalled()
     const [diagnostic] = reporter.report.mock.calls[0]
     expect(diagnostic.level).toBe('warn')
@@ -63,7 +61,7 @@ describe('createLogger', () => {
   it('.error() calls reporter with error level', () => {
     const reporter = { report: vi.fn() }
     const log = createLogger({ diagnostics: [i18nDiags], reporter })
-    log.I001({ locale: 'fr' }).error()
+    log.I18N_I001({ locale: 'fr' }).error()
     const [diagnostic] = reporter.report.mock.calls[0]
     expect(diagnostic.level).toBe('error')
   })
@@ -71,7 +69,7 @@ describe('createLogger', () => {
   it('.log() uses diagnostic own level', () => {
     const reporter = { report: vi.fn() }
     const log = createLogger({ diagnostics: [i18nDiags], reporter })
-    log.I001({ locale: 'fr' }).log()
+    log.I18N_I001({ locale: 'fr' }).log()
     const [diagnostic] = reporter.report.mock.calls[0]
     expect(diagnostic.level).toBe('warn')
   })
@@ -79,27 +77,27 @@ describe('createLogger', () => {
   it('.format() returns formatted string', () => {
     const formatter = { format: vi.fn().mockReturnValue('formatted output') }
     const log = createLogger({ diagnostics: [nuxtDiags], formatter })
-    const result = log.B1001().format()
+    const result = log.NUXT_B1001().format()
     expect(result).toBe('formatted output')
   })
 
   it('raw throw() works with diagnostic object', () => {
     const log = createLogger({ diagnostics: [nuxtDiags] })
-    const diag = nuxtDiags.B1001()
+    const diag = nuxtDiags.NUXT_B1001()
     expect(() => log.throw(diag)).toThrow(CodedError)
   })
 
   it('raw warn() works with diagnostic object', () => {
     const reporter = { report: vi.fn() }
     const log = createLogger({ diagnostics: [nuxtDiags], reporter })
-    log.warn(nuxtDiags.B1001())
+    log.warn(nuxtDiags.NUXT_B1001())
     expect(reporter.report).toHaveBeenCalled()
   })
 
   it('defaults to plainFormatter and consoleReporter', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => { })
     const log = createLogger({ diagnostics: [i18nDiags] })
-    log.I001({ locale: 'fr' }).log()
+    log.I18N_I001({ locale: 'fr' }).log()
     expect(spy).toHaveBeenCalledTimes(1)
     expect(spy).toHaveBeenCalledWith(expect.stringContaining('[I18N_I001]'))
     spy.mockRestore()

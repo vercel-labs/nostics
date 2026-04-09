@@ -8,7 +8,6 @@ export interface SourceLocation {
 
 export interface Diagnostic {
   code: string
-  prefix?: string
   level: DiagnosticLevel
   message: string
   why?: string
@@ -79,7 +78,6 @@ export type DiagnosticsResult<C> = {
 } & DiagnosticsMethods<C>
 
 export interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {
-  prefix?: string
   docsBase?: string
   codes: C
 }

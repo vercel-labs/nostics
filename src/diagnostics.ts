@@ -11,7 +11,7 @@ function resolveTemplate(template: MessageTemplate | undefined, params: any): st
 export function defineDiagnostics<C extends Record<string, DiagnosticDefinition>>(
   options: DefineDiagnosticsOptions<C>,
 ): DiagnosticsResult<C> {
-  const { prefix, docsBase, codes } = options
+  const { docsBase, codes } = options
 
   const result = {} as any
 
@@ -31,7 +31,6 @@ export function defineDiagnostics<C extends Record<string, DiagnosticDefinition>
         code,
         level: def.level ?? 'error',
         message: resolveTemplate(def.message, params)!,
-        ...(prefix != null && { prefix }),
         ...(docsBase != null && { docs: `${docsBase}/${code.toLowerCase()}` }),
         ...resolveTemplate(def.fix, params) != null && { fix: resolveTemplate(def.fix, params) },
         ...resolveTemplate(def.why, params) != null && { why: resolveTemplate(def.why, params) },

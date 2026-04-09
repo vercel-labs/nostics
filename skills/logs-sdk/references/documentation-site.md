@@ -16,7 +16,7 @@ Every diagnostic code should have a dedicated, publicly accessible documentation
 
 1. **Developers** encountering the error in their terminal or logs can click the `see:` URL and get immediate guidance
 2. **AI agents** (Claude, Copilot, etc.) can fetch the page content to provide contextual help when a user pastes an error
-3. **Search engines** index these pages so developers searching for `[NUXT_B2011]` find the answer directly
+3. **Search engines** index these pages so developers searching for `NUXT_B2011` find the answer directly
 
 ## Setting up docsBase
 
@@ -24,33 +24,32 @@ The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs
 
 ```ts
 const diagnostics = defineDiagnostics({
-  prefix: 'NUXT',
   docsBase: 'https://nuxt.com/e',
   codes: {
-    B2011: { message: '...' },
+    NUXT_B2011: { message: '...' },
   },
 })
-// diagnostics.B2011().docs → 'https://nuxt.com/e/b2011'
+// diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/nuxt_b2011'
 ```
 
 The URL is always `${docsBase}/${code.toLowerCase()}`. Plan your URL structure accordingly.
 
 ## Documentation page structure
 
-Each error code page (e.g. `https://nuxt.com/e/b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption — use clear headings, concise language, and structured sections.
+Each error code page (e.g. `https://nuxt.com/e/nuxt_b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption — use clear headings, concise language, and structured sections.
 
 ### Required sections
 
 **Title and code identifier**
 
 ```markdown
-# B2011: Invalid plugin — src option is required
+# NUXT_B2011: Invalid plugin — src option is required
 
 Code: `NUXT_B2011`
 Level: error
 ```
 
-Start with the code and a short human-readable title. Include the fully qualified code (with prefix) and the severity level.
+Start with the code and a short human-readable title. Include the code and the severity level.
 
 **What this error means**
 
@@ -112,7 +111,7 @@ Provide concrete code examples showing the wrong pattern and the corrected versi
 
 - This validation was added in Nuxt 3.2
 - If you are writing a Nuxt module, see the [Module Author Guide](https://nuxt.com/docs/guide/going-further/modules)
-- Related codes: [B1001](./b1001) (template compilation), [B3005](./b3005) (module resolution)
+- Related codes: [NUXT_B1001](./nuxt_b1001) (template compilation), [NUXT_B3005](./nuxt_b3005) (module resolution)
 ```
 
 Link to related documentation, changelog entries, or related diagnostic codes.
@@ -125,7 +124,7 @@ Link to related documentation, changelog entries, or related diagnostic codes.
 \```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/b2011
+├▶ see: https://nuxt.com/e/nuxt_b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 \```
@@ -140,7 +139,7 @@ Use this template for each error code page:
 ```markdown
 # {CODE}: {Short title}
 
-Code: `{PREFIX}_{CODE}`
+Code: `{CODE}`
 Level: {error|warn|suggestion|deprecation}
 
 ## What this error means
@@ -188,5 +187,5 @@ Pages should be structured so that an AI agent fetching the URL can extract the 
 - Use consistent heading hierarchy (`##` for sections)
 - Put the most actionable content (fix instructions) early
 - Avoid hiding critical information in collapsed sections, tabs, or JavaScript-rendered content
-- Include the fully qualified code (`PREFIX_CODE`) in the page title and body so keyword matching works
+- Include the code in the page title and body so keyword matching works
 - Keep code examples self-contained — an agent should be able to suggest the fix from the page content alone
