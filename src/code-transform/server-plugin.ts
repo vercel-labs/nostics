@@ -52,6 +52,7 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
       configureServer(server) {
         server.ws.on('logs-sdk:report', (data) => {
           try {
+            // TODO: validate data shape
             appendFileSync(logFile, `${JSON.stringify(data)}\n`)
           }
           catch (err: unknown) {
