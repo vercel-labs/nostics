@@ -35,9 +35,7 @@ export interface Formatter {
   format: (diagnostic: Diagnostic) => string
 }
 
-export interface Reporter {
-  report: (diagnostic: Diagnostic, formatted: string) => void
-}
+export type Reporter = (diagnostic: Diagnostic, formatted: string) => void
 
 export interface DiagnosticActions extends Diagnostic {
   throw: () => never
@@ -110,5 +108,5 @@ export type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods
 export interface CreateLoggerOptions<D extends readonly any[]> {
   diagnostics: [...D]
   formatter?: Formatter
-  reporter?: Reporter
+  reporter?: Reporter | Reporter[]
 }

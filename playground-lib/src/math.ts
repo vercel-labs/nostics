@@ -6,17 +6,17 @@ export function add(a: number, b: number): number {
 
 export function divide(a: number, b: number): number {
   if (b === 0) {
-    log.E001().error()
+    log.MATH_E001().error()
   }
   return a / b
 }
 
 export function factorial(n: number): number {
   if (n < 0) {
-    log.W001({ n }).warn()
+    log.MATH_W001({ n }).warn()
   }
   if (n > 170) {
-    log.W002({ n }).warn()
+    log.MATH_W002({ n }).warn()
   }
   if (n <= 1)
     return 1
@@ -25,6 +25,6 @@ export function factorial(n: number): number {
 
 /** @deprecated Use add() instead */
 export function sum(a: number, b: number): number {
-  log.D001().warn()
+  log.MATH_D001().warn()
   return add(a, b)
 }
