@@ -14,15 +14,15 @@ describe('transform', () => {
     })
 
     it('returns undefined for files mentioning logs-sdk in a string but not importing', () => {
-      expect(transform('const x = "logs-sdk"', 'test.ts')).toBeUndefined()
+      expect(transform('const x = "@antfu/experimental-logs-sdk"', 'test.ts')).toBeUndefined()
     })
 
     it('detects named imports from logs-sdk', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && log.E1().warn()`
 
@@ -30,11 +30,11 @@ process.env.NODE_ENV !== 'production' && log.E1().warn()`
     })
 
     it('handles renamed imports', () => {
-      const input = `import { createLogger as myLog } from 'logs-sdk'
+      const input = `import { createLogger as myLog } from '@antfu/experimental-logs-sdk'
 const log = myLog({})
 log.E1().warn()`
 
-      const expected = `import { createLogger as myLog } from 'logs-sdk'
+      const expected = `import { createLogger as myLog } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ myLog({})
 process.env.NODE_ENV !== 'production' && log.E1().warn()`
 
@@ -44,31 +44,31 @@ process.env.NODE_ENV !== 'production' && log.E1().warn()`
 
   describe('pURE annotations', () => {
     it('adds /*#__PURE__*/ to defineDiagnostics calls', () => {
-      const input = `import { defineDiagnostics } from 'logs-sdk'
+      const input = `import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
 const diags = defineDiagnostics({ codes: {} })`
 
-      const expected = `import { defineDiagnostics } from 'logs-sdk'
+      const expected = `import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
 const diags = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
 
       expectTransform(input, expected)
     })
 
     it('adds /*#__PURE__*/ to createLogger calls', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({ diagnostics: [] })`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({ diagnostics: [] })`
 
       expectTransform(input, expected)
     })
 
     it('adds /*#__PURE__*/ to both defineDiagnostics and createLogger', () => {
-      const input = `import { defineDiagnostics, createLogger } from 'logs-sdk'
+      const input = `import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 const diags = defineDiagnostics({ codes: { E1: { message: 'x' } } })
 const log = createLogger({ diagnostics: [diags] })`
 
-      const expected = `import { defineDiagnostics, createLogger } from 'logs-sdk'
+      const expected = `import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 const diags = /*#__PURE__*/ defineDiagnostics({ codes: { E1: { message: 'x' } } })
 const log = /*#__PURE__*/ createLogger({ diagnostics: [diags] })`
 
@@ -78,11 +78,11 @@ const log = /*#__PURE__*/ createLogger({ diagnostics: [diags] })`
 
   describe('expression statement wrapping', () => {
     it('wraps log.CODE().method() calls', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && log.E1().warn()`
 
@@ -90,11 +90,11 @@ process.env.NODE_ENV !== 'production' && log.E1().warn()`
     })
 
     it('wraps chained calls with arguments', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.B2011({ src: '/bad.ts' }).warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && log.B2011({ src: '/bad.ts' }).warn()`
 
@@ -102,11 +102,11 @@ process.env.NODE_ENV !== 'production' && log.B2011({ src: '/bad.ts' }).warn()`
     })
 
     it('wraps raw logger methods', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.warn(someDiagnostic)`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && log.warn(someDiagnostic)`
 
@@ -114,13 +114,13 @@ process.env.NODE_ENV !== 'production' && log.warn(someDiagnostic)`
     })
 
     it('wraps multiple expression statements', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.E1().warn()
 log.E2().error()
 log.E3().log()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && log.E1().warn()
 process.env.NODE_ENV !== 'production' && log.E2().error()
@@ -132,13 +132,13 @@ process.env.NODE_ENV !== 'production' && log.E3().log()`
 
   describe('nested scopes', () => {
     it('transforms inside function bodies', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 function handler() {
   log.E1().warn()
 }`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 function handler() {
   process.env.NODE_ENV !== 'production' && log.E1().warn()
@@ -148,13 +148,13 @@ function handler() {
     })
 
     it('transforms inside if blocks', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 if (condition) {
   log.E1().warn()
 }`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 if (condition) {
   process.env.NODE_ENV !== 'production' && log.E1().warn()
@@ -164,14 +164,14 @@ if (condition) {
     })
 
     it('transforms function-scoped logger creation', () => {
-      const input = `import { defineDiagnostics, createLogger } from 'logs-sdk'
+      const input = `import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 function setup() {
   const diags = defineDiagnostics({ codes: {} })
   const log = createLogger({ diagnostics: [diags] })
   log.E1().warn()
 }`
 
-      const expected = `import { defineDiagnostics, createLogger } from 'logs-sdk'
+      const expected = `import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 function setup() {
   const diags = /*#__PURE__*/ defineDiagnostics({ codes: {} })
   const log = /*#__PURE__*/ createLogger({ diagnostics: [diags] })
@@ -184,11 +184,11 @@ function setup() {
 
   describe('compound expression wrapping', () => {
     it('wraps logical AND with logger on right', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 someCondition && log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && someCondition && log.E1().warn()`
 
@@ -196,11 +196,11 @@ process.env.NODE_ENV !== 'production' && someCondition && log.E1().warn()`
     })
 
     it('wraps logical OR with logger on left', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 log.E1().warn() || fallback()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && (log.E1().warn() || fallback())`
 
@@ -208,11 +208,11 @@ process.env.NODE_ENV !== 'production' && (log.E1().warn() || fallback())`
     })
 
     it('wraps ternary with logger in consequent', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 condition ? log.E1().warn() : null`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && (condition ? log.E1().warn() : null)`
 
@@ -220,11 +220,11 @@ process.env.NODE_ENV !== 'production' && (condition ? log.E1().warn() : null)`
     })
 
     it('wraps ternary with logger in alternate', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 condition ? null : log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && (condition ? null : log.E1().warn())`
 
@@ -232,11 +232,11 @@ process.env.NODE_ENV !== 'production' && (condition ? null : log.E1().warn())`
     })
 
     it('wraps void expression', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 void log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && void log.E1().warn()`
 
@@ -244,13 +244,13 @@ process.env.NODE_ENV !== 'production' && void log.E1().warn()`
     })
 
     it('wraps await expression', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 async function handler() {
   await log.E1().warn()
 }`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 async function handler() {
   process.env.NODE_ENV !== 'production' && await log.E1().warn()
@@ -260,11 +260,11 @@ async function handler() {
     })
 
     it('wraps negation expression', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 !log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 process.env.NODE_ENV !== 'production' && !log.E1().warn()`
 
@@ -272,11 +272,11 @@ process.env.NODE_ENV !== 'production' && !log.E1().warn()`
     })
 
     it('wraps sequence expression with logger last', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 ;(a(), log.E1().warn())`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 ;process.env.NODE_ENV !== 'production' && (a(), log.E1().warn())`
 
@@ -284,11 +284,11 @@ const log = /*#__PURE__*/ createLogger({})
     })
 
     it('wraps sequence expression with logger first', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 ;(log.E1().warn(), a())`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 ;process.env.NODE_ENV !== 'production' && (log.E1().warn(), a())`
 
@@ -298,11 +298,11 @@ const log = /*#__PURE__*/ createLogger({})
 
   describe('value-passing patterns', () => {
     it('does not wrap variable declaration', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 const x = log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 const x = log.E1().warn()`
 
@@ -310,13 +310,13 @@ const x = log.E1().warn()`
     })
 
     it('does not wrap return statement', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 function handler() {
   return log.E1().warn()
 }`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 function handler() {
   return log.E1().warn()
@@ -326,11 +326,11 @@ function handler() {
     })
 
     it('does not wrap logger passed as function argument', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 fn(log.E1().warn())`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 fn(log.E1().warn())`
 
@@ -338,11 +338,11 @@ fn(log.E1().warn())`
     })
 
     it('does not wrap logger passed as method argument', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 arr.push(log.E1().warn())`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 arr.push(log.E1().warn())`
 
@@ -350,12 +350,12 @@ arr.push(log.E1().warn())`
     })
 
     it('does not wrap assignment expression', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 let x
 x = log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 let x
 x = log.E1().warn()`
@@ -366,12 +366,12 @@ x = log.E1().warn()`
 
   describe('does not transform non-logging code', () => {
     it('does not wrap unrelated expression statements', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 console.log('hello')
 log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 console.log('hello')
 process.env.NODE_ENV !== 'production' && log.E1().warn()`
@@ -380,12 +380,12 @@ process.env.NODE_ENV !== 'production' && log.E1().warn()`
     })
 
     it('does not add PURE to non-imported function calls', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})
 const other = someOtherFunction()
 log.E1().warn()`
 
-      const expected = `import { createLogger } from 'logs-sdk'
+      const expected = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = /*#__PURE__*/ createLogger({})
 const other = someOtherFunction()
 process.env.NODE_ENV !== 'production' && log.E1().warn()`
@@ -412,7 +412,7 @@ process.env.NODE_ENV !== 'production' && log.E1().warn()`
 
   describe('source maps', () => {
     it('produces a source map', () => {
-      const input = `import { createLogger } from 'logs-sdk'
+      const input = `import { createLogger } from '@antfu/experimental-logs-sdk'
 const log = createLogger({})`
 
       const result = transform(input, 'test.ts')

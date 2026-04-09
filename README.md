@@ -40,7 +40,7 @@ An agent can resolve the issue without asking the user for more information. Use
 `docsBase` can be a string (auto-appends `/${code.toLowerCase()}`) or a function for full control over the URL:
 
 ```ts
-import { defineDiagnostics } from 'logs-sdk'
+import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
 
 // Function form — strip the project prefix for cleaner URLs
 const diagnostics = defineDiagnostics({
@@ -77,7 +77,7 @@ const diagnostics = defineDiagnostics({
 `createLogger()` binds diagnostics to output — formatting and reporting.
 
 ```ts
-import { createLogger } from 'logs-sdk'
+import { createLogger } from '@antfu/experimental-logs-sdk'
 
 const log = createLogger({
   diagnostics: [diagnostics],
