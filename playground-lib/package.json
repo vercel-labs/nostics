@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "test:types": "tsc --noEmit",
+    "test": "tsc --noEmit",
     "build": "tsdown"
   },
   "dependencies": {
