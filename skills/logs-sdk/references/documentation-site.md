@@ -20,23 +20,35 @@ Every diagnostic code should have a dedicated, publicly accessible documentation
 
 ## Setting up docsBase
 
-The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs` URL:
+The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs` URL. It can be a string or a function:
 
 ```ts
+// Function form — full control over the URL
 const diagnostics = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B2011: { message: '...' },
   },
 })
-// diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/nuxt_b2011'
+// diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/b2011'
 ```
 
-The URL is always `${docsBase}/${code.toLowerCase()}`. Plan your URL structure accordingly.
+```ts
+// String form — code appended automatically as ${docsBase}/${code.toLowerCase()}
+const diagnostics = defineDiagnostics({
+  docsBase: 'https://example.com/errors',
+  codes: {
+    MY_E001: { message: '...' },
+  },
+})
+// diagnostics.MY_E001().docs → 'https://example.com/errors/my_e001'
+```
+
+Plan your URL structure accordingly.
 
 ## Documentation page structure
 
-Each error code page (e.g. `https://nuxt.com/e/nuxt_b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption — use clear headings, concise language, and structured sections.
+Each error code page (e.g. `https://nuxt.com/e/b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption — use clear headings, concise language, and structured sections.
 
 ### Required sections
 
@@ -124,7 +136,7 @@ Link to related documentation, changelog entries, or related diagnostic codes.
 \```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/nuxt_b2011
+├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 \```

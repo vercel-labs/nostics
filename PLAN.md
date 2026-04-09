@@ -38,7 +38,7 @@ Defines the diagnostic codes for a domain. Owns identity (docsBase) and produces
 import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B1001: {
       message: 'Could not compile template.',
@@ -65,7 +65,7 @@ Each code key is a factory function returning a plain `Diagnostic`:
 // diagnostics.NUXT_B1001 is: (overrides?) => Diagnostic
 
 const diag = diagnostics.NUXT_B2011({ src: pluginPath })
-// → { code: 'NUXT_B2011', docs: 'https://nuxt.com/e/nuxt_b2011', message: '...', ... }
+// → { code: 'NUXT_B2011', docs: 'https://nuxt.com/e/b2011', message: '...', ... }
 ```
 
 - **`diagnostics.NUXT_B2011` is cmd+clickable** — navigates straight to the definition
@@ -226,7 +226,7 @@ The `diagnostic` property carries the full structured object. Error handlers can
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
 ├▶ why: The plugin object was passed without a src path
-├▶ see: https://nuxt.com/e/nuxt_b2011
+├▶ see: https://nuxt.com/e/b2011
 ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
 ╰▶ hint: Check your module's addPlugin() calls
 ```
@@ -272,7 +272,7 @@ Zero runtime dependencies.
 ## Implementation Steps
 
 1. **`src/types.ts`** — `Diagnostic`, `DiagnosticActions`, `DiagnosticDefinition`, `MessageTemplate`, `SourceLocation`, `Formatter`, `Reporter`, `Overrides`, type utilities (`ExtractParams<T>`)
-2. **`src/diagnostics.ts`** — `defineDiagnostics({ docsBase, codes })` — typed factory functions per code, each producing plain `Diagnostic`. Utility methods: `codes()`, `has()`, `get()`, `extend()`.
+2. **`src/diagnostics.ts`** — `defineDiagnostics({ docsBase, codes })` — typed factory functions per code, each producing plain `Diagnostic`. `docsBase` accepts a string (auto-appends code) or function (full URL control). Utility methods: `codes()`, `has()`, `get()`, `extend()`.
 3. **`src/format.ts`** — Port `wrapLine()` / `renderFrame()`. Implement `plainFormatter`.
 4. **`src/error.ts`** — `CodedError` class, constructed from a `Diagnostic` object
 5. **`src/reporter.ts`** — `consoleReporter`, `createFetchReporter()`

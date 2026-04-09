@@ -78,7 +78,7 @@ export type DiagnosticsResult<C> = {
 } & DiagnosticsMethods<C>
 
 export interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {
-  docsBase?: string
+  docsBase?: string | ((code: string) => string | undefined)
   codes: C
 }
 

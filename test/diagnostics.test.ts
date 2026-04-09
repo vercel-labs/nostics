@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { defineDiagnostics } from '../src/diagnostics'
 
 const diagnostics = defineDiagnostics({
-  docsBase: 'https://nuxt.com/e',
+  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
     NUXT_B1001: {
       message: 'Could not compile template.',
@@ -29,7 +29,7 @@ describe('defineDiagnostics', () => {
       level: 'error',
       message: 'Could not compile template.',
       fix: 'Check the template for syntax errors.',
-      docs: 'https://nuxt.com/e/nuxt_b1001',
+      docs: 'https://nuxt.com/e/b1001',
     })
   })
 
@@ -37,7 +37,7 @@ describe('defineDiagnostics', () => {
     const d = diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' })
     expect(d.message).toBe('Invalid plugin `/plugins/bad.ts`. src option is required.')
     expect(d.code).toBe('NUXT_B2011')
-    expect(d.docs).toBe('https://nuxt.com/e/nuxt_b2011')
+    expect(d.docs).toBe('https://nuxt.com/e/b2011')
   })
 
   it('interpolates fix params', () => {
@@ -90,5 +90,25 @@ describe('defineDiagnostics', () => {
     })
     expect(extended.NUXT_B9999().message).toBe('Extended diagnostic.')
     expect(extended.NUXT_B1001().code).toBe('NUXT_B1001')
+  })
+
+  it('supports string docsBase', () => {
+    const diags = defineDiagnostics({
+      docsBase: 'https://example.com/errors',
+      codes: {
+        MY_E001: { message: 'Test error.' },
+      },
+    })
+    expect(diags.MY_E001().docs).toBe('https://example.com/errors/my_e001')
+  })
+
+  it('supports docsBase returning undefined', () => {
+    const diags = defineDiagnostics({
+      docsBase: () => undefined,
+      codes: {
+        E001: { message: 'No docs.' },
+      },
+    })
+    expect(diags.E001().docs).toBeUndefined()
   })
 })

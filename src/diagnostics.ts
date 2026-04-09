@@ -27,11 +27,17 @@ export function defineDiagnostics<C extends Record<string, DiagnosticDefinition>
       const params = hasParams ? paramsOrOverrides : undefined
       const overrides = hasParams ? maybeOverrides : paramsOrOverrides as Overrides | undefined
 
+      const docs = typeof docsBase === 'function'
+        ? docsBase(code)
+        : docsBase != null
+          ? `${docsBase}/${code.toLowerCase()}`
+          : undefined
+
       const diagnostic: Diagnostic = {
         code,
         level: def.level ?? 'error',
         message: resolveTemplate(def.message, params)!,
-        ...(docsBase != null && { docs: `${docsBase}/${code.toLowerCase()}` }),
+        ...(docs != null && { docs }),
         ...resolveTemplate(def.fix, params) != null && { fix: resolveTemplate(def.fix, params) },
         ...resolveTemplate(def.why, params) != null && { why: resolveTemplate(def.why, params) },
         ...resolveTemplate(def.hint, params) != null && { hint: resolveTemplate(def.hint, params) },
