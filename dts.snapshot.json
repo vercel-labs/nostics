@@ -5,7 +5,7 @@
       "devReporter"
     ]
   },
-  "diagnostics-!~{003}~.d.mts": {
+  "diagnostics-!~{001}~.d.mts": {
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
     "defineDiagnostics": "declare function defineDiagnostics<C extends Record<string, DiagnosticDefinition>>(_: DefineDiagnosticsOptions<C>): DiagnosticsResult<C>",
     "DefineDiagnosticsOptions": "interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {\n docsBase?: string | ((_: string) => string | undefined)\n codes: C\n}",
@@ -22,7 +22,7 @@
     "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
     "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
   },
-  "format-!~{005}~.d.mts": {
+  "format-!~{003}~.d.mts": {
     "formatTag": "declare function formatTag(_: Diagnostic): string",
     "Formatter": "type Formatter = (_: Diagnostic) => string",
     "plainFormatter": "Formatter",
@@ -78,40 +78,23 @@
       "renderFrame"
     ]
   },
-  "reporter-!~{004}~.d.mts": {
+  "reporter-!~{002}~.d.mts": {
     "consoleReporter": "Reporter",
     "createFetchReporter": "declare function createFetchReporter(_: string): Reporter",
     "Reporter": "type Reporter = (_: Diagnostic, _: string) => void"
   },
-  "rolldown.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "#exports": [
-      "default"
-    ]
-  },
-  "unplugin-!~{002}~.d.mts": {
+  "unplugin.d.mts": {
+    "default": "UnpluginInstance<LogsSdkPluginOptions | undefined>",
     "logsSDK": "UnpluginInstance<LogsSdkPluginOptions | undefined>",
     "LogsSdkPluginOptions": "type LogsSdkPluginOptions = TransformOptions",
     "logsSDKServer": "UnpluginInstance<LogsSdkServerOptions | undefined>",
     "LogsSdkServerOptions": "interface LogsSdkServerOptions {\n logFile?: string\n}",
-    "TransformOptions": "interface TransformOptions {\n packageName?: string\n}"
-  },
-  "unplugin.d.mts": {
+    "TransformOptions": "interface TransformOptions {\n packageName?: string\n}",
     "#exports": [
       "LogsSdkPluginOptions",
       "LogsSdkServerOptions",
       "default",
       "logsSDK",
-      "logsSDKServer"
-    ]
-  },
-  "vite.d.mts": {
-    "_default": ";((_: LogsSdkPluginOptions) => any)",
-    "default": ";((_: LogsSdkPluginOptions) => any)",
-    "logsSDKServer": ";((_: LogsSdkServerOptions) => any)",
-    "#exports": [
-      "default",
       "logsSDKServer"
     ]
   }

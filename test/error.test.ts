@@ -1,4 +1,4 @@
-import type { Diagnostic } from '../src/types'
+import type { Diagnostic } from '../src/diagnostics'
 import { describe, expect, it } from 'vitest'
 import { CodedError } from '../src/error'
 
