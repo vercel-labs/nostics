@@ -81,7 +81,7 @@ export function handler() {
     const output = await bundleProduction(input)
     // The handler function should remain but logging should be gone
     expect(output).toMatchInlineSnapshot(`
-      "function t(){return"ok"}export{t as handler};
+      "function o(){return"ok"}export{o as handler};
       "
     `)
   })

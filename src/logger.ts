@@ -1,5 +1,4 @@
 import type { CreateLoggerOptions, Diagnostic, DiagnosticActions, Formatter, Logger, Reporter } from './types'
-import { devReporter } from './dev-reporter'
 import { CodedError } from './error'
 import { plainFormatter } from './format'
 import { consoleReporter } from './reporter'
@@ -43,11 +42,6 @@ export function createLogger<const D extends readonly any[]>(
   const reporters = Array.isArray(options.reporter)
     ? options.reporter
     : [options.reporter ?? consoleReporter]
-
-  // transfers logs from client to logs file
-  if (!reporters.includes(devReporter)) {
-    reporters.push(devReporter)
-  }
 
   const result = {} as any
 
