@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    ".": "./dist/index.mjs"
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
   },
-  "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
     "dist"
   ],
   "scripts": {
+    "test:types": "tsc --noEmit",
     "build": "tsdown"
   },
   "dependencies": {

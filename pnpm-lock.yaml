@@ -154,6 +154,9 @@ importers:
         specifier: workspace:*
         version: link:../playground-lib
     devDependencies:
+      logs-sdk:
+        specifier: workspace:*
+        version: link:..
       typescript:
         specifier: catalog:cli
         version: 6.0.2
