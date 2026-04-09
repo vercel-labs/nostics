@@ -9,8 +9,14 @@ export default defineConfig({
     'unplugin': 'src/code-transform/unplugin.ts',
     'vite': 'src/code-transform/vite.ts',
     'rolldown': 'src/code-transform/rolldown.ts',
+    'dev-reporter': 'src/dev-reporter.ts',
   },
-  dts: true,
+  dts: {
+    enabled: true,
+    // NOTE: cannot use isolatedDeclarations
+    // https://github.com/microsoft/TypeScript/issues/58944#issuecomment-4213203205
+    oxc: true,
+  },
   exports: true,
   publint: true,
   plugins: [
