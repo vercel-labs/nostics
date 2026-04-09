@@ -29,11 +29,11 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "dev": "vitest",
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "bumpp",
-    "test": "vitest",
+    "test": "pnpm run build && pnpm -r run build && tsc && eslint && vitest run",
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },
