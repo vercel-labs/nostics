@@ -12,6 +12,7 @@
     "playground-lib": "workspace:*"
   },
   "devDependencies": {
+    "logs-sdk": "workspace:*",
     "typescript": "catalog:cli",
     "vite": "catalog:cli"
   }

@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    // can't be enabled: https://github.com/microsoft/TypeScript/issues/58944#issuecomment-2452188819
+    "isolatedDeclarations": false,
     "skipLibCheck": true
   },
   "include": ["src"]
