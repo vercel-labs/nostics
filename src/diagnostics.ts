@@ -14,8 +14,9 @@ export function defineDiagnostics<C extends Record<string, DiagnosticDefinition>
   const { docsBase, codes } = options
 
   const result = {} as any
+  const codeKeys = Object.keys(codes)
 
-  for (const code of Object.keys(codes)) {
+  for (const code of codeKeys) {
     const def = codes[code]
     result[code] = (paramsOrOverrides?: any, maybeOverrides?: Overrides): Diagnostic => {
       // Determine if first arg is params or overrides
@@ -50,7 +51,7 @@ export function defineDiagnostics<C extends Record<string, DiagnosticDefinition>
 
   Object.defineProperties(result, {
     codes: {
-      value: () => Object.keys(codes),
+      value: () => codeKeys,
       enumerable: false,
     },
     has: {

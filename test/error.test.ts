@@ -7,7 +7,7 @@ describe('codedError', () => {
     code: 'NUXT_B2011',
     level: 'error',
     message: 'Invalid plugin.',
-    docs: 'https://nuxt.com/e/nuxt_b2011',
+    docs: 'https://nuxt.com/e/b2011',
     fix: 'Pass a src property.',
     why: 'Missing src.',
     hint: 'Check addPlugin() calls.',
@@ -32,11 +32,11 @@ describe('codedError', () => {
   it('carries the full diagnostic', () => {
     const err = new CodedError(diagnostic)
     expect(err.diagnostic).toEqual(diagnostic)
-    expect(err.code).toBe('NUXT_B2011')
-    expect(err.docsUrl).toBe('https://nuxt.com/e/nuxt_b2011')
-    expect(err.fix).toBe('Pass a src property.')
-    expect(err.why).toBe('Missing src.')
-    expect(err.hint).toBe('Check addPlugin() calls.')
+    expect(err.diagnostic.code).toBe('NUXT_B2011')
+    expect(err.diagnostic.docs).toBe('https://nuxt.com/e/b2011')
+    expect(err.diagnostic.fix).toBe('Pass a src property.')
+    expect(err.diagnostic.why).toBe('Missing src.')
+    expect(err.diagnostic.hint).toBe('Check addPlugin() calls.')
   })
 
   it('sets cause when present', () => {

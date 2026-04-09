@@ -3,9 +3,11 @@ import { CodedError } from './error'
 import { plainFormatter } from './format'
 import { consoleReporter } from './reporter'
 
-function report(reporters: Reporter[], diagnostic: Diagnostic, formatted: string): void {
+function formatAndReport(formatter: Formatter, reporters: Reporter[], diagnostic: Diagnostic): string {
+  const formatted = formatter(diagnostic)
   for (const reporter of reporters)
     reporter(diagnostic, formatted)
+  return formatted
 }
 
 function createActions(
@@ -15,26 +17,20 @@ function createActions(
 ): DiagnosticActions {
   return Object.assign({}, diagnostic, {
     throw(): never {
-      const formatted = formatter.format(diagnostic)
-      report(reporters, diagnostic, formatted)
+      formatAndReport(formatter, reporters, diagnostic)
       throw new CodedError(diagnostic)
     },
     warn() {
-      const d = { ...diagnostic, level: 'warn' as const }
-      const formatted = formatter.format(d)
-      report(reporters, d, formatted)
+      formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const })
     },
     error() {
-      const d = { ...diagnostic, level: 'error' as const }
-      const formatted = formatter.format(d)
-      report(reporters, d, formatted)
+      formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const })
     },
     log() {
-      const formatted = formatter.format(diagnostic)
-      report(reporters, diagnostic, formatted)
+      formatAndReport(formatter, reporters, diagnostic)
     },
     format() {
-      return formatter.format(diagnostic)
+      return formatter(diagnostic)
     },
   })
 }
@@ -67,30 +63,20 @@ export function createLogger<const D extends readonly any[]>(
 
   // Raw logger methods
   result.throw = (diagnostic: Diagnostic): never => {
-    const formatted = formatter.format(diagnostic)
-    report(reporters, diagnostic, formatted)
+    formatAndReport(formatter, reporters, diagnostic)
     throw new CodedError(diagnostic)
   }
-
   result.warn = (diagnostic: Diagnostic): void => {
-    const d = { ...diagnostic, level: 'warn' as const }
-    const formatted = formatter.format(d)
-    report(reporters, d, formatted)
+    formatAndReport(formatter, reporters, { ...diagnostic, level: 'warn' as const })
   }
-
   result.error = (diagnostic: Diagnostic): void => {
-    const d = { ...diagnostic, level: 'error' as const }
-    const formatted = formatter.format(d)
-    report(reporters, d, formatted)
+    formatAndReport(formatter, reporters, { ...diagnostic, level: 'error' as const })
   }
-
   result.log = (diagnostic: Diagnostic): void => {
-    const formatted = formatter.format(diagnostic)
-    report(reporters, diagnostic, formatted)
+    formatAndReport(formatter, reporters, diagnostic)
   }
-
   result.format = (diagnostic: Diagnostic): string => {
-    return formatter.format(diagnostic)
+    return formatter(diagnostic)
   }
 
   return result as Logger<D>

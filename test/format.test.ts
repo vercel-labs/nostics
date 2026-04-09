@@ -9,7 +9,7 @@ describe('plainFormatter', () => {
       level: 'error',
       message: 'Something went wrong.',
     }
-    expect(plainFormatter.format(d)).toBe('[E001] Something went wrong.')
+    expect(plainFormatter(d)).toBe('[E001] Something went wrong.')
   })
 
   it('formats full diagnostic with box-drawing', () => {
@@ -18,20 +18,18 @@ describe('plainFormatter', () => {
       level: 'error',
       message: 'Invalid plugin `/plugins/bad.ts`. src option is required.',
       why: 'The plugin object was passed without a src path',
-      docs: 'https://nuxt.com/e/nuxt_b2011',
+      docs: 'https://nuxt.com/e/b2011',
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
       hint: 'Check your module\'s addPlugin() calls',
     }
 
-    const expected = [
-      '[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.',
-      '├▶ why: The plugin object was passed without a src path',
-      '├▶ see: https://nuxt.com/e/nuxt_b2011',
-      '├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.',
-      '╰▶ hint: Check your module\'s addPlugin() calls',
-    ].join('\n')
-
-    expect(plainFormatter.format(d)).toBe(expected)
+    expect(plainFormatter(d)).toMatchInlineSnapshot(`
+      "[NUXT_B2011] Invalid plugin \`/plugins/bad.ts\`. src option is required.
+      ├▶ why: The plugin object was passed without a src path
+      ├▶ fix: Pass a string path or an object with a \`src\` property to \`addPlugin()\`.
+      ├▶ hint: Check your module's addPlugin() calls
+      ╰▶ see: https://nuxt.com/e/b2011"
+    `)
   })
 
   it('omits missing optional fields', () => {
@@ -47,10 +45,10 @@ describe('plainFormatter', () => {
       '╰▶ fix: Use the new API instead.',
     ].join('\n')
 
-    expect(plainFormatter.format(d)).toBe(expected)
+    expect(plainFormatter(d)).toBe(expected)
   })
 
-  it('orders details: why, see, fix, hint', () => {
+  it('orders details: why, fix, hint, see', () => {
     const d: Diagnostic = {
       code: 'T001',
       level: 'error',
@@ -61,11 +59,11 @@ describe('plainFormatter', () => {
       why: 'A reason.',
     }
 
-    const output = plainFormatter.format(d)
+    const output = plainFormatter(d)
     const lines = output.split('\n')
     expect(lines[1]).toContain('why:')
-    expect(lines[2]).toContain('see:')
-    expect(lines[3]).toContain('fix:')
-    expect(lines[4]).toContain('hint:')
+    expect(lines[2]).toContain('fix:')
+    expect(lines[3]).toContain('hint:')
+    expect(lines[4]).toContain('see:')
   })
 })

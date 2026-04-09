@@ -14,7 +14,7 @@
     ]
   },
   "index.d.mts": {
-    "CodedError": "declare class CodedError extends Error {\n readonly diagnostic: Diagnostic\n readonly code: string\n readonly docsUrl?: string\n readonly fix?: string\n readonly why?: string\n readonly hint?: string\n constructor(_: Diagnostic)\n}",
+    "CodedError": "declare class CodedError extends Error {\n readonly diagnostic: Diagnostic\n constructor(_: Diagnostic)\n}",
     "consoleReporter": "Reporter",
     "createFetchReporter": "declare function createFetchReporter(_: string): Reporter",
     "createLogger": "declare function createLogger<const D extends readonly any[]>(_: CreateLoggerOptions<D>): Logger<D>",
@@ -65,11 +65,11 @@
     "DiagnosticActions": "interface DiagnosticActions extends Diagnostic {\n throw: () => never\n warn: () => void\n error: () => void\n log: () => void\n format: () => string\n}",
     "DiagnosticDefinition": "interface DiagnosticDefinition {\n message: MessageTemplate\n fix?: MessageTemplate\n why?: MessageTemplate\n hint?: MessageTemplate\n level?: DiagnosticLevel\n}",
     "DiagnosticLevel": "type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'",
-    "DiagnosticsMethods": "interface DiagnosticsMethods<C> {\n codes: () => (keyof C & string)[]\n has: (_: string) => boolean\n get: <K extends keyof C>(_: K) => C[K]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
-    "DiagnosticsResult": "type DiagnosticsResult<C> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>",
+    "DiagnosticsMethods": "interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {\n codes: () => (keyof C & string)[]\n has: (_: string) => code is Extract<keyof C, string>\n get: <K extends keyof C>(_: K) => C[K]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
+    "DiagnosticsResult": "type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>",
     "ExtractFieldParams": "type ExtractFieldParams<T> = T extends ((_: infer P) => string) ? P : Record<never, never>",
     "ExtractParams": "type ExtractParams<T> = (T extends { message: infer M } ? ExtractFieldParams<M> : Record<never, never>) & (T extends { fix: infer F } ? ExtractFieldParams<F> : Record<never, never>) & (T extends { why: infer W } ? ExtractFieldParams<W> : Record<never, never>) & (T extends { hint: infer H } ? ExtractFieldParams<H> : Record<never, never>)",
-    "Formatter": "interface Formatter {\n format: (_: Diagnostic) => string\n}",
+    "Formatter": "type Formatter = (_: Diagnostic) => string",
     "IsEmptyObject": "type IsEmptyObject<T> = keyof T extends never ? true : false",
     "Logger": "type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods",
     "LoggerMethods": "interface LoggerMethods {\n throw: (_: Diagnostic) => never\n warn: (_: Diagnostic) => void\n error: (_: Diagnostic) => void\n log: (_: Diagnostic) => void\n format: (_: Diagnostic) => string\n}",
