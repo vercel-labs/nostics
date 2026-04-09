@@ -1,8 +1,6 @@
-import { setupCounter } from './counter'
+import { createApp } from 'vue'
+import App from './App.vue'
+import './css/reset.css'
+import './css/buttons.css'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <h1>logs-sdk playground</h1>
-  <button id="counter" type="button"></button>
-`
-
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+createApp(App).mount('#app')

@@ -9,11 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "playground-lib": "workspace:*"
+    "playground-lib": "workspace:*",
+    "vue": "catalog:cli"
   },
   "devDependencies": {
     "@antfu/experimental-logs-sdk": "workspace:*",
     "@vitejs/devtools": "catalog:cli",
+    "@vitejs/plugin-vue": "catalog:cli",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
     "vite-plugin-inspect": "catalog:cli"
