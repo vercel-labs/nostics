@@ -12,7 +12,7 @@ const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (opti
   const trackedExportsMap: TrackedExportsMap = new Map()
 
   return {
-    name: 'logs-sdk',
+    name: '@antfu/experimental-logs-sdk',
 
     transform: {
       filter: {

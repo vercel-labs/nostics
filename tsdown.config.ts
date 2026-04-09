@@ -17,6 +17,13 @@ export default defineConfig({
     // https://github.com/microsoft/TypeScript/issues/58944#issuecomment-4213203205
     oxc: true,
   },
+  deps: {
+    // virtual module so we can warn if plugin is missing during dev
+    neverBundle: ['@antfu/experimental-logs-sdk/dev-reporter'],
+    onlyBundle: [],
+  },
+  target: 'esnext',
+  sourcemap: true,
   exports: true,
   publint: true,
   plugins: [

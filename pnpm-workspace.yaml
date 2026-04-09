@@ -14,23 +14,25 @@ packages:
   - examples/*
 catalog:
   esbuild: ^0.28.0
-  magic-string: ^0.30.21
-  oxc-parser: ^0.124.0
   rolldown-plugin-dts-snapshot: ^0.4.0
-  unplugin: ^3.0.0
 catalogs:
   cli:
     '@antfu/eslint-config': ^8.1.0
     '@antfu/ni': ^30.0.0
+    '@vitejs/devtools': ^0.1.13
     bumpp: ^11.0.1
     eslint: ^10.2.0
     lint-staged: ^16.4.0
     publint: ^0.3.18
     simple-git-hooks: ^2.13.1
     tsdown: ^0.21.7
-    tsx: ^4.21.0
     typescript: ^6.0.2
     vite: ^8.0.7
+    vite-plugin-inspect: ^11.0.0
+  deps:
+    magic-string: ^0.30.21
+    oxc-parser: ^0.124.0
+    unplugin: ^3.0.0
   inlined:
     '@antfu/utils': ^9.3.0
   testing:

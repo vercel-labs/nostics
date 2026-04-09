@@ -1,16 +1,15 @@
-import { createLogger } from '@antfu/experimental-logs-sdk'
-import { devReporter } from '@antfu/experimental-logs-sdk/dev-reporter'
+import { consoleReporter, createLogger } from '@antfu/experimental-logs-sdk'
 import { diagnostics } from './diagnostics'
 
 export const log = createLogger({
   diagnostics: [diagnostics],
-  // FIXME: I think we can put this directly within @antfu/experimental-logs-sdk, the lib author shouldn't have to import it separately
-  reporter: devReporter,
+  reporter: consoleReporter,
 })
 
-globalThis.nostics = log
+// TODO: explore this idea
 
-declare global {
-  // eslint-disable-next-line vars-on-top
-  var nostics: typeof log
-}
+// globalThis.nostics = log
+// declare global {
+//   // eslint-disable-next-line vars-on-top
+//   var nostics: typeof log
+// }
