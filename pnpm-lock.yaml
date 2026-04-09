@@ -15,9 +15,6 @@ catalogs:
     '@vitejs/devtools':
       specifier: ^0.1.13
       version: 0.1.13
-    '@vitejs/plugin-vue':
-      specifier: ^5.2.4
-      version: 5.2.4
     bumpp:
       specifier: ^11.0.1
       version: 11.0.1
@@ -45,9 +42,6 @@ catalogs:
     vite-plugin-inspect:
       specifier: ^11.0.0
       version: 11.3.3
-    vue:
-      specifier: ^3.5.13
-      version: 3.5.32
   default:
     esbuild:
       specifier: ^0.28.0
@@ -69,6 +63,13 @@ catalogs:
     '@antfu/utils':
       specifier: ^9.3.0
       version: 9.3.0
+  playground:
+    '@vitejs/plugin-vue':
+      specifier: ^5.2.4
+      version: 5.2.4
+    vue:
+      specifier: ^3.5.13
+      version: 3.5.32
   testing:
     tinyexec:
       specifier: ^1.1.1
@@ -165,7 +166,7 @@ importers:
         specifier: workspace:*
         version: link:../playground-lib
       vue:
-        specifier: catalog:cli
+        specifier: catalog:playground
         version: 3.5.32(typescript@6.0.2)
     devDependencies:
       '@antfu/experimental-logs-sdk':
@@ -175,7 +176,7 @@ importers:
         specifier: catalog:cli
         version: 0.1.13(@pnpm/logger@1001.0.1)(typescript@6.0.2)(vite@8.0.7)
       '@vitejs/plugin-vue':
-        specifier: catalog:cli
+        specifier: catalog:playground
         version: 5.2.4(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))
       typescript:
         specifier: catalog:cli
