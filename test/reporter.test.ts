@@ -6,7 +6,7 @@ describe('consoleReporter', () => {
   it('calls console.error for error level', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const d: Diagnostic = { code: 'E001', level: 'error', message: 'Error.' }
-    consoleReporter.report(d, 'formatted error')
+    consoleReporter(d, 'formatted error')
     expect(spy).toHaveBeenCalledWith('formatted error')
     spy.mockRestore()
   })
@@ -14,7 +14,7 @@ describe('consoleReporter', () => {
   it('calls console.warn for warn level', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const d: Diagnostic = { code: 'W001', level: 'warn', message: 'Warning.' }
-    consoleReporter.report(d, 'formatted warn')
+    consoleReporter(d, 'formatted warn')
     expect(spy).toHaveBeenCalledWith('formatted warn')
     spy.mockRestore()
   })
@@ -22,7 +22,7 @@ describe('consoleReporter', () => {
   it('calls console.warn for suggestion level', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const d: Diagnostic = { code: 'S001', level: 'suggestion', message: 'Suggest.' }
-    consoleReporter.report(d, 'formatted suggestion')
+    consoleReporter(d, 'formatted suggestion')
     expect(spy).toHaveBeenCalledWith('formatted suggestion')
     spy.mockRestore()
   })
@@ -35,7 +35,7 @@ describe('createFetchReporter', () => {
 
     const reporter = createFetchReporter('https://example.com/report')
     const d: Diagnostic = { code: 'E001', level: 'error', message: 'Error.' }
-    reporter.report(d, 'formatted')
+    reporter(d, 'formatted')
 
     expect(mockFetch).toHaveBeenCalledWith('https://example.com/report', {
       method: 'POST',

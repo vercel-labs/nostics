@@ -59,7 +59,7 @@
   "types-!~{003}~.d.mts": {
     "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
-    "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter\n}",
+    "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter | Reporter[]\n}",
     "DefineDiagnosticsOptions": "interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {\n docsBase?: string | ((_: string) => string | undefined)\n codes: C\n}",
     "Diagnostic": "interface Diagnostic {\n code: string\n level: DiagnosticLevel\n message: string\n why?: string\n fix?: string\n hint?: string\n docs?: string\n sources?: SourceLocation[]\n cause?: unknown\n context?: Record<string, unknown>\n}",
     "DiagnosticActions": "interface DiagnosticActions extends Diagnostic {\n throw: () => never\n warn: () => void\n error: () => void\n log: () => void\n format: () => string\n}",
@@ -76,7 +76,7 @@
     "MergeFactories": "type MergeFactories<D extends readonly any[]> = D extends readonly [infer First, ...infer Rest] ? ActionFactories<First> & MergeFactories<Rest> : {}",
     "MessageTemplate": "type MessageTemplate<P = any> = string | ((_: P) => string)",
     "Overrides": "type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>",
-    "Reporter": "interface Reporter {\n report: (_: Diagnostic, _: string) => void\n}",
+    "Reporter": "type Reporter = (_: Diagnostic, _: string) => void",
     "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
     "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
   },

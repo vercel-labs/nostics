@@ -44,33 +44,33 @@ describe('createLogger', () => {
     }
     catch (err) {
       expect(err).toBeInstanceOf(CodedError)
-      expect((err as CodedError).code).toBe('NUXT_B2011')
+      expect((err as CodedError).diagnostic.code).toBe('NUXT_B2011')
       expect((err as CodedError).diagnostic.message).toBe('Invalid plugin `/bad.ts`.')
     }
   })
 
   it('.warn() calls reporter', () => {
-    const reporter = { report: vi.fn() }
+    const reporter = vi.fn()
     const log = createLogger({ diagnostics: [nuxtDiags], reporter })
     log.NUXT_B1001().warn()
-    expect(reporter.report).toHaveBeenCalled()
-    const [diagnostic] = reporter.report.mock.calls[0]
+    expect(reporter).toHaveBeenCalled()
+    const [diagnostic] = reporter.mock.calls[0]
     expect(diagnostic.level).toBe('warn')
   })
 
   it('.error() calls reporter with error level', () => {
-    const reporter = { report: vi.fn() }
+    const reporter = vi.fn()
     const log = createLogger({ diagnostics: [i18nDiags], reporter })
     log.I18N_I001({ locale: 'fr' }).error()
-    const [diagnostic] = reporter.report.mock.calls[0]
+    const [diagnostic] = reporter.mock.calls[0]
     expect(diagnostic.level).toBe('error')
   })
 
   it('.log() uses diagnostic own level', () => {
-    const reporter = { report: vi.fn() }
+    const reporter = vi.fn()
     const log = createLogger({ diagnostics: [i18nDiags], reporter })
     log.I18N_I001({ locale: 'fr' }).log()
-    const [diagnostic] = reporter.report.mock.calls[0]
+    const [diagnostic] = reporter.mock.calls[0]
     expect(diagnostic.level).toBe('warn')
   })
 
@@ -88,10 +88,10 @@ describe('createLogger', () => {
   })
 
   it('raw warn() works with diagnostic object', () => {
-    const reporter = { report: vi.fn() }
+    const reporter = vi.fn()
     const log = createLogger({ diagnostics: [nuxtDiags], reporter })
     log.warn(nuxtDiags.NUXT_B1001())
-    expect(reporter.report).toHaveBeenCalled()
+    expect(reporter).toHaveBeenCalled()
   })
 
   it('defaults to plainFormatter and consoleReporter', () => {
@@ -101,5 +101,14 @@ describe('createLogger', () => {
     expect(spy).toHaveBeenCalledTimes(1)
     expect(spy).toHaveBeenCalledWith(expect.stringContaining('[I18N_I001]'))
     spy.mockRestore()
+  })
+
+  it('supports array of reporters', () => {
+    const reporter1 = vi.fn()
+    const reporter2 = vi.fn()
+    const log = createLogger({ diagnostics: [nuxtDiags], reporter: [reporter1, reporter2] })
+    log.NUXT_B1001().log()
+    expect(reporter1).toHaveBeenCalledTimes(1)
+    expect(reporter2).toHaveBeenCalledTimes(1)
   })
 })
