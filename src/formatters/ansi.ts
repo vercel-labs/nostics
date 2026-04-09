@@ -1,4 +1,5 @@
-import type { Diagnostic, Formatter } from '../types'
+import type { Diagnostic } from '../diagnostics'
+import type { Formatter } from '../format'
 import { formatTag } from '../format'
 
 export interface Colors {

@@ -1,4 +1,4 @@
-import type { Diagnostic } from './types'
+import type { Diagnostic } from './diagnostics'
 
 export class CodedError extends Error {
   readonly diagnostic: Diagnostic

@@ -1,7 +1,48 @@
-import type { CreateLoggerOptions, Diagnostic, DiagnosticActions, Formatter, Logger, Reporter } from './types'
+import type { Diagnostic } from './diagnostics'
+import type { Formatter } from './format'
+import type { Reporter } from './reporter'
 import { CodedError } from './error'
 import { plainFormatter } from './format'
 import { consoleReporter } from './reporter'
+
+export interface DiagnosticActions extends Diagnostic {
+  throw: () => never
+  warn: () => void
+  error: () => void
+  log: () => void
+  format: () => string
+}
+
+// Type utilities for extracting params from template fields
+
+type ActionFactories<T> = {
+  [K in keyof T as T[K] extends (...args: any[]) => Diagnostic ? K : never]:
+  T[K] extends (...args: infer A) => Diagnostic
+    ? (...args: A) => DiagnosticActions
+    : never
+}
+
+export type MergeFactories<D extends readonly any[]>
+  = D extends readonly [infer First, ...infer Rest]
+    ? ActionFactories<First> & MergeFactories<Rest>
+    // eslint-disable-next-line ts/no-empty-object-type
+    : {}
+
+export interface LoggerMethods {
+  throw: (diagnostic: Diagnostic) => never
+  warn: (diagnostic: Diagnostic) => void
+  error: (diagnostic: Diagnostic) => void
+  log: (diagnostic: Diagnostic) => void
+  format: (diagnostic: Diagnostic) => string
+}
+
+export type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods
+
+export interface CreateLoggerOptions<D extends readonly any[]> {
+  diagnostics: [...D]
+  formatter?: Formatter
+  reporter?: Reporter | Reporter[]
+}
 
 function formatAndReport(formatter: Formatter, reporters: Reporter[], diagnostic: Diagnostic): string {
   const formatted = formatter(diagnostic)

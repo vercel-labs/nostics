@@ -1,4 +1,6 @@
-import type { Diagnostic, Formatter } from './types'
+import type { Diagnostic } from './diagnostics'
+
+export type Formatter = (diagnostic: Diagnostic) => string
 
 export function formatTag(d: Diagnostic): string {
   return `[${d.code}]`
