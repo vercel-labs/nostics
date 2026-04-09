@@ -1,4 +1,4 @@
 import type { LogsSdkPluginOptions } from './unplugin'
-import { unplugin } from './unplugin'
+import { logsSDK } from './unplugin'
 
-export default unplugin.rolldown as (options?: LogsSdkPluginOptions) => any
+export default logsSDK.rolldown as (options?: LogsSdkPluginOptions) => any
