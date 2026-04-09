@@ -1,7 +1,7 @@
 {
-  "name": "logs-sdk",
+  "name": "@antfu/experimental-logs-sdk",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Structured diagnostic code library",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -24,7 +24,8 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "scripts": {
     "build": "tsdown",
