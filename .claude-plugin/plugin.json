@@ -4,6 +4,5 @@
   "description": "Claude Code plugin for @antfu/experimental-logs-sdk",
   "author": {
     "name": "Eduardo San Martin Morote"
-  },
-  "hooks": "./hooks/hooks.json"
+  }
 }
