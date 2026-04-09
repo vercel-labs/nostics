@@ -42,7 +42,7 @@ interface Diagnostic {
 Creates typed factory functions that produce plain `Diagnostic` objects. No side effects, no logging.
 
 ```ts
-import { defineDiagnostics } from 'logs-sdk'
+import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
 
 const diagnostics = defineDiagnostics({
   docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
@@ -112,7 +112,7 @@ diagnostics.extend({ // → new diagnostics set with additional codes merged in
 Merges diagnostic sets and wraps each code factory to return `DiagnosticActions` — a `Diagnostic` enriched with action methods.
 
 ```ts
-import { consoleReporter, createLogger, plainFormatter } from 'logs-sdk'
+import { consoleReporter, createLogger, plainFormatter } from '@antfu/experimental-logs-sdk'
 import { ansiFormatter } from 'logs-sdk/formatters/ansi'
 
 const log = createLogger({
@@ -211,7 +211,7 @@ Detail line order is fixed: `why` → `fix` → `hint` → `see` (docs URL). Mis
 **Writing a custom formatter:**
 
 ```ts
-import type { Formatter } from 'logs-sdk'
+import type { Formatter } from '@antfu/experimental-logs-sdk'
 
 const myFormatter: Formatter = (d) => {
   return `[${d.code}] ${d.message}${d.fix ? ` (fix: ${d.fix})` : ''}`
@@ -237,7 +237,7 @@ All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a si
 **Writing a custom reporter:**
 
 ```ts
-import type { Reporter } from 'logs-sdk'
+import type { Reporter } from '@antfu/experimental-logs-sdk'
 
 const fileReporter: Reporter = (diagnostic, formatted) => {
   fs.appendFileSync('errors.log', `${formatted}\n`)

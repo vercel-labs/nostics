@@ -25,7 +25,7 @@ async function bundleProduction(input: string): Promise<string> {
       name: 'logs-sdk-stub',
       setup(build) {
         build.onResolve({ filter: /^logs-sdk/ }, () => ({
-          path: 'logs-sdk',
+          path: '@antfu/experimental-logs-sdk',
           namespace: 'logs-sdk-stub',
         }))
         build.onLoad({ filter: /.*/, namespace: 'logs-sdk-stub' }, () => ({
@@ -46,7 +46,7 @@ async function bundleProduction(input: string): Promise<string> {
 describe('tree-shake integration', () => {
   it('eliminates all logging code in production', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'logs-sdk'
+import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 
 const diags = defineDiagnostics({
   prefix: 'TEST',
@@ -68,7 +68,7 @@ log.E002({ file: '/bad.ts' }).error()
 
   it('eliminates logging inside functions', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'logs-sdk'
+import { defineDiagnostics, createLogger } from '@antfu/experimental-logs-sdk'
 
 const diags = defineDiagnostics({ prefix: 'T', codes: { E1: { message: 'x' } } })
 const log = createLogger({ diagnostics: [diags] })
