@@ -2,11 +2,10 @@
   "hooks": {
     "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/consume-diagnostic.sh"
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/consume-diagnostic.mjs"
           }
         ]
       }
