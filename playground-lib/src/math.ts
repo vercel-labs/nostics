@@ -18,9 +18,6 @@ export function factorial(n: number): number {
   if (n > 170) {
     log.MATH_W002({ n }).warn()
   }
-  if (n > 170) {
-    log.MATH_W002({ n }).warn()
-  }
   if (n <= 1)
     return 1
   return n * factorial(n - 1)
