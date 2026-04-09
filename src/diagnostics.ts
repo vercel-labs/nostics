@@ -1,4 +1,58 @@
-import type { DefineDiagnosticsOptions, Diagnostic, DiagnosticDefinition, DiagnosticsResult, MessageTemplate, Overrides } from './types'
+import type { ExtractParams, IsEmptyObject, Simplify } from './utils'
+
+export type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'
+
+export interface SourceLocation {
+  file?: string
+  line?: number
+  column?: number
+}
+
+export interface Diagnostic {
+  code: string
+  level: DiagnosticLevel
+  message: string
+  why?: string
+  fix?: string
+  hint?: string
+  docs?: string
+  sources?: SourceLocation[]
+  cause?: unknown
+  context?: Record<string, unknown>
+}
+
+export type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>
+
+export type MessageTemplate<P = any> = string | ((params: P) => string)
+
+export interface DiagnosticDefinition {
+  message: MessageTemplate
+  fix?: MessageTemplate
+  why?: MessageTemplate
+  hint?: MessageTemplate
+  level?: DiagnosticLevel
+}
+
+export type CodeFactory<T>
+  = IsEmptyObject<ExtractParams<T>> extends true
+    ? (overrides?: Overrides) => Diagnostic
+    : (params: Simplify<ExtractParams<T>>, overrides?: Overrides) => Diagnostic
+
+export interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {
+  codes: () => (keyof C & string)[]
+  has: (code: string) => code is Extract<keyof C, string>
+  get: <K extends keyof C>(code: K) => C[K]
+  extend: <U extends Record<string, DiagnosticDefinition>>(defs: U) => DiagnosticsResult<C & U>
+}
+
+export type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = {
+  [K in keyof C]: CodeFactory<C[K]>
+} & DiagnosticsMethods<C>
+
+export interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {
+  docsBase?: string | ((code: string) => string | undefined)
+  codes: C
+}
 
 function resolveTemplate(template: MessageTemplate | undefined, params: any): string | undefined {
   if (template == null)

@@ -1,4 +1,6 @@
-import type { Reporter } from './types'
+import type { Diagnostic } from './diagnostics'
+
+export type Reporter = (diagnostic: Diagnostic, formatted: string) => void
 
 export const consoleReporter: Reporter = (diagnostic, formatted) => {
   if (diagnostic.level === 'error')

@@ -5,6 +5,29 @@
       "devReporter"
     ]
   },
+  "diagnostics-!~{003}~.d.mts": {
+    "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
+    "defineDiagnostics": "declare function defineDiagnostics<C extends Record<string, DiagnosticDefinition>>(_: DefineDiagnosticsOptions<C>): DiagnosticsResult<C>",
+    "DefineDiagnosticsOptions": "interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {\n docsBase?: string | ((_: string) => string | undefined)\n codes: C\n}",
+    "Diagnostic": "interface Diagnostic {\n code: string\n level: DiagnosticLevel\n message: string\n why?: string\n fix?: string\n hint?: string\n docs?: string\n sources?: SourceLocation[]\n cause?: unknown\n context?: Record<string, unknown>\n}",
+    "DiagnosticDefinition": "interface DiagnosticDefinition {\n message: MessageTemplate\n fix?: MessageTemplate\n why?: MessageTemplate\n hint?: MessageTemplate\n level?: DiagnosticLevel\n}",
+    "DiagnosticLevel": "type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'",
+    "DiagnosticsMethods": "interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {\n codes: () => (keyof C & string)[]\n has: (_: string) => code is Extract<keyof C, string>\n get: <K extends keyof C>(_: K) => C[K]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
+    "DiagnosticsResult": "type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>",
+    "ExtractFieldParams": "type ExtractFieldParams<T> = T extends ((_: infer P) => string) ? P : Record<never, never>",
+    "ExtractParams": "type ExtractParams<T> = (T extends { message: infer M } ? ExtractFieldParams<M> : Record<never, never>) & (T extends { fix: infer F } ? ExtractFieldParams<F> : Record<never, never>) & (T extends { why: infer W } ? ExtractFieldParams<W> : Record<never, never>) & (T extends { hint: infer H } ? ExtractFieldParams<H> : Record<never, never>)",
+    "IsEmptyObject": "type IsEmptyObject<T> = keyof T extends never ? true : false",
+    "MessageTemplate": "type MessageTemplate<P = any> = string | ((_: P) => string)",
+    "Overrides": "type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>",
+    "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
+    "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
+  },
+  "format-!~{005}~.d.mts": {
+    "formatTag": "declare function formatTag(_: Diagnostic): string",
+    "Formatter": "type Formatter = (_: Diagnostic) => string",
+    "plainFormatter": "Formatter",
+    "renderFrame": "declare function renderFrame(_: Diagnostic): string"
+  },
   "formatters/ansi.d.mts": {
     "ansiFormatter": "declare function ansiFormatter(_: Colors): Formatter",
     "Colors": "interface Colors {\n red: (_: string) => string\n yellow: (_: string) => string\n cyan: (_: string) => string\n gray: (_: string) => string\n bold: (_: string) => string\n dim: (_: string) => string\n}",
@@ -20,14 +43,14 @@
     ]
   },
   "index.d.mts": {
+    "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
     "CodedError": "declare class CodedError extends Error {\n readonly diagnostic: Diagnostic\n constructor(_: Diagnostic)\n}",
-    "consoleReporter": "Reporter",
-    "createFetchReporter": "declare function createFetchReporter(_: string): Reporter",
     "createLogger": "declare function createLogger<const D extends readonly any[]>(_: CreateLoggerOptions<D>): Logger<D>",
-    "defineDiagnostics": "declare function defineDiagnostics<C extends Record<string, DiagnosticDefinition>>(_: DefineDiagnosticsOptions<C>): DiagnosticsResult<C>",
-    "formatTag": "declare function formatTag(_: Diagnostic): string",
-    "plainFormatter": "Formatter",
-    "renderFrame": "declare function renderFrame(_: Diagnostic): string",
+    "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter | Reporter[]\n}",
+    "DiagnosticActions": "interface DiagnosticActions extends Diagnostic {\n throw: () => never\n warn: () => void\n error: () => void\n log: () => void\n format: () => string\n}",
+    "Logger": "type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods",
+    "LoggerMethods": "interface LoggerMethods {\n throw: (_: Diagnostic) => never\n warn: (_: Diagnostic) => void\n error: (_: Diagnostic) => void\n log: (_: Diagnostic) => void\n format: (_: Diagnostic) => string\n}",
+    "MergeFactories": "type MergeFactories<D extends readonly any[]> = D extends readonly [infer First, ...infer Rest] ? ActionFactories<First> & MergeFactories<Rest> : {}",
     "#exports": [
       "CodeFactory",
       "CodedError",
@@ -55,36 +78,17 @@
       "renderFrame"
     ]
   },
+  "reporter-!~{004}~.d.mts": {
+    "consoleReporter": "Reporter",
+    "createFetchReporter": "declare function createFetchReporter(_: string): Reporter",
+    "Reporter": "type Reporter = (_: Diagnostic, _: string) => void"
+  },
   "rolldown.d.mts": {
     "_default": ";((_: LogsSdkPluginOptions) => any)",
     "default": ";((_: LogsSdkPluginOptions) => any)",
     "#exports": [
       "default"
     ]
-  },
-  "types-!~{003}~.d.mts": {
-    "ActionFactories": "type ActionFactories<T> = { [K in keyof T as T[K] extends ((...args: any[]) => Diagnostic) ? K : never]: T[K] extends ((...args: infer A) => Diagnostic) ? (...args: A) => DiagnosticActions : never }",
-    "CodeFactory": "type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (_: Overrides) => Diagnostic : (_: Simplify<ExtractParams<T>>, _: Overrides) => Diagnostic",
-    "CreateLoggerOptions": "interface CreateLoggerOptions<D extends readonly any[]> {\n diagnostics: [...D]\n formatter?: Formatter\n reporter?: Reporter | Reporter[]\n}",
-    "DefineDiagnosticsOptions": "interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {\n docsBase?: string | ((_: string) => string | undefined)\n codes: C\n}",
-    "Diagnostic": "interface Diagnostic {\n code: string\n level: DiagnosticLevel\n message: string\n why?: string\n fix?: string\n hint?: string\n docs?: string\n sources?: SourceLocation[]\n cause?: unknown\n context?: Record<string, unknown>\n}",
-    "DiagnosticActions": "interface DiagnosticActions extends Diagnostic {\n throw: () => never\n warn: () => void\n error: () => void\n log: () => void\n format: () => string\n}",
-    "DiagnosticDefinition": "interface DiagnosticDefinition {\n message: MessageTemplate\n fix?: MessageTemplate\n why?: MessageTemplate\n hint?: MessageTemplate\n level?: DiagnosticLevel\n}",
-    "DiagnosticLevel": "type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'",
-    "DiagnosticsMethods": "interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {\n codes: () => (keyof C & string)[]\n has: (_: string) => code is Extract<keyof C, string>\n get: <K extends keyof C>(_: K) => C[K]\n extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>\n}",
-    "DiagnosticsResult": "type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>",
-    "ExtractFieldParams": "type ExtractFieldParams<T> = T extends ((_: infer P) => string) ? P : Record<never, never>",
-    "ExtractParams": "type ExtractParams<T> = (T extends { message: infer M } ? ExtractFieldParams<M> : Record<never, never>) & (T extends { fix: infer F } ? ExtractFieldParams<F> : Record<never, never>) & (T extends { why: infer W } ? ExtractFieldParams<W> : Record<never, never>) & (T extends { hint: infer H } ? ExtractFieldParams<H> : Record<never, never>)",
-    "Formatter": "type Formatter = (_: Diagnostic) => string",
-    "IsEmptyObject": "type IsEmptyObject<T> = keyof T extends never ? true : false",
-    "Logger": "type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods",
-    "LoggerMethods": "interface LoggerMethods {\n throw: (_: Diagnostic) => never\n warn: (_: Diagnostic) => void\n error: (_: Diagnostic) => void\n log: (_: Diagnostic) => void\n format: (_: Diagnostic) => string\n}",
-    "MergeFactories": "type MergeFactories<D extends readonly any[]> = D extends readonly [infer First, ...infer Rest] ? ActionFactories<First> & MergeFactories<Rest> : {}",
-    "MessageTemplate": "type MessageTemplate<P = any> = string | ((_: P) => string)",
-    "Overrides": "type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>",
-    "Reporter": "type Reporter = (_: Diagnostic, _: string) => void",
-    "Simplify": "type Simplify<T> = { [K in keyof T]: T[K] } & {}",
-    "SourceLocation": "interface SourceLocation {\n file?: string\n line?: number\n column?: number\n}"
   },
   "unplugin-!~{002}~.d.mts": {
     "logsSDK": "UnpluginInstance<LogsSdkPluginOptions | undefined>",
