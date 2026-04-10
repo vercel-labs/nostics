@@ -74,16 +74,12 @@
     "lint-staged": "catalog:cli",
     "nostics": "workspace:*",
     "publint": "catalog:cli",
-    "rolldown-plugin-dts-snapshot": "catalog:",
-    "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",
-    "tinyexec": "catalog:testing",
     "tsdown": "catalog:cli",
+    "tsnapi": "catalog:testing",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
-    "vitest": "catalog:testing",
-    "vitest-package-exports": "catalog:testing",
-    "yaml": "catalog:testing"
+    "vitest": "catalog:testing"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
