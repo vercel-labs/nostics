@@ -1,8 +1,8 @@
-# logs-sdk
+# nostics
 
 Structured diagnostic codes for JavaScript/TypeScript libraries and frameworks.
 
-`logs-sdk` makes every error, warning, and suggestion a **structured, typed, machine-readable object** — with a stable code, a human explanation, and enough context for an agent to act on it precisely.
+`nostics` makes every error, warning, and suggestion a **structured, typed, machine-readable object** — with a stable code, a human explanation, and enough context for an agent to act on it precisely.
 
 ## What it looks like
 
@@ -29,7 +29,7 @@ Structured diagnostics enable a different kind of agent integration — **precis
 
 Every diagnostic has a stable code an agent can dispatch on directly, instead of pattern-matching on message text. The object carries everything needed to act: what happened (`message`), why (`why`), how to fix it (`fix`), where to learn more (`docs`), and machine-readable details (`context`, `sources`). The per-code documentation pages are equally useful for agents — they can crawl or fetch them for deeper context when the inline fields aren't enough.
 
-An agent can resolve the issue without asking the user for more information. Users don't need to configure anything — if a library uses `logs-sdk`, its diagnostics are already agent-ready. All codes are defined in a catalog, so an agent can enumerate the full error surface ahead of time. And when multiple libraries in a stack adopt it, agents get uniformly structured data from every layer.
+An agent can resolve the issue without asking the user for more information. Users don't need to configure anything — if a library uses `nostics`, its diagnostics are already agent-ready. All codes are defined in a catalog, so an agent can enumerate the full error surface ahead of time. And when multiple libraries in a stack adopt it, agents get uniformly structured data from every layer.
 
 ## Usage
 
@@ -40,7 +40,7 @@ An agent can resolve the issue without asking the user for more information. Use
 `docsBase` can be a string (auto-appends `/${code.toLowerCase()}`) or a function for full control over the URL:
 
 ```ts
-import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
+import { defineDiagnostics } from 'nostics'
 
 // Function form — strip the project prefix for cleaner URLs
 const diagnostics = defineDiagnostics({
@@ -77,7 +77,7 @@ const diagnostics = defineDiagnostics({
 `createLogger()` binds diagnostics to output — formatting and reporting.
 
 ```ts
-import { createLogger } from '@antfu/experimental-logs-sdk'
+import { createLogger } from 'nostics'
 
 const log = createLogger({
   diagnostics: [diagnostics],

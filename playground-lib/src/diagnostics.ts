@@ -1,4 +1,4 @@
-import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
+import { defineDiagnostics } from 'nostics'
 
 export const diagnostics = defineDiagnostics({
   codes: {

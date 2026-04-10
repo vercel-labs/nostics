@@ -14,18 +14,18 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
   const logFile = options?.logFile ?? '.nostics.log'
 
   return {
-    name: 'logs-sdk-server',
+    name: 'nostics-server',
     enforce: 'pre',
 
     vite: {
       configureServer(server) {
-        server.ws.on('logs-sdk:report', (data) => {
+        server.ws.on('nostics:report', (data) => {
           try {
             // TODO: validate data shape
             appendFileSync(logFile, `${JSON.stringify(data)}\n`)
           }
           catch (err: unknown) {
-            console.error(`[logs-sdk]: Failed to write log to "${logFile}":`, err)
+            console.error(`[nostics]: Failed to write log to "${logFile}":`, err)
           }
         })
       },

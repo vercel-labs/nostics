@@ -16,7 +16,7 @@
     "build": "tsdown"
   },
   "dependencies": {
-    "@antfu/experimental-logs-sdk": "workspace:*"
+    "nostics": "workspace:*"
   },
   "devDependencies": {
     "tsdown": "catalog:cli"

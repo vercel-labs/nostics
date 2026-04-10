@@ -105,9 +105,6 @@ importers:
       '@antfu/eslint-config':
         specifier: catalog:cli
         version: 8.1.0(@typescript-eslint/rule-tester@8.58.0(eslint@10.2.0(jiti@2.6.1))(typescript@6.0.2))(@typescript-eslint/typescript-estree@8.58.1(typescript@6.0.2))(@typescript-eslint/utils@8.58.1(eslint@10.2.0(jiti@2.6.1))(typescript@6.0.2))(@vue/compiler-sfc@3.5.32)(eslint@10.2.0(jiti@2.6.1))(typescript@6.0.2)(vitest@4.1.3(@types/node@25.5.2)(vite@8.0.7))
-      '@antfu/experimental-logs-sdk':
-        specifier: workspace:*
-        version: 'link:'
       '@antfu/ni':
         specifier: catalog:cli
         version: 30.0.0
@@ -129,6 +126,9 @@ importers:
       lint-staged:
         specifier: catalog:cli
         version: 16.4.0
+      nostics:
+        specifier: workspace:*
+        version: 'link:'
       publint:
         specifier: catalog:cli
         version: 0.3.18
@@ -169,15 +169,15 @@ importers:
         specifier: catalog:playground
         version: 3.5.32(typescript@6.0.2)
     devDependencies:
-      '@antfu/experimental-logs-sdk':
-        specifier: workspace:*
-        version: link:..
       '@vitejs/devtools':
         specifier: catalog:cli
         version: 0.1.13(@pnpm/logger@1001.0.1)(typescript@6.0.2)(vite@8.0.7)
       '@vitejs/plugin-vue':
         specifier: catalog:playground
         version: 5.2.4(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))
+      nostics:
+        specifier: workspace:*
+        version: link:..
       typescript:
         specifier: catalog:cli
         version: 6.0.2
@@ -190,7 +190,7 @@ importers:
 
   playground-lib:
     dependencies:
-      '@antfu/experimental-logs-sdk':
+      nostics:
         specifier: workspace:*
         version: link:..
     devDependencies:

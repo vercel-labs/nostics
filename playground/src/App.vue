@@ -35,7 +35,7 @@ function runSum(a?: number, b?: number) {
 </script>
 
 <template>
-  <h1>logs-sdk playground</h1>
+  <h1>nostics playground</h1>
 
   <section>
     <h2><code>add(a, b)</code></h2>

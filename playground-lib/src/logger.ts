@@ -1,6 +1,6 @@
-import { consoleReporter, createLogger } from '@antfu/experimental-logs-sdk'
+import { consoleReporter, createLogger } from 'nostics'
 // TODO: figure out a way to automatically add this reporter in the correct context
-import { devReporter } from '@antfu/experimental-logs-sdk/dev-reporter'
+import { devReporter } from 'nostics/dev-reporter'
 import { diagnostics } from './diagnostics'
 
 export const log = createLogger({
