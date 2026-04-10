@@ -1,5 +1,5 @@
-import { DtsSnapshot } from 'rolldown-plugin-dts-snapshot'
 import { defineConfig } from 'tsdown'
+import ApiSnapshot from 'tsnapi/rolldown'
 
 export default defineConfig({
   entry: {
@@ -25,6 +25,6 @@ export default defineConfig({
   exports: true,
   publint: true,
   plugins: [
-    DtsSnapshot(),
+    ApiSnapshot(),
   ],
 })
