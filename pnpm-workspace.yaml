@@ -19,11 +19,15 @@ catalogs:
   cli:
     '@antfu/eslint-config': ^8.1.0
     '@antfu/ni': ^30.0.0
+    '@posva/prompts': ^2.4.4
     '@vitejs/devtools': ^0.1.13
     bumpp: ^11.0.1
+    conventional-changelog: ^7.2.0
+    conventional-changelog-angular: ^8.3.1
     eslint: ^10.2.0
     lint-staged: ^16.4.0
     publint: ^0.3.18
+    semver: ^7.7.4
     simple-git-hooks: ^2.13.1
     tsdown: ^0.21.7
     typescript: ^6.0.2
@@ -45,6 +49,7 @@ catalogs:
     yaml: ^2.8.3
   types:
     '@types/node': ^25.5.2
+    '@types/semver': ^7.7.1
 onlyBuiltDependencies:
   - esbuild
   - simple-git-hooks
