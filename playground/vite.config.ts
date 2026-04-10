@@ -1,5 +1,5 @@
-import { logsSDKServer } from '@antfu/experimental-logs-sdk/unplugin'
 import vue from '@vitejs/plugin-vue'
+import { logsSDKServer } from 'nostics/unplugin'
 import { defineConfig } from 'vite'
 import inspect from 'vite-plugin-inspect'
 

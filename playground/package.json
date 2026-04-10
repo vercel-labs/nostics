@@ -13,9 +13,9 @@
     "vue": "catalog:playground"
   },
   "devDependencies": {
-    "@antfu/experimental-logs-sdk": "workspace:*",
     "@vitejs/devtools": "catalog:cli",
     "@vitejs/plugin-vue": "catalog:playground",
+    "nostics": "workspace:*",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
     "vite-plugin-inspect": "catalog:cli"

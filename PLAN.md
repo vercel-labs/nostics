@@ -1,4 +1,4 @@
-# Plan: `logs-sdk` — Structured Diagnostic Code Library
+# Plan: `nostics` — Structured Diagnostic Code Library
 
 ## Core Design: Object-First
 
@@ -35,7 +35,7 @@ This object is what gets:
 Defines the diagnostic codes for a domain. Owns identity (docsBase) and produces plain `Diagnostic` objects. No side effects, no logging.
 
 ```ts
-import { defineDiagnostics } from '@antfu/experimental-logs-sdk'
+import { defineDiagnostics } from 'nostics'
 
 const diagnostics = defineDiagnostics({
   docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
@@ -106,7 +106,7 @@ NUXT_B5001: {
 The logger brings together diagnostics and output configuration. Each code key on the logger returns a `DiagnosticActions` — a `Diagnostic` enriched with action methods.
 
 ```ts
-import { createLogger } from '@antfu/experimental-logs-sdk'
+import { createLogger } from 'nostics'
 
 const log = createLogger({
   diagnostics: [diagnostics],
