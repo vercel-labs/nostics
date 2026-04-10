@@ -29,6 +29,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "vitest",
+    "play": "pnpm -C playground run dev",
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "bumpp",
