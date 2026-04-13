@@ -126,6 +126,20 @@ const log = createLogger({
 - Multiple diagnostic sets — compose diagnostics from different libraries
 - Zero runtime dependencies
 
+## Claude Code plugin
+
+nostics ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) that gives agents full context on the diagnostics API.
+
+```bash
+# Coming soon — install instructions will be available once the package is publicly released
+claude plugin install nostics
+```
+
+The plugin includes two skills:
+
+- **nostics** — auto-triggered reference skill. Loaded automatically when Claude Code detects nostics imports or API usage in your project, providing context on `defineDiagnostics`, `createLogger`, formatters, reporters, and best practices.
+- **`/add-diagnostic`** — user-invocable skill. Guides the agent through adding a new diagnostic code following the `PREFIX_XNNNN` convention, picking the right file, category, and sequence number.
+
 ## License
 
 [MIT](./LICENSE)
