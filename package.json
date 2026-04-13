@@ -74,6 +74,7 @@
     "lint-staged": "catalog:cli",
     "nostics": "workspace:*",
     "publint": "catalog:cli",
+    "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",
     "tsdown": "catalog:cli",
     "tsnapi": "catalog:testing",

@@ -36,6 +36,9 @@ catalogs:
     publint:
       specifier: ^0.3.18
       version: 0.3.18
+    semver:
+      specifier: ^7.7.4
+      version: 7.7.4
     simple-git-hooks:
       specifier: ^2.13.1
       version: 2.13.1
@@ -71,8 +74,8 @@ catalogs:
       version: 9.3.0
   playground:
     '@vitejs/plugin-vue':
-      specifier: ^5.2.4
-      version: 5.2.4
+      specifier: ^6.0.0
+      version: 6.0.6
     vue:
       specifier: ^3.5.13
       version: 3.5.32
@@ -147,6 +150,9 @@ importers:
       publint:
         specifier: catalog:cli
         version: 0.3.18
+      semver:
+        specifier: catalog:cli
+        version: 7.7.4
       simple-git-hooks:
         specifier: catalog:cli
         version: 2.13.1
@@ -180,7 +186,7 @@ importers:
         version: 0.1.13(@pnpm/logger@1001.0.1)(typescript@6.0.2)(vite@8.0.7)
       '@vitejs/plugin-vue':
         specifier: catalog:playground
-        version: 5.2.4(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))
+        version: 6.0.6(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))
       nostics:
         specifier: workspace:*
         version: link:..
@@ -1406,11 +1412,11 @@ packages:
     peerDependencies:
       vite: '*'
 
-  '@vitejs/plugin-vue@5.2.4':
-    resolution: {integrity: sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
+  '@vitejs/plugin-vue@6.0.6':
+    resolution: {integrity: sha512-u9HHgfrq3AjXlysn0eINFnWQOJQLO9WN6VprZ8FXl7A2bYisv3Hui9Ij+7QZ41F/WYWarHjwBbXtD7dKg3uxbg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
       vue: ^3.2.25
 
   '@vitest/eslint-plugin@1.6.14':
@@ -2956,6 +2962,10 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
+  tinyglobby@0.2.16:
+    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
+    engines: {node: '>=12.0.0'}
+
   tinyrainbow@3.1.0:
     resolution: {integrity: sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==}
     engines: {node: '>=14.0.0'}
@@ -4263,7 +4273,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.7.4
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       ts-api-utils: 2.5.0(typescript@6.0.2)
       typescript: 6.0.2
     transitivePeerDependencies:
@@ -4438,8 +4448,9 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@vitejs/plugin-vue@5.2.4(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))':
+  '@vitejs/plugin-vue@6.0.6(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))':
     dependencies:
+      '@rolldown/pluginutils': 1.0.0-rc.13
       vite: 8.0.7(@types/node@25.5.2)(@vitejs/devtools@0.1.13)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
       vue: 3.5.32(typescript@6.0.2)
 
@@ -6240,6 +6251,11 @@ snapshots:
   tinyexec@1.1.1: {}
 
   tinyglobby@0.2.15:
+    dependencies:
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
+
+  tinyglobby@0.2.16:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
