@@ -19,6 +19,7 @@
     "./dev-reporter": "./dist/dev-reporter.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
+    "./node-reporter": "./dist/node-reporter.mjs",
     "./unplugin": "./dist/unplugin.mjs",
     "./package.json": "./package.json"
   },

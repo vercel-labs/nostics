@@ -8,6 +8,7 @@ export default defineConfig({
     'formatters/json': 'src/formatters/json.ts',
     'unplugin': 'src/code-transform/unplugin.ts',
     'dev-reporter': 'src/dev-reporter.ts',
+    'node-reporter': 'src/node-reporter.ts',
   },
   dts: {
     enabled: true,

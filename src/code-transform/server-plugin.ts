@@ -1,6 +1,6 @@
 import type { UnpluginInstance } from 'unplugin'
-import { appendFileSync } from 'node:fs'
 import { createUnplugin } from 'unplugin'
+import { createFileReporter } from '../node-reporter'
 
 export interface LogsSdkServerOptions {
   /**
@@ -11,7 +11,7 @@ export interface LogsSdkServerOptions {
 }
 
 export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> = createUnplugin((options) => {
-  const logFile = options?.logFile ?? '.nostics.log'
+  const reporter = createFileReporter({ logFile: options?.logFile })
 
   return {
     name: 'nostics-server',
@@ -20,13 +20,8 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
     vite: {
       configureServer(server) {
         server.ws.on('nostics:report', (data) => {
-          try {
-            // TODO: validate data shape
-            appendFileSync(logFile, `${JSON.stringify(data)}\n`)
-          }
-          catch (err: unknown) {
-            console.error(`[nostics]: Failed to write log to "${logFile}":`, err)
-          }
+          // TODO: validate data shape
+          reporter(data, '')
         })
       },
     },
