@@ -131,8 +131,8 @@ const log = createLogger({
 nostics ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) that gives agents full context on the diagnostics API.
 
 ```bash
-# Coming soon — install instructions will be available once the package is publicly released
-claude plugin install nostics
+# temporary install because private repo, should be a claude code marketplace in the future
+gh api repos/vercel-labs/nostics/contents/install.sh --jq '.content' | base64 -d | bash
 ```
 
 The plugin includes two skills:
