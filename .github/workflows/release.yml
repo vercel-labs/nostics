@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       startsWith(github.ref_name, 'v') &&
-      github.repository == 'vercel-labs/logs-sdk'
+      github.repository == 'vercel-labs/nostics'
 
     environment: release
 
