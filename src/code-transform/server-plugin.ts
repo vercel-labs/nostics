@@ -11,10 +11,19 @@ export interface LogsSdkServerOptions {
    * @default '.diagnostics.log'
    */
   logFile?: string
+
+  /**
+   * Enable debug logging for the plugin.
+   * @default !!process.env.DEBUG
+   */
+  debug?: boolean
 }
 
 export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> = createUnplugin((options) => {
   const logFile = options?.logFile ?? '.diagnostics.log'
+  const debug = options?.debug ?? !!process.env.DEBUG
+  // eslint-disable-next-line no-console -- debug logging opt-in
+  const log = debug ? (...args: unknown[]) => console.log('[logs-sdk]', ...args) : () => {}
   const reporter = createFileReporter({ logFile })
 
   return {
@@ -30,9 +39,13 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
         const displayPath = relative(process.cwd(), resolvedLogFile) || logFile
         server.config.logger.info(`📋 logs-sdk ··· saving logs to ${displayPath}`)
 
+        log('listening for diagnostics on ws')
+
         server.ws.on('logs-sdk:report', (data) => {
           // TODO: validate data shape
+          log('received diagnostic', data.code ?? data)
           reporter(data, '')
+          log('wrote diagnostic to', displayPath)
         })
       },
     },
