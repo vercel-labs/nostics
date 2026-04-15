@@ -11,19 +11,19 @@ export interface TransformResult {
 export interface TransformOptions {
   /**
    * The package name to detect imports from.
-   * @default 'nostics'
+   * @default 'logs-sdk'
    */
   packageName?: string
 }
 
 /**
  * Cross-file state: maps file paths to sets of exported variable names
- * that are derived from nostics function calls (createLogger, defineDiagnostics, etc.)
+ * that are derived from logs-sdk function calls (createLogger, defineDiagnostics, etc.)
  */
 export type TrackedExportsMap = Map<string, Set<string>>
 
 /**
- * Transforms code that imports from `nostics`:
+ * Transforms code that imports from `logs-sdk`:
  * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` and `createLogger()` call expressions
  * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using logger variables
  *
@@ -37,7 +37,7 @@ export function transform(
   options?: TransformOptions,
   trackedExportsMap?: TrackedExportsMap,
 ): TransformResult | undefined {
-  const packageName = options?.packageName ?? 'nostics'
+  const packageName = options?.packageName ?? 'logs-sdk'
 
   const result = parseSync(id, code)
   const ast = result.program
@@ -170,7 +170,7 @@ function resolveModulePath(source: string, importer: string): string | undefined
 }
 
 /**
- * Analyze a module to find exported variables derived from nostics calls.
+ * Analyze a module to find exported variables derived from logs-sdk calls.
  * Results are cached in trackedExportsMap.
  */
 function analyzeModule(filePath: string, packageName: string, trackedExportsMap: TrackedExportsMap): void {

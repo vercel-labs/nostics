@@ -6,7 +6,7 @@ name: Publish to npm
 # npm publish
 #
 # Add "repository": "vercel/logs-sdk", to package.json
-# Go to the settings page on npm: https://www.npmjs.com/package/nostics/access
+# Go to the settings page on npm: https://www.npmjs.com/package/logs-sdk/access
 # Set the Trusted Published, add an environment if added on GitHub repository settings / Environments
 # Disallow tokens
 #
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       startsWith(github.ref_name, 'v') &&
-      github.repository == 'vercel-labs/nostics'
+      github.repository == 'vercel-labs/logs-sdk'
 
     environment: release
 

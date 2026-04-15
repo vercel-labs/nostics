@@ -1,6 +1,6 @@
 ---
 name: add-diagnostic
-description: "Add a new diagnostic code following the defineDiagnostics() conventions from nostics"
+description: "Add a new diagnostic code following the defineDiagnostics() conventions from logs-sdk"
 user-invocable: true
 allowed-tools: Read Grep Glob Edit Write
 ---

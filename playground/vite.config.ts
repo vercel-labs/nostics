@@ -1,6 +1,6 @@
 import { DevTools } from '@vitejs/devtools'
 import vue from '@vitejs/plugin-vue'
-import { logsSDKServer } from 'nostics/unplugin'
+import { logsSDKServer } from 'logs-sdk/unplugin'
 import { defineConfig } from 'vite'
 import inspect from 'vite-plugin-inspect'
 

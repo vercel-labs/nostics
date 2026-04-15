@@ -1,4 +1,4 @@
-import { defineDiagnostics } from 'nostics'
+import { defineDiagnostics } from 'logs-sdk'
 
 export const diagnostics = defineDiagnostics({
   codes: {

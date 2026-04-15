@@ -19,16 +19,16 @@ async function bundleProduction(input: string): Promise<string> {
     treeShaking: true,
     define: { 'process.env.NODE_ENV': '"production"' },
     format: 'esm',
-    // Mark nostics as external so we can see if it's still imported
+    // Mark logs-sdk as external so we can see if it's still imported
     // Actually, we need to provide a stub so esbuild can resolve it
     plugins: [{
-      name: 'nostics-stub',
+      name: 'logs-sdk-stub',
       setup(build) {
-        build.onResolve({ filter: /^nostics/ }, () => ({
-          path: 'nostics',
-          namespace: 'nostics-stub',
+        build.onResolve({ filter: /^logs-sdk/ }, () => ({
+          path: 'logs-sdk',
+          namespace: 'logs-sdk-stub',
         }))
-        build.onLoad({ filter: /.*/, namespace: 'nostics-stub' }, () => ({
+        build.onLoad({ filter: /.*/, namespace: 'logs-sdk-stub' }, () => ({
           contents: `
             export function defineDiagnostics(opts) { return opts }
             export function createLogger(opts) { return opts }
@@ -46,7 +46,7 @@ async function bundleProduction(input: string): Promise<string> {
 describe('tree-shake integration', () => {
   it('eliminates all logging code in production', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'nostics'
+import { defineDiagnostics, createLogger } from 'logs-sdk'
 
 const diags = defineDiagnostics({
   prefix: 'TEST',
@@ -68,7 +68,7 @@ log.E002({ file: '/bad.ts' }).error()
 
   it('eliminates logging inside functions', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'nostics'
+import { defineDiagnostics, createLogger } from 'logs-sdk'
 
 const diags = defineDiagnostics({ prefix: 'T', codes: { E1: { message: 'x' } } })
 const log = createLogger({ diagnostics: [diags] })

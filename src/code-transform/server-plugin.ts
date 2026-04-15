@@ -5,7 +5,7 @@ import { createFileReporter } from '../node-reporter'
 export interface LogsSdkServerOptions {
   /**
    * Path to the log file.
-   * @default '.nostics.log'
+   * @default '.diagnostics.log'
    */
   logFile?: string
 }
@@ -14,12 +14,12 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
   const reporter = createFileReporter({ logFile: options?.logFile })
 
   return {
-    name: 'nostics-server',
+    name: 'logs-sdk-server',
     enforce: 'pre',
 
     vite: {
       configureServer(server) {
-        server.ws.on('nostics:report', (data) => {
+        server.ws.on('logs-sdk:report', (data) => {
           // TODO: validate data shape
           reporter(data, '')
         })

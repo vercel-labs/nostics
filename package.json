@@ -1,17 +1,17 @@
 {
-  "name": "nostics",
+  "name": "logs-sdk",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.0",
   "packageManager": "pnpm@10.33.0",
   "description": "Structured diagnostic code library",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/vercel-labs/nostics#readme",
+  "homepage": "https://github.com/vercel-labs/logs-sdk#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel-labs/nostics.git"
+    "url": "git+https://github.com/vercel-labs/logs-sdk.git"
   },
-  "bugs": "https://github.com/vercel-labs/nostics/issues",
+  "bugs": "https://github.com/vercel-labs/logs-sdk/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
@@ -73,7 +73,7 @@
     "esbuild": "catalog:",
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
-    "nostics": "workspace:*",
+    "logs-sdk": "workspace:*",
     "publint": "catalog:cli",
     "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",

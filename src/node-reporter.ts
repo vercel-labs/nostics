@@ -4,7 +4,7 @@ import { appendFileSync } from 'node:fs'
 export interface FileReporterOptions {
   /**
    * Path to the log file.
-   * @default '.nostics.log'
+   * @default '.diagnostics.log'
    */
   logFile?: string
 }
@@ -15,7 +15,7 @@ export interface FileReporterOptions {
  *
  * @example
  * ```ts
- * import { createFileReporter } from 'nostics/node-reporter'
+ * import { createFileReporter } from 'logs-sdk/node-reporter'
  *
  * const log = createLogger({
  *   diagnostics: [diagnostics],
@@ -24,13 +24,13 @@ export interface FileReporterOptions {
  * ```
  */
 export function createFileReporter(options?: FileReporterOptions): Reporter {
-  const logFile = options?.logFile ?? '.nostics.log'
+  const logFile = options?.logFile ?? '.diagnostics.log'
   return (diagnostic, _formatted) => {
     try {
       appendFileSync(logFile, `${JSON.stringify(diagnostic)}\n`)
     }
     catch (err: unknown) {
-      console.error(`[nostics]: Failed to write log to "${logFile}":`, err)
+      console.error(`[logs-sdk]: Failed to write log to "${logFile}":`, err)
     }
   }
 }

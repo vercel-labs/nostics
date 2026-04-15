@@ -35,11 +35,11 @@ describe('createFileReporter', () => {
     expect(mockAppendFileSync).toHaveBeenNthCalledWith(2, 'test.log', `${JSON.stringify(d2)}\n`)
   })
 
-  it('defaults to .nostics.log', () => {
+  it('defaults to .diagnostics.log', () => {
     const reporter = createFileReporter()
     const d: Diagnostic = { code: 'E001', level: 'error', message: 'boom' }
     reporter(d, '')
-    expect(mockAppendFileSync).toHaveBeenCalledWith('.nostics.log', expect.any(String))
+    expect(mockAppendFileSync).toHaveBeenCalledWith('.diagnostics.log', expect.any(String))
   })
 
   it('logs error to console on write failure', () => {
@@ -51,7 +51,7 @@ describe('createFileReporter', () => {
     const d: Diagnostic = { code: 'E001', level: 'error', message: 'boom' }
     reporter(d, '')
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('[nostics]'),
+      expect.stringContaining('[logs-sdk]'),
       expect.anything(),
     )
     spy.mockRestore()

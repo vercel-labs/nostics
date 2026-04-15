@@ -1,4 +1,4 @@
-import logsSdk from 'nostics/unplugin'
+import logsSdk from 'logs-sdk/unplugin'
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
@@ -6,7 +6,7 @@ export default defineConfig({
   sourcemap: true,
   exports: true,
   deps: {
-    neverBundle: ['nostics'],
+    neverBundle: ['logs-sdk'],
     onlyBundle: [],
   },
   dts: {

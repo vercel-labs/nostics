@@ -144,7 +144,7 @@ importers:
       lint-staged:
         specifier: catalog:cli
         version: 16.4.0
-      nostics:
+      logs-sdk:
         specifier: workspace:*
         version: 'link:'
       publint:
@@ -187,7 +187,7 @@ importers:
       '@vitejs/plugin-vue':
         specifier: catalog:playground
         version: 6.0.6(vite@8.0.7)(vue@3.5.32(typescript@6.0.2))
-      nostics:
+      logs-sdk:
         specifier: workspace:*
         version: link:..
       typescript:
@@ -202,7 +202,7 @@ importers:
 
   playground-lib:
     dependencies:
-      nostics:
+      logs-sdk:
         specifier: workspace:*
         version: link:..
     devDependencies:

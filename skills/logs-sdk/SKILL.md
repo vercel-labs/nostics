@@ -1,9 +1,9 @@
 ---
-name: nostics
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/nostics`, `nostics`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters, or integrating diagnostic codes into a library or framework."
+name: logs-sdk
+description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters, or integrating diagnostic codes into a library or framework."
 ---
 
-# nostics
+# logs-sdk
 
 Structured diagnostic code library for JavaScript/TypeScript. Every error, warning, suggestion, and deprecation becomes a typed, serializable `Diagnostic` object with a stable code, docs URL, and actionable fields.
 
@@ -42,7 +42,7 @@ interface Diagnostic {
 Creates typed factory functions that produce plain `Diagnostic` objects. No side effects, no logging.
 
 ```ts
-import { defineDiagnostics } from 'nostics'
+import { defineDiagnostics } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
   docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
@@ -112,8 +112,8 @@ diagnostics.extend({ // → new diagnostics set with additional codes merged in
 Merges diagnostic sets and wraps each code factory to return `DiagnosticActions` — a `Diagnostic` enriched with action methods.
 
 ```ts
-import { consoleReporter, createLogger, plainFormatter } from 'nostics'
-import { ansiFormatter } from 'nostics/formatters/ansi'
+import { consoleReporter, createLogger, plainFormatter } from 'logs-sdk'
+import { ansiFormatter } from 'logs-sdk/formatters/ansi'
 
 const log = createLogger({
   diagnostics: [diagnostics],
@@ -179,9 +179,9 @@ All are plain functions: `(d: Diagnostic) => string`.
 
 | Formatter | Import | Description |
 |-----------|--------|-------------|
-| `plainFormatter` | `nostics` | Unicode box-drawing, no colors. Default. |
-| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Accepts a generic `Colors` interface — no hard ANSI dependency |
-| `jsonFormatter` | `nostics/formatters/json` | `JSON.stringify(diagnostic)` |
+| `plainFormatter` | `logs-sdk` | Unicode box-drawing, no colors. Default. |
+| `ansiFormatter(colors)` | `logs-sdk/formatters/ansi` | Accepts a generic `Colors` interface — no hard ANSI dependency |
+| `jsonFormatter` | `logs-sdk/formatters/json` | `JSON.stringify(diagnostic)` |
 
 **ANSI formatter `Colors` interface:**
 
@@ -211,7 +211,7 @@ Detail line order is fixed: `why` → `fix` → `hint` → `see` (docs URL). Mis
 **Writing a custom formatter:**
 
 ```ts
-import type { Formatter } from 'nostics'
+import type { Formatter } from 'logs-sdk'
 
 const myFormatter: Formatter = (d) => {
   return `[${d.code}] ${d.message}${d.fix ? ` (fix: ${d.fix})` : ''}`
@@ -231,13 +231,13 @@ All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a si
 
 | Reporter | Import | Description |
 |----------|--------|-------------|
-| `consoleReporter` | `nostics` | `console.error` for `'error'` level, `console.warn` for all others |
-| `createFetchReporter(url)` | `nostics` | POSTs diagnostic JSON to the given URL (silently ignores fetch errors) |
+| `consoleReporter` | `logs-sdk` | `console.error` for `'error'` level, `console.warn` for all others |
+| `createFetchReporter(url)` | `logs-sdk` | POSTs diagnostic JSON to the given URL (silently ignores fetch errors) |
 
 **Writing a custom reporter:**
 
 ```ts
-import type { Reporter } from 'nostics'
+import type { Reporter } from 'logs-sdk'
 
 const fileReporter: Reporter = (diagnostic, formatted) => {
   fs.appendFileSync('errors.log', `${formatted}\n`)

@@ -16,7 +16,7 @@
     "build": "tsdown"
   },
   "dependencies": {
-    "nostics": "workspace:*"
+    "logs-sdk": "workspace:*"
   },
   "devDependencies": {
     "tsdown": "catalog:cli"

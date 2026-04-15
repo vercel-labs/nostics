@@ -15,7 +15,7 @@
   "devDependencies": {
     "@vitejs/devtools": "catalog:cli",
     "@vitejs/plugin-vue": "catalog:playground",
-    "nostics": "workspace:*",
+    "logs-sdk": "workspace:*",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
     "vite-plugin-inspect": "catalog:cli"
