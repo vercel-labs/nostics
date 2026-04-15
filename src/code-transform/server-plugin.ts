@@ -1,4 +1,7 @@
 import type { UnpluginInstance } from 'unplugin'
+import { existsSync, writeFileSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
+import process from 'node:process'
 import { createUnplugin } from 'unplugin'
 import { createFileReporter } from '../node-reporter'
 
@@ -11,7 +14,8 @@ export interface LogsSdkServerOptions {
 }
 
 export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> = createUnplugin((options) => {
-  const reporter = createFileReporter({ logFile: options?.logFile })
+  const logFile = options?.logFile ?? '.diagnostics.log'
+  const reporter = createFileReporter({ logFile })
 
   return {
     name: 'logs-sdk-server',
@@ -19,6 +23,13 @@ export const logsSDKServer: UnpluginInstance<LogsSdkServerOptions | undefined> =
 
     vite: {
       configureServer(server) {
+        const resolvedLogFile = resolve(server.config.root, logFile)
+        if (!existsSync(resolvedLogFile)) {
+          writeFileSync(resolvedLogFile, '')
+        }
+        const displayPath = relative(process.cwd(), resolvedLogFile) || logFile
+        server.config.logger.info(`📋 logs-sdk ··· saving logs to ${displayPath}`)
+
         server.ws.on('logs-sdk:report', (data) => {
           // TODO: validate data shape
           reporter(data, '')
