@@ -31,6 +31,22 @@ Every diagnostic has a stable code an agent can dispatch on directly, instead of
 
 An agent can resolve the issue without asking the user for more information. Users don't need to configure anything — if a library uses `logs-sdk`, its diagnostics are already agent-ready. All codes are defined in a catalog, so an agent can enumerate the full error surface ahead of time. And when multiple libraries in a stack adopt it, agents get uniformly structured data from every layer.
 
+## Claude Code plugin
+
+logs-sdk ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) that gives agents full context on the diagnostics API.
+
+Run from your project root — the plugin is scoped to the current directory:
+
+```bash
+# temporary install because private repo, should be a claude code marketplace in the future
+gh api repos/vercel-labs/logs-sdk/contents/install.sh --jq '.content' | base64 -d | bash
+```
+
+The plugin includes two skills:
+
+- **logs-sdk** — auto-triggered reference skill. Loaded automatically when Claude Code detects logs-sdk imports or API usage in your project, providing context on `defineDiagnostics`, `createLogger`, formatters, reporters, and best practices.
+- **`/add-diagnostic`** — user-invocable skill. Guides the agent through adding a new diagnostic code following the `PREFIX_XNNNN` convention, picking the right file, category, and sequence number.
+
 ## Usage
 
 ### Define diagnostics
@@ -125,22 +141,6 @@ const log = createLogger({
 - Pluggable reporters — console, HTTP, custom
 - Multiple diagnostic sets — compose diagnostics from different libraries
 - Zero runtime dependencies
-
-## Claude Code plugin
-
-logs-sdk ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) that gives agents full context on the diagnostics API.
-
-Run from your project root — the plugin is scoped to the current directory:
-
-```bash
-# temporary install because private repo, should be a claude code marketplace in the future
-gh api repos/vercel-labs/logs-sdk/contents/install.sh --jq '.content' | base64 -d | bash
-```
-
-The plugin includes two skills:
-
-- **logs-sdk** — auto-triggered reference skill. Loaded automatically when Claude Code detects logs-sdk imports or API usage in your project, providing context on `defineDiagnostics`, `createLogger`, formatters, reporters, and best practices.
-- **`/add-diagnostic`** — user-invocable skill. Guides the agent through adding a new diagnostic code following the `PREFIX_XNNNN` convention, picking the right file, category, and sequence number.
 
 ## License
 
