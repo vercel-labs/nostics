@@ -5,6 +5,9 @@
   "packageManager": "pnpm@10.33.0",
   "description": "Structured diagnostic code library",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "contributors": [
+    "Eduardo San Martin Morote <posva13@gmail.com>"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/vercel-labs/logs-sdk#readme",
   "repository": {
