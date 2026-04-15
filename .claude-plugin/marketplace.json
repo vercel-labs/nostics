@@ -1,0 +1,21 @@
+{
+  "name": "vercel-labs",
+  "owner": {
+    "name": "Eduardo San Martin Morote"
+  },
+  "plugins": [
+    {
+      "name": "logs-sdk",
+      "source": "./",
+      "description": "Claude Code plugin for logs-sdk — structured diagnostic codes for JavaScript/TypeScript libraries and frameworks",
+      "version": "0.0.1",
+      "author": {
+        "name": "Eduardo San Martin Morote"
+      },
+      "skills": [
+        "./skills/logs-sdk",
+        "./skills/add-diagnostic"
+      ]
+    }
+  ]
+}

@@ -130,6 +130,8 @@ const log = createLogger({
 
 logs-sdk ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) that gives agents full context on the diagnostics API.
 
+Run from your project root — the plugin is scoped to the current directory:
+
 ```bash
 # temporary install because private repo, should be a claude code marketplace in the future
 gh api repos/vercel-labs/logs-sdk/contents/install.sh --jq '.content' | base64 -d | bash
