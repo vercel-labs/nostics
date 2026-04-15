@@ -1,3 +1,10 @@
+## [0.0.5](https://github.com/vercel-labs/logs-sdk/compare/v0.0.4...v0.0.5) (2026-04-15)
+
+
+### Features
+
+* add Node.js file reporter (`nostics/node-reporter`) ([da5c97d](https://github.com/vercel-labs/logs-sdk/commit/da5c97d766c9686e0b7319b11b9c31cdb7b633f5))
+
 ## 0.0.4 (2026-04-14)
 
 

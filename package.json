@@ -1,7 +1,7 @@
 {
   "name": "logs-sdk",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packageManager": "pnpm@10.33.0",
   "description": "Structured diagnostic code library",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
