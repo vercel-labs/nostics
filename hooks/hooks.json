@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-vite-plugin.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/check-vite-plugin.sh"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/consume-diagnostic.mjs"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/consume-diagnostic.mjs\""
           }
         ]
       }

@@ -68,3 +68,5 @@ const output = JSON.stringify({
 
 debug(`Output: ${output}`)
 process.stdout.write(`${output}\n`)
+// Block the stop and let Claude continue running
+process.exit(2)
