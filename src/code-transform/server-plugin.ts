@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import process from 'node:process'
 import { createUnplugin } from 'unplugin'
-import { createFileReporter } from '../node-reporter'
+import { createFileReporter } from '../reporters/node'
 
 export interface LogsSdkServerOptions {
   /**

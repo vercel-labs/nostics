@@ -1,4 +1,4 @@
-import type { Reporter } from './reporter'
+import type { Reporter } from '../reporter'
 
 export const devReporter: Reporter = (diagnostic) => {
   if (import.meta.hot && typeof import.meta.hot.send === 'function') {

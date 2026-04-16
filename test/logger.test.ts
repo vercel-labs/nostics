@@ -51,7 +51,7 @@ describe('createLogger', () => {
 
   it('.warn() calls reporter', () => {
     const reporter = vi.fn()
-    const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+    const log = createLogger({ diagnostics: [nuxtDiags], reporters: reporter })
     log.NUXT_B1001().warn()
     expect(reporter).toHaveBeenCalled()
     const [diagnostic] = reporter.mock.calls[0]
@@ -60,7 +60,7 @@ describe('createLogger', () => {
 
   it('.error() calls reporter with error level', () => {
     const reporter = vi.fn()
-    const log = createLogger({ diagnostics: [i18nDiags], reporter })
+    const log = createLogger({ diagnostics: [i18nDiags], reporters: reporter })
     log.I18N_I001({ locale: 'fr' }).error()
     const [diagnostic] = reporter.mock.calls[0]
     expect(diagnostic.level).toBe('error')
@@ -68,7 +68,7 @@ describe('createLogger', () => {
 
   it('.log() uses diagnostic own level', () => {
     const reporter = vi.fn()
-    const log = createLogger({ diagnostics: [i18nDiags], reporter })
+    const log = createLogger({ diagnostics: [i18nDiags], reporters: reporter })
     log.I18N_I001({ locale: 'fr' }).log()
     const [diagnostic] = reporter.mock.calls[0]
     expect(diagnostic.level).toBe('warn')
@@ -89,7 +89,7 @@ describe('createLogger', () => {
 
   it('raw warn() works with diagnostic object', () => {
     const reporter = vi.fn()
-    const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+    const log = createLogger({ diagnostics: [nuxtDiags], reporters: reporter })
     log.warn(nuxtDiags.NUXT_B1001())
     expect(reporter).toHaveBeenCalled()
   })
@@ -106,7 +106,7 @@ describe('createLogger', () => {
   it('supports array of reporters', () => {
     const reporter1 = vi.fn()
     const reporter2 = vi.fn()
-    const log = createLogger({ diagnostics: [nuxtDiags], reporter: [reporter1, reporter2] })
+    const log = createLogger({ diagnostics: [nuxtDiags], reporters: [reporter1, reporter2] })
     log.NUXT_B1001().log()
     expect(reporter1).toHaveBeenCalledTimes(1)
     expect(reporter2).toHaveBeenCalledTimes(1)
@@ -115,7 +115,7 @@ describe('createLogger', () => {
   describe('stack capture', () => {
     it('captures stack on action methods pointing to call site', () => {
       const reporter = vi.fn()
-      const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+      const log = createLogger({ diagnostics: [nuxtDiags], reporters: reporter })
       log.NUXT_B1001().warn()
       const [diagnostic] = reporter.mock.calls[0]
       expect(diagnostic.stack).toBeDefined()
@@ -134,7 +134,7 @@ describe('createLogger', () => {
 
     it('captures stack on raw logger methods', () => {
       const reporter = vi.fn()
-      const log = createLogger({ diagnostics: [nuxtDiags], reporter })
+      const log = createLogger({ diagnostics: [nuxtDiags], reporters: reporter })
       log.warn(nuxtDiags.NUXT_B1001())
       const [diagnostic] = reporter.mock.calls[0]
       expect(diagnostic.stack).toBeDefined()
@@ -143,7 +143,7 @@ describe('createLogger', () => {
 
     it('does not capture stack when captureStack is false', () => {
       const reporter = vi.fn()
-      const log = createLogger({ diagnostics: [nuxtDiags], reporter, captureStack: false })
+      const log = createLogger({ diagnostics: [nuxtDiags], reporters: reporter, captureStack: false })
       log.NUXT_B1001().warn()
       const [diagnostic] = reporter.mock.calls[0]
       expect(diagnostic.stack).toBeUndefined()

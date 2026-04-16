@@ -7,8 +7,8 @@ export default defineConfig({
     'formatters/ansi': 'src/formatters/ansi.ts',
     'formatters/json': 'src/formatters/json.ts',
     'unplugin': 'src/code-transform/unplugin.ts',
-    'dev-reporter': 'src/dev-reporter.ts',
-    'node-reporter': 'src/node-reporter.ts',
+    'reporters/dev': 'src/reporters/dev.ts',
+    'reporters/node': 'src/reporters/node.ts',
   },
   dts: {
     enabled: true,
@@ -18,7 +18,7 @@ export default defineConfig({
   },
   deps: {
     // virtual module so we can warn if plugin is missing during dev
-    neverBundle: ['logs-sdk/dev-reporter'],
+    neverBundle: ['logs-sdk/reporters/dev'],
     onlyBundle: [],
   },
   target: 'esnext',

@@ -19,10 +19,10 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
-    "./dev-reporter": "./dist/dev-reporter.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
-    "./node-reporter": "./dist/node-reporter.mjs",
+    "./reporters/dev": "./dist/reporters/dev.mjs",
+    "./reporters/node": "./dist/reporters/node.mjs",
     "./unplugin": "./dist/unplugin.mjs",
     "./package.json": "./package.json"
   },

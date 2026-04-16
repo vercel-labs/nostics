@@ -1,6 +1,6 @@
 ---
 name: logs-sdk
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter, devReporter), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
+description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter from logs-sdk/reporters/node, devReporter from logs-sdk/reporters/dev), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
 ---
 
 # logs-sdk
@@ -118,7 +118,7 @@ import { ansiFormatter } from 'logs-sdk/formatters/ansi'
 const log = createLogger({
   diagnostics: [diagnostics],
   formatter: ansiFormatter(colors), // or plainFormatter (default)
-  reporter: consoleReporter, // default — pass a single function or an array
+  reporters: consoleReporter, // default — pass a single function or an array
 })
 ```
 
@@ -233,17 +233,17 @@ All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a si
 |----------|--------|-------------|
 | `consoleReporter` | `logs-sdk` | `console.error` for `'error'` level, `console.warn` for all others |
 | `createFetchReporter(url)` | `logs-sdk` | POSTs diagnostic JSON to the given URL (silently ignores fetch errors) |
-| `createFileReporter(options?)` | `logs-sdk/node-reporter` | Appends diagnostics as NDJSON to a local file (default `.diagnostics.log`) |
-| `devReporter` | `logs-sdk/dev-reporter` | Sends diagnostics to the Vite dev server via `import.meta.hot.send()` for dev-time collection |
+| `createFileReporter(options?)` | `logs-sdk/reporters/node` | Appends diagnostics as NDJSON to a local file (default `.diagnostics.log`) |
+| `devReporter` | `logs-sdk/reporters/dev` | Sends diagnostics to the Vite dev server via `import.meta.hot.send()` for dev-time collection |
 
 **File reporter usage:**
 
 ```ts
-import { createFileReporter } from 'logs-sdk/node-reporter'
+import { createFileReporter } from 'logs-sdk/reporters/node'
 
 const log = createLogger({
   diagnostics: [diagnostics],
-  reporter: [consoleReporter, createFileReporter()],
+  reporters: [consoleReporter, createFileReporter()],
 })
 
 // Or with a custom path:
@@ -254,11 +254,11 @@ createFileReporter({ logFile: 'my-app.log' })
 
 ```ts
 import { consoleReporter, createLogger } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/dev-reporter'
+import { devReporter } from 'logs-sdk/reporters/dev'
 
 const log = createLogger({
   diagnostics: [diagnostics],
-  reporter: [consoleReporter, devReporter],
+  reporters: [consoleReporter, devReporter],
 })
 ```
 
@@ -349,11 +349,11 @@ export default defineConfig({
 ```ts
 // src/logger.ts
 import { consoleReporter, createLogger } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/dev-reporter'
+import { devReporter } from 'logs-sdk/reporters/dev'
 
 export const log = createLogger({
   diagnostics: [diagnostics],
-  reporter: [consoleReporter, devReporter],
+  reporters: [consoleReporter, devReporter],
 })
 ```
 
