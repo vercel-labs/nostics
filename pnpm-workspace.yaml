@@ -1,11 +1,8 @@
 catalogMode: prefer
-
 ignoreWorkspaceRootCheck: true
-
 shellEmulator: true
 
 trustPolicy: no-downgrade
-
 packages:
   - playground
   - playground-lib
@@ -16,7 +13,7 @@ catalog:
   esbuild: ^0.28.0
 catalogs:
   cli:
-    '@antfu/eslint-config': ^8.1.0
+    '@antfu/eslint-config': ^8.2.0
     '@antfu/ni': ^30.0.0
     '@posva/prompts': ^2.4.4
     '@vitejs/devtools': ^0.1.13
@@ -28,13 +25,13 @@ catalogs:
     publint: ^0.3.18
     semver: ^7.7.4
     simple-git-hooks: ^2.13.1
-    tsdown: ^0.21.7
+    tsdown: ^0.21.8
     typescript: ^6.0.2
-    vite: ^8.0.7
+    vite: ^8.0.8
     vite-plugin-inspect: ^12.0.0-beta.1
   deps:
     magic-string: ^0.30.21
-    oxc-parser: ^0.124.0
+    oxc-parser: ^0.126.0
     unplugin: ^3.0.0
   inlined:
     '@antfu/utils': ^9.3.0
@@ -42,10 +39,10 @@ catalogs:
     '@vitejs/plugin-vue': ^6.0.0
     vue: ^3.5.13
   testing:
-    tsnapi: ^0.1.1
-    vitest: ^4.1.3
+    tsnapi: ^0.3.0
+    vitest: ^4.1.4
   types:
-    '@types/node': ^25.5.2
+    '@types/node': ^25.6.0
     '@types/semver': ^7.7.1
 onlyBuiltDependencies:
   - esbuild

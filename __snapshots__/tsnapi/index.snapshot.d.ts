@@ -8,7 +8,7 @@ export interface CreateLoggerOptions<D extends readonly any[]> {
   captureStack?: boolean;
 }
 export interface DefineDiagnosticsOptions<C extends Record<string, DiagnosticDefinition>> {
-  docsBase?: string | ((code: string) => string | undefined);
+  docsBase?: string | ((_: string) => string | undefined);
   codes: C;
 }
 export interface Diagnostic {
@@ -40,16 +40,16 @@ export interface DiagnosticDefinition {
 }
 export interface DiagnosticsMethods<C extends Record<string, DiagnosticDefinition>> {
   codes: () => (keyof C & string)[];
-  has: (code: string) => code is Extract<keyof C, string>;
-  get: <K extends keyof C>(code: K) => C[K];
-  extend: <U extends Record<string, DiagnosticDefinition>>(defs: U) => DiagnosticsResult<C & U>;
+  has: (_: string) => code is Extract<keyof C, string>;
+  get: <K extends keyof C>(_: K) => C[K];
+  extend: <U extends Record<string, DiagnosticDefinition>>(_: U) => DiagnosticsResult<C & U>;
 }
 export interface LoggerMethods {
-  throw: (diagnostic: Diagnostic) => never;
-  warn: (diagnostic: Diagnostic) => void;
-  error: (diagnostic: Diagnostic) => void;
-  log: (diagnostic: Diagnostic) => void;
-  format: (diagnostic: Diagnostic) => string;
+  throw: (_: Diagnostic) => never;
+  warn: (_: Diagnostic) => void;
+  error: (_: Diagnostic) => void;
+  log: (_: Diagnostic) => void;
+  format: (_: Diagnostic) => string;
 }
 export interface SourceLocation {
   file?: string;
@@ -61,16 +61,16 @@ export interface SourceLocation {
 export type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (overrides?: Overrides) => Diagnostic : (params: Simplify<ExtractParams<T>>, overrides?: Overrides) => Diagnostic;
 export type DiagnosticLevel = "error" | "warn" | "suggestion" | "deprecation";
 export type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = { [K in keyof C]: CodeFactory<C[K]> } & DiagnosticsMethods<C>;
-export type Formatter = (diagnostic: Diagnostic) => string;
+export type Formatter = (_: Diagnostic) => string;
 export type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods;
 export type MergeFactories<D extends readonly any[]> = D extends readonly [infer First, ...infer Rest] ? ActionFactories<First> & MergeFactories<Rest> : {};
 export type Overrides = Partial<Pick<Diagnostic, "level" | "sources" | "cause" | "context">>;
-export type Reporter = (diagnostic: Diagnostic, formatted: string) => void;
+export type Reporter = (_: Diagnostic, _: string) => void;
 
 // Classes
 export declare class CodedError extends Error {
   readonly diagnostic: Diagnostic;
-  constructor(diagnostic: Diagnostic);
+  constructor(_: Diagnostic);
 }
 
 // Functions
