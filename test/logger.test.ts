@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineDiagnostics } from '../src/diagnostics'
 import { CodedError } from '../src/error'
 import { createLogger } from '../src/logger'
+import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
 const nuxtDiags = defineDiagnostics({
   docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
@@ -25,6 +26,9 @@ const i18nDiags = defineDiagnostics({
 })
 
 describe('createLogger', () => {
+  mockConsoleWarn()
+  mockConsoleError()
+
   it('merges multiple diagnostic sets', () => {
     const log = createLogger({ diagnostics: [nuxtDiags, i18nDiags] })
     expect(typeof log.NUXT_B1001).toBe('function')
@@ -35,6 +39,7 @@ describe('createLogger', () => {
   it('.throw() throws CodedError', () => {
     const log = createLogger({ diagnostics: [nuxtDiags] })
     expect(() => log.NUXT_B1001().throw()).toThrow(CodedError)
+    expect('[NUXT_B1001]').toHaveBeenErrored()
   })
 
   it('.throw() error has correct diagnostic', () => {
@@ -47,6 +52,7 @@ describe('createLogger', () => {
       expect((err as CodedError).diagnostic.code).toBe('NUXT_B2011')
       expect((err as CodedError).diagnostic.message).toBe('Invalid plugin `/bad.ts`.')
     }
+    expect('[NUXT_B2011]').toHaveBeenErrored()
   })
 
   it('.warn() calls reporter', () => {
@@ -85,6 +91,7 @@ describe('createLogger', () => {
     const log = createLogger({ diagnostics: [nuxtDiags] })
     const diag = nuxtDiags.NUXT_B1001()
     expect(() => log.throw(diag)).toThrow(CodedError)
+    expect('[NUXT_B1001]').toHaveBeenErrored()
   })
 
   it('raw warn() works with diagnostic object', () => {
@@ -95,12 +102,9 @@ describe('createLogger', () => {
   })
 
   it('defaults to plainFormatter and consoleReporter', () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => { })
     const log = createLogger({ diagnostics: [i18nDiags] })
     log.I18N_I001({ locale: 'fr' }).log()
-    expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('[I18N_I001]'))
-    spy.mockRestore()
+    expect('[I18N_I001]').toHaveBeenWarned()
   })
 
   it('supports array of reporters', () => {

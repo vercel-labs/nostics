@@ -2,6 +2,7 @@ import type { Diagnostic } from '../src/diagnostics'
 import { appendFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createFileReporter } from '../src/reporters/node'
+import { mockConsoleError } from './mock-warn'
 
 // We mock node:fs instead of writing real files to keep tests fast and side-effect free.
 // Vitest recommends memfs (https://vitest.dev/guide/mocking/file-system) for more complex
@@ -13,6 +14,8 @@ vi.mock('node:fs', () => ({
 const mockAppendFileSync = vi.mocked(appendFileSync)
 
 describe('createFileReporter', () => {
+  mockConsoleError()
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -46,14 +49,9 @@ describe('createFileReporter', () => {
     mockAppendFileSync.mockImplementationOnce(() => {
       throw new Error('ENOENT')
     })
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => { })
     const reporter = createFileReporter({ logFile: 'bad.log' })
     const d: Diagnostic = { code: 'E001', level: 'error', message: 'boom' }
     reporter(d, '')
-    expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('[logs-sdk]'),
-      expect.anything(),
-    )
-    spy.mockRestore()
+    expect('[logs-sdk]').toHaveBeenErrored()
   })
 })
