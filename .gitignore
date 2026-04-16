@@ -18,3 +18,5 @@ logs
 node_modules
 temp
 tsconfig.tsbuildinfo
+.claude/settings.local.json
+.claude/worktrees
