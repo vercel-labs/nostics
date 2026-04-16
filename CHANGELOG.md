@@ -1,3 +1,11 @@
+## [0.0.6](https://github.com/vercel-labs/logs-sdk/compare/v0.0.5...v0.0.6) (2026-04-16)
+
+
+### Features
+
+* add debug option to server plugin ([7c2392f](https://github.com/vercel-labs/logs-sdk/commit/7c2392fb4716118fa84b469b01c7eff2c057221e))
+* initialize log file and display path on dev server start ([19323e2](https://github.com/vercel-labs/logs-sdk/commit/19323e254ee0d8935e479651b08dabc902cf6641))
+
 ## [0.0.5](https://github.com/vercel-labs/logs-sdk/compare/v0.0.4...v0.0.5) (2026-04-15)
 
 
