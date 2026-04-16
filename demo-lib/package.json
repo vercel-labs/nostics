@@ -1,7 +1,7 @@
 {
   "name": "@posva/logs-lib-demo",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "publishConfig": {
     "access": "public"
   },
