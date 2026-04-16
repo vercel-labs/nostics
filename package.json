@@ -42,22 +42,6 @@
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },
-  "peerDependencies": {
-    "magic-string": ">=0.30.0",
-    "oxc-parser": ">=0.50.0",
-    "unplugin": ">=2.0.0"
-  },
-  "peerDependenciesMeta": {
-    "magic-string": {
-      "optional": true
-    },
-    "oxc-parser": {
-      "optional": true
-    },
-    "unplugin": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "magic-string": "catalog:deps",
     "oxc-parser": "catalog:deps",
