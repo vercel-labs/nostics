@@ -111,7 +111,7 @@ import { createLogger } from 'nostics'
 const log = createLogger({
   diagnostics: [diagnostics],
   formatter: ansiFormatter(colors),
-  reporter: consoleReporter,
+  reporters: consoleReporter,
 })
 ```
 
@@ -139,7 +139,7 @@ const i18nDiagnostics = defineDiagnostics({
 const log = createLogger({
   diagnostics: [diagnostics, i18nDiagnostics],
   formatter: ansiFormatter(colors),
-  reporter: consoleReporter,
+  reporters: consoleReporter,
 })
 
 log.NUXT_B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
@@ -181,7 +181,7 @@ log.throw(diagnostics.NUXT_B2011({ src: pluginPath }))
 
 **Default behavior:**
 
-If no formatter/reporter specified, defaults to `plainFormatter` + `consoleReporter`. Works out of the box.
+If no formatter/reporters specified, defaults to `plainFormatter` + `consoleReporter`. Works out of the box.
 
 ### 3. Formatting and reporting
 

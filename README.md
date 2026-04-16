@@ -123,7 +123,7 @@ Pass a single reporter function or an array:
 ```ts
 const log = createLogger({
   diagnostics: [diagnostics],
-  reporter: [
+  reporters: [
     consoleReporter,
     (diagnostic, formatted) => {
       sentry.captureMessage(formatted, { tags: { code: diagnostic.code } })

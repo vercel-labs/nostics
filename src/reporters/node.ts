@@ -1,4 +1,4 @@
-import type { Reporter } from './reporter'
+import type { Reporter } from '../reporter'
 import { appendFileSync } from 'node:fs'
 
 export interface FileReporterOptions {
@@ -15,11 +15,11 @@ export interface FileReporterOptions {
  *
  * @example
  * ```ts
- * import { createFileReporter } from 'logs-sdk/node-reporter'
+ * import { createFileReporter } from 'logs-sdk/reporters/node'
  *
  * const log = createLogger({
  *   diagnostics: [diagnostics],
- *   reporter: [consoleReporter, createFileReporter()],
+ *   reporters: [consoleReporter, createFileReporter()],
  * })
  * ```
  */

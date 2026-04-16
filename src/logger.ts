@@ -41,7 +41,7 @@ export type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods
 export interface CreateLoggerOptions<D extends readonly any[]> {
   diagnostics: [...D]
   formatter?: Formatter
-  reporter?: Reporter | Reporter[]
+  reporters?: Reporter | Reporter[]
   captureStack?: boolean
 }
 
@@ -120,9 +120,9 @@ export function createLogger<const D extends readonly any[]>(
   options: CreateLoggerOptions<D>,
 ): Logger<D> {
   const formatter = options.formatter ?? plainFormatter
-  const reporters = Array.isArray(options.reporter)
-    ? options.reporter
-    : [options.reporter ?? consoleReporter]
+  const reporters = Array.isArray(options.reporters)
+    ? options.reporters
+    : [options.reporters ?? consoleReporter]
   const shouldCaptureStack = options.captureStack !== false
 
   const result = {} as any

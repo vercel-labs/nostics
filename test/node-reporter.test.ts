@@ -1,7 +1,7 @@
 import type { Diagnostic } from '../src/diagnostics'
 import { appendFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createFileReporter } from '../src/node-reporter'
+import { createFileReporter } from '../src/reporters/node'
 
 // We mock node:fs instead of writing real files to keep tests fast and side-effect free.
 // Vitest recommends memfs (https://vitest.dev/guide/mocking/file-system) for more complex
