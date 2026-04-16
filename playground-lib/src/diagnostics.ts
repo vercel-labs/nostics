@@ -4,17 +4,17 @@ export const diagnostics = defineDiagnostics({
   codes: {
     MATH_E001: {
       message: 'Division by zero',
-      fix: 'Pass a non-zero divisor',
+      fix: 'Ensure the denominator is not zero',
       level: 'error',
     },
     MATH_W001: {
       message: (p: { n: number }) => `Negative input ${p.n} for factorial`,
-      fix: 'Pass a non-negative integer',
+      fix: 'Ensure n is a non-negative integer',
       level: 'warn',
     },
     MATH_W002: {
       message: (p: { n: number }) => `Large input ${p.n} may overflow`,
-      hint: 'Keep n <= 170 to avoid Infinity',
+      hint: 'Avoid calling factorial with n > 170',
       level: 'warn',
     },
     MATH_D001: {
