@@ -46,3 +46,5 @@ Rules:
 - Always provide `fix` when the solution is known
 - Set `level` explicitly if it's not `'error'`
 - Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
+
+<!-- synced-sha: 7c2392fb4716118fa84b469b01c7eff2c057221e -->

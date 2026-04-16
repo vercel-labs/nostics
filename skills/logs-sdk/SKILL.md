@@ -1,6 +1,6 @@
 ---
 name: logs-sdk
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters, or integrating diagnostic codes into a library or framework."
+description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter, devReporter), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
 ---
 
 # logs-sdk
@@ -233,6 +233,34 @@ All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a si
 |----------|--------|-------------|
 | `consoleReporter` | `logs-sdk` | `console.error` for `'error'` level, `console.warn` for all others |
 | `createFetchReporter(url)` | `logs-sdk` | POSTs diagnostic JSON to the given URL (silently ignores fetch errors) |
+| `createFileReporter(options?)` | `logs-sdk/node-reporter` | Appends diagnostics as NDJSON to a local file (default `.diagnostics.log`) |
+| `devReporter` | `logs-sdk/dev-reporter` | Sends diagnostics to the Vite dev server via `import.meta.hot.send()` for dev-time collection |
+
+**File reporter usage:**
+
+```ts
+import { createFileReporter } from 'logs-sdk/node-reporter'
+
+const log = createLogger({
+  diagnostics: [diagnostics],
+  reporter: [consoleReporter, createFileReporter()],
+})
+
+// Or with a custom path:
+createFileReporter({ logFile: 'my-app.log' })
+```
+
+**Dev reporter usage:**
+
+```ts
+import { consoleReporter, createLogger } from 'logs-sdk'
+import { devReporter } from 'logs-sdk/dev-reporter'
+
+const log = createLogger({
+  diagnostics: [diagnostics],
+  reporter: [consoleReporter, devReporter],
+})
+```
 
 **Writing a custom reporter:**
 
@@ -257,6 +285,75 @@ diagnostics.NUXT_B2011({ src: pluginPath }, {
   cause: originalError,
   sources: [{ file: 'nuxt.config.ts', line: 42 }],
   context: { moduleName: 'my-module' },
+})
+```
+
+## Vite Plugins
+
+Two unplugin-based plugins for build-time optimization and dev-time diagnostic collection, imported from `logs-sdk/unplugin`.
+
+### `logsSDK` — Build-time AST transform
+
+Marks `defineDiagnostics()` and `createLogger()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard so diagnostics tree-shake out of production builds. Supports `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
+
+```ts
+import { logsSDK } from 'logs-sdk/unplugin'
+
+export default defineConfig({
+  plugins: [
+    logsSDK.vite(),
+  ],
+})
+```
+
+**Options (`LogsSdkPluginOptions`):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `packageName` | `string?` | The package name to detect imports from. Default: `'logs-sdk'` |
+
+### `logsSDKServer` — Dev server diagnostic collector
+
+Listens for diagnostics sent over the Vite WebSocket (from `devReporter` in the browser) and writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
+
+```ts
+import { logsSDKServer } from 'logs-sdk/unplugin'
+
+export default defineConfig({
+  plugins: [
+    logsSDKServer.vite(),
+  ],
+})
+```
+
+**Options (`LogsSdkServerOptions`):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `logFile` | `string?` | Path to the log file. Default: `'.diagnostics.log'` |
+| `debug` | `boolean?` | Enable debug logging for the plugin. Default: `!!process.env.DEBUG` |
+
+### Typical dev setup
+
+Use both plugins together with `devReporter` for full dev-time diagnostic capture:
+
+```ts
+// vite.config.ts
+import { logsSDK, logsSDKServer } from 'logs-sdk/unplugin'
+
+export default defineConfig({
+  plugins: [logsSDK.vite(), logsSDKServer.vite()],
+})
+```
+
+```ts
+// src/logger.ts
+import { consoleReporter, createLogger } from 'logs-sdk'
+import { devReporter } from 'logs-sdk/dev-reporter'
+
+export const log = createLogger({
+  diagnostics: [diagnostics],
+  reporter: [consoleReporter, devReporter],
 })
 ```
 
@@ -295,3 +392,5 @@ Each file calls `defineDiagnostics()` with the same `docsBase` but different cod
 ## Documentation Site
 
 For guidance on building error code documentation pages (structure, templates, deployment, and AI-agent optimization), read `references/documentation-site.md`.
+
+<!-- synced-sha: 7c2392fb4716118fa84b469b01c7eff2c057221e -->
