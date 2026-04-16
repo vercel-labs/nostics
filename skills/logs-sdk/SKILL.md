@@ -1,6 +1,6 @@
 ---
 name: logs-sdk
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `@anthropic/logs-sdk`, `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter from logs-sdk/reporters/node, devReporter from logs-sdk/reporters/dev), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
+description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter from logs-sdk/reporters/node, devReporter from logs-sdk/reporters/dev), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
 ---
 
 # logs-sdk
