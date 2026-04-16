@@ -13,7 +13,6 @@ interface Diagnostic {
   fix?: string // how to fix it
   hint?: string // additional hint
   docs?: string // documentation URL
-  sources?: SourceLocation[]
   cause?: unknown
   context?: Record<string, unknown> // machine-readable details
 }
@@ -254,7 +253,7 @@ log.NUXT_B2011({ src: pluginPath }).throw()
 ```
 src/
   index.ts              # Public API exports
-  types.ts              # Diagnostic, DiagnosticActions, SourceLocation, Formatter, Reporter, Overrides, etc.
+  types.ts              # Diagnostic, DiagnosticActions, Formatter, Reporter, Overrides, etc.
   diagnostics.ts        # defineDiagnostics() — pure data + typed factories → Diagnostic
   logger.ts             # createLogger() — binds diagnostics + formatter + reporter
   error.ts              # CodedError class
@@ -271,7 +270,7 @@ Zero runtime dependencies.
 
 ## Implementation Steps
 
-1. **`src/types.ts`** — `Diagnostic`, `DiagnosticActions`, `DiagnosticDefinition`, `MessageTemplate`, `SourceLocation`, `Formatter`, `Reporter`, `Overrides`, type utilities (`ExtractParams<T>`)
+1. **`src/types.ts`** — `Diagnostic`, `DiagnosticActions`, `DiagnosticDefinition`, `MessageTemplate`, `Formatter`, `Reporter`, `Overrides`, type utilities (`ExtractParams<T>`)
 2. **`src/diagnostics.ts`** — `defineDiagnostics({ docsBase, codes })` — typed factory functions per code, each producing plain `Diagnostic`. `docsBase` accepts a string (auto-appends code) or function (full URL control). Utility methods: `codes()`, `has()`, `get()`, `extend()`.
 3. **`src/format.ts`** — Port `wrapLine()` / `renderFrame()`. Implement `plainFormatter`.
 4. **`src/error.ts`** — `CodedError` class, constructed from a `Diagnostic` object

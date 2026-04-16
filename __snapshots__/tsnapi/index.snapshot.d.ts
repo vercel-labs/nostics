@@ -19,7 +19,6 @@ export interface Diagnostic {
   fix?: string;
   hint?: string;
   docs?: string;
-  sources?: SourceLocation[];
   cause?: unknown;
   context?: Record<string, unknown>;
   stack?: string;
@@ -51,11 +50,6 @@ export interface LoggerMethods {
   log: (_: Diagnostic) => void;
   format: (_: Diagnostic) => string;
 }
-export interface SourceLocation {
-  file?: string;
-  line?: number;
-  column?: number;
-}
 
 // Types
 export type CodeFactory<T> = IsEmptyObject<ExtractParams<T>> extends true ? (overrides?: Overrides) => Diagnostic : (params: Simplify<ExtractParams<T>>, overrides?: Overrides) => Diagnostic;
@@ -64,7 +58,7 @@ export type DiagnosticsResult<C extends Record<string, DiagnosticDefinition>> = 
 export type Formatter = (_: Diagnostic) => string;
 export type Logger<D extends readonly any[]> = MergeFactories<D> & LoggerMethods;
 export type MergeFactories<D extends readonly any[]> = D extends readonly [infer First, ...infer Rest] ? ActionFactories<First> & MergeFactories<Rest> : {};
-export type Overrides = Partial<Pick<Diagnostic, "level" | "sources" | "cause" | "context">>;
+export type Overrides = Partial<Pick<Diagnostic, "level" | "cause" | "context">>;
 export type Reporter = (_: Diagnostic, _: string) => void;
 
 // Classes

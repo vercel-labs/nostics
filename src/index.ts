@@ -8,7 +8,6 @@ export type {
   DiagnosticsMethods,
   DiagnosticsResult,
   Overrides,
-  SourceLocation,
 } from './diagnostics'
 
 export { CodedError } from './error'

@@ -27,7 +27,7 @@ When library authors define diagnostics in one place, messages stay consistent. 
 
 Structured diagnostics enable a different kind of agent integration — **precise rather than probabilistic**.
 
-Every diagnostic has a stable code an agent can dispatch on directly, instead of pattern-matching on message text. The object carries everything needed to act: what happened (`message`), why (`why`), how to fix it (`fix`), where to learn more (`docs`), and machine-readable details (`context`, `sources`). The per-code documentation pages are equally useful for agents — they can crawl or fetch them for deeper context when the inline fields aren't enough.
+Every diagnostic has a stable code an agent can dispatch on directly, instead of pattern-matching on message text. The object carries everything needed to act: what happened (`message`), why (`why`), how to fix it (`fix`), where to learn more (`docs`), and machine-readable details (`context`). The per-code documentation pages are equally useful for agents — they can crawl or fetch them for deeper context when the inline fields aren't enough.
 
 An agent can resolve the issue without asking the user for more information. Users don't need to configure anything — if a library uses `logs-sdk`, its diagnostics are already agent-ready. All codes are defined in a catalog, so an agent can enumerate the full error surface ahead of time. And when multiple libraries in a stack adopt it, agents get uniformly structured data from every layer.
 

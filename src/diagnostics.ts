@@ -5,19 +5,6 @@ import type { ExtractParams, IsEmptyObject, Simplify } from './utils'
  */
 export type DiagnosticLevel = 'error' | 'warn' | 'suggestion' | 'deprecation'
 
-/**
- * Source location in user code. Use the `file:line:column` string convention
- * when a simpler representation suffices.
- */
-export interface SourceLocation {
-  file?: string
-  line?: number
-  column?: number
-}
-
-/**
- * A structured, serializable diagnostic object with a stable code.
- */
 export interface Diagnostic {
   /**
    * Unique, stable identifier for this diagnostic (e.g. `MATH_E001`).
@@ -48,14 +35,6 @@ export interface Diagnostic {
    * Auto-generated from {@link DefineDiagnosticsOptions.docsBase}.
    */
   docs?: string
-  /**
-   * Relevant source locations in user code associated with this diagnostic.
-   */
-  sources?: SourceLocation[]
-  /**
-   * Original error or exception that triggered this diagnostic.
-   * Propagated to {@link CodedError.cause} when throwing.
-   */
   cause?: unknown
   /**
    * Arbitrary key-value metadata for machine consumers (reporters, telemetry).
@@ -69,10 +48,7 @@ export interface Diagnostic {
   stack?: string
 }
 
-/**
- * Fields that can be overridden per-call when invoking a diagnostic factory.
- */
-export type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>
+export type Overrides = Partial<Pick<Diagnostic, 'level' | 'cause' | 'context'>>
 
 /**
  * A template for a diagnostic text field — either a static string or a function

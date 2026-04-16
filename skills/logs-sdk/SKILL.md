@@ -22,7 +22,6 @@ interface Diagnostic {
   fix?: string // how to resolve it
   hint?: string // additional guidance
   docs?: string // URL to documentation page for this code
-  sources?: SourceLocation[]
   cause?: unknown
   context?: Record<string, unknown>
 }
@@ -277,13 +276,12 @@ const fileReporter: Reporter = (diagnostic, formatted) => {
 When calling a factory, you can pass `Overrides` to attach runtime context:
 
 ```ts
-type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>
+type Overrides = Partial<Pick<Diagnostic, 'level' | 'cause' | 'context'>>
 ```
 
 ```ts
 diagnostics.NUXT_B2011({ src: pluginPath }, {
   cause: originalError,
-  sources: [{ file: 'nuxt.config.ts', line: 42 }],
   context: { moduleName: 'my-module' },
 })
 ```
