@@ -5,9 +5,9 @@ import { join } from 'node:path'
 import process from 'node:process'
 
 const projectDir = process.env.CLAUDE_PROJECT_DIR || '.'
-const logFile = join(projectDir, '.nostics.log')
+const logFile = join(projectDir, '.diagnostics.log')
 const debugEnabled = !!process.env.DEBUG
-const debugLog = join(projectDir, '.nostics-hook-debug.log')
+const debugLog = join(projectDir, '.diagnostics-hook-debug.log')
 
 function debug(msg) {
   if (!debugEnabled)
@@ -22,7 +22,7 @@ try {
   const stdin = readFileSync(0, 'utf-8')
   input = JSON.parse(stdin)
 }
-catch {}
+catch { }
 
 debug(`Hook fired. stop_hook_active=${input.stop_hook_active}`)
 
