@@ -1,8 +1,10 @@
 {
-  "name": "playground-lib",
+  "name": "@posva/logs-lib-demo",
   "type": "module",
   "version": "0.0.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": "./dist/index.mjs",
     "./package.json": "./package.json"

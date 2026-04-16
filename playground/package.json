@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "playground-lib": "workspace:*",
+    "@posva/logs-lib-demo": "workspace:*",
     "vue": "catalog:playground"
   },
   "devDependencies": {

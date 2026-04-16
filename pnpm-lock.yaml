@@ -172,11 +172,21 @@ importers:
         specifier: catalog:testing
         version: 4.1.4(@types/node@25.6.0)(vite@8.0.8)
 
+  demo-lib:
+    dependencies:
+      logs-sdk:
+        specifier: workspace:*
+        version: link:..
+    devDependencies:
+      tsdown:
+        specifier: catalog:cli
+        version: 0.21.8(@vitejs/devtools@0.1.13)(publint@0.3.18)(synckit@0.11.12)(typescript@6.0.2)
+
   playground:
     dependencies:
-      playground-lib:
+      '@posva/logs-lib-demo':
         specifier: workspace:*
-        version: link:../playground-lib
+        version: link:../demo-lib
       vue:
         specifier: catalog:playground
         version: 3.5.32(typescript@6.0.2)
@@ -199,16 +209,6 @@ importers:
       vite-plugin-inspect:
         specifier: catalog:cli
         version: 12.0.0-beta.1(typescript@6.0.2)(vite@8.0.8)(ws@8.20.0)
-
-  playground-lib:
-    dependencies:
-      logs-sdk:
-        specifier: workspace:*
-        version: link:..
-    devDependencies:
-      tsdown:
-        specifier: catalog:cli
-        version: 0.21.8(@vitejs/devtools@0.1.13)(publint@0.3.18)(synckit@0.11.12)(typescript@6.0.2)
 
 packages:
 

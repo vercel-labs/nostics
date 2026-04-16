@@ -20,4 +20,4 @@ Structured diagnostic SDK — typed, serializable `Diagnostic` objects with stab
 
 `src/code-transform/` — build-time AST transform: marks diagnostic code as pure, wraps with `NODE_ENV` guard for tree-shaking.
 
-Monorepo (pnpm workspaces): `playground/` and `playground-lib/` are subprojects.
+Monorepo (pnpm workspaces): `playground/` and `demo-lib/` are subprojects.

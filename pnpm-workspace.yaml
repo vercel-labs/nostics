@@ -5,7 +5,7 @@ shellEmulator: true
 trustPolicy: no-downgrade
 packages:
   - playground
-  - playground-lib
+  - demo-lib
   - docs
   - packages/*
   - examples/*

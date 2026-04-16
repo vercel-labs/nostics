@@ -22,8 +22,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # prevent running on forks and with other tags
     if: |
-      startsWith(github.ref_name, 'v') &&
+      (startsWith(github.ref_name, 'v') ||
+      contains(github.ref_name, '@')) &&
       github.repository == 'vercel-labs/logs-sdk'
 
     environment: release
@@ -47,11 +49,39 @@ jobs:
           echo "Current tag: $TAG"
           echo "TAG=$TAG" >>$GITHUB_OUTPUT
 
-          # Compute previous tag (skip current tag)
-          echo "Finding previous tag using: git describe --match 'v*'"
+          # ========= Determine package type =========
+          if [[ "$TAG" =~ ^v[0-9] ]]; then
+            # Main package
+            PKG_NAME="<main>"
+            PACKAGE_PATH="."
+            GIT_DESCRIBE_MATCH="v*"
+          else
+            # Scoped package: extract prefix before last @
+            PKG_NAME="${TAG%@*}"
+            GIT_DESCRIBE_MATCH="${PKG_NAME}@*"
+
+            # Package folder mapping
+            declare -A MAP=(
+              ["@posva/logs-lib-demo"]="demo-lib"
+            )
+
+            if [[ -z "${MAP[$PKG_NAME]}" ]]; then
+              echo "❌ Unknown package name '$PKG_NAME'" >&2
+              exit 1
+            fi
+
+            PACKAGE_PATH="${MAP[$PKG_NAME]}"
+          fi
+
+          echo "PKG_NAME=$PKG_NAME" >>$GITHUB_OUTPUT
+          echo "PACKAGE_PATH=$PACKAGE_PATH" >>$GITHUB_OUTPUT
+          echo "GIT_DESCRIBE_MATCH=$GIT_DESCRIBE_MATCH" >>$GITHUB_OUTPUT
+
+          # ========= Compute previous tag (skip current tag) =========
+          echo "Finding previous tag using: git describe --match '$GIT_DESCRIBE_MATCH'"
 
           set +e
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match "v*" "${TAG}^" 2>/dev/null)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match "$GIT_DESCRIBE_MATCH" "${TAG}^" 2>/dev/null)
           STATUS=$?
           set -e
 
@@ -64,8 +94,13 @@ jobs:
 
           echo "PREVIOUS_TAG=$PREVIOUS_TAG" >>$GITHUB_OUTPUT
 
-          # Determine npm dist-tag
-          VERSION="${TAG#v}"
+          # ========= Determine npm dist-tag =========
+          if [[ "$TAG" =~ ^v[0-9] ]]; then
+            VERSION="${TAG#v}"
+          else
+            VERSION="${TAG##*@}"
+          fi
+
           if [[ "$VERSION" =~ -beta ]]; then
             NPM_TAG="beta"
           elif [[ "$VERSION" =~ -alpha ]]; then
@@ -80,6 +115,8 @@ jobs:
 
           echo "Resolved:"
           echo "  TAG=$TAG"
+          echo "  PKG_NAME=$PKG_NAME"
+          echo "  PACKAGE_PATH=$PACKAGE_PATH"
           echo "  PREVIOUS_TAG=$PREVIOUS_TAG"
           echo "  NPM_TAG=$NPM_TAG"
 
@@ -98,10 +135,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: pnpm run build && pnpm -r run build
 
       - name: Publish to NPM
         run: pnpm publish --access public --no-git-checks --tag ${{ steps.resolve.outputs.NPM_TAG }}
+        working-directory: ${{ steps.resolve.outputs.PACKAGE_PATH }}
 
       - name: Generate GitHub Changelog
         run: pnpx changelogithub@14.0.0 --from "$FROM_TAG" --to "$TAG"
