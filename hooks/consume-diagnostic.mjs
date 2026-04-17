@@ -56,9 +56,33 @@ if (lines.length === 0) {
 const firstLine = lines[0]
 debug(`First line: ${firstLine}`)
 
-// Remove the first line
-writeFileSync(logFile, lines.slice(1).join('\n') + (lines.length > 1 ? '\n' : ''))
-debug(`Removed first line, remaining: ${lines.length - 1}`)
+let dropCode
+let dropFile
+try {
+  const d = JSON.parse(firstLine)
+  dropCode = d.code
+  dropFile = d.sources?.[0]?.file
+}
+catch { }
+
+const remaining = lines.slice(1).filter((line) => {
+  // keep l
+  if (!dropCode) {
+    debug(`Potentially invalid line (no code to drop): ${line}`)
+    return true
+  }
+  try {
+    const d = JSON.parse(line)
+    return !(d.code === dropCode && d.sources?.[0]?.file === dropFile)
+  }
+  catch (err) {
+    debug(`Error parsing line, keeping it: ${line}\nError: ${err}`)
+    return true
+  }
+})
+
+debug(`Consumed 1, removed ${lines.length - 1 - remaining.length} duplicate(s), remaining: ${remaining.length}`)
+writeFileSync(logFile, remaining.length ? `${remaining.join('\n')}\n` : '')
 
 // Block stop and pass the diagnostic as reason
 const output = JSON.stringify({
