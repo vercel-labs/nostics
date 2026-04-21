@@ -1,203 +1,113 @@
-# Documentation Site and Error Code Registry
+# Error Code Documentation Pages
 
-## Table of Contents
+Every published diagnostic code should have a dedicated page at the URL its `docs` field resolves to. Humans land there from the `see:` link in terminal output; agents fetch it to explain an error they've been handed.
 
-- [Why a documentation site matters](#why-a-documentation-site-matters)
-- [Setting up docsBase](#setting-up-docsbase)
-- [Documentation page structure](#documentation-page-structure)
-- [Page template](#page-template)
-- [Deployment recommendations](#deployment-recommendations)
-- [Keeping docs in sync with code](#keeping-docs-in-sync-with-code)
-- [Optimizing for AI agent consumption](#optimizing-for-ai-agent-consumption)
-
-## Why a documentation site matters
-
-Every diagnostic code should have a dedicated, publicly accessible documentation page. This serves three audiences:
-
-1. **Developers** encountering the error in their terminal or logs can click the `see:` URL and get immediate guidance
-2. **AI agents** (Claude, Copilot, etc.) can fetch the page content to provide contextual help when a user pastes an error
-3. **Search engines** index these pages so developers searching for `NUXT_B2011` find the answer directly
-
-## Setting up docsBase
-
-The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs` URL. It can be a string or a function:
-
-```ts
-// Function form — full control over the URL
-const diagnostics = defineDiagnostics({
-  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
-  codes: {
-    NUXT_B2011: { message: '...' },
-  },
-})
-// diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/b2011'
-```
-
-```ts
-// String form — code appended automatically as ${docsBase}/${code.toLowerCase()}
-const diagnostics = defineDiagnostics({
-  docsBase: 'https://example.com/errors',
-  codes: {
-    MY_E001: { message: '...' },
-  },
-})
-// diagnostics.MY_E001().docs → 'https://example.com/errors/my_e001'
-```
-
-Plan your URL structure accordingly.
-
-## Documentation page structure
-
-Each error code page (e.g. `https://nuxt.com/e/b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption — use clear headings, concise language, and structured sections.
-
-### Required sections
-
-**Title and code identifier**
-
-```markdown
-# NUXT_B2011: Invalid plugin — src option is required
-
-Code: `NUXT_B2011`
-Level: error
-```
-
-Start with the code and a short human-readable title. Include the code and the severity level.
-
-**What this error means**
-
-```markdown
-## What this error means
-
-This error occurs when a plugin is registered via `addPlugin()` without providing a
-valid `src` path. Nuxt requires every plugin to have a source file so it can be
-resolved and included in the build.
-```
-
-Explain the error in plain language. Assume the reader has no prior context — describe what the system expected vs what it received. This section is the primary content AI agents will use to explain the error to users.
-
-**Why this happens**
-
-```markdown
-## Why this happens
-
-Common causes:
-
-- Passing an object to `addPlugin()` without a `src` property
-- Passing `undefined` or `null` as the plugin path
-- A module is constructing a plugin object dynamically and the `src` field is missing
-  due to a conditional branch or typo
-```
-
-List the concrete scenarios that trigger this diagnostic. Use bullet points. Each bullet should be a specific, recognizable situation the developer might be in.
-
-**How to fix it**
-
-```markdown
-## How to fix it
-
-Ensure every call to `addPlugin()` includes a valid `src` path:
-
-\```ts
-// Wrong
-addPlugin({ name: 'my-plugin' })
-
-// Correct
-addPlugin({ src: resolve('./runtime/my-plugin'), name: 'my-plugin' })
-
-// Also correct — pass a string directly
-addPlugin(resolve('./runtime/my-plugin'))
-\```
-
-If the plugin path is computed dynamically, verify the variable is defined before
-passing it to `addPlugin()`.
-```
-
-Provide concrete code examples showing the wrong pattern and the corrected version. This is the most important section — it should be copy-pasteable.
-
-### Optional sections
-
-**Additional context**
-
-```markdown
-## Additional context
-
-- This validation was added in Nuxt 3.2
-- If you are writing a Nuxt module, see the [Module Author Guide](https://nuxt.com/docs/guide/going-further/modules)
-- Related codes: [NUXT_B1001](./nuxt_b1001) (template compilation), [NUXT_B3005](./nuxt_b3005) (module resolution)
-```
-
-Link to related documentation, changelog entries, or related diagnostic codes.
-
-**Example diagnostic output**
-
-```markdown
-## Example output
-
-\```
-[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ why: The plugin object was passed without a src path
-├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-├▶ hint: Check your module's addPlugin() calls
-╰▶ see: https://nuxt.com/e/b2011
-\```
-```
-
-Show what the user actually sees in their terminal so they can confirm they're on the right page.
+For `docsBase` setup (string vs function form), see `api-reference.md`. This file covers the *content* behind those URLs.
 
 ## Page template
 
-Use this template for each error code page:
-
 ```markdown
-# {CODE}: {Short title}
+# {CODE}: {short title}
 
 Code: `{CODE}`
-Level: {error|warn|suggestion|deprecation}
+Level: {error | warn | suggestion | deprecation}
 
 ## What this error means
 
-{Plain-language explanation of the diagnostic. 1-3 sentences.}
+{Plain-language explanation. 1–3 sentences. Describe what the system expected
+vs what it received. This is the primary section AI agents read.}
 
 ## Why this happens
 
-{Bulleted list of concrete scenarios that trigger this diagnostic.}
+- {Concrete scenario 1}
+- {Concrete scenario 2}
+- {Concrete scenario 3}
 
 ## How to fix it
 
-{Code examples showing the wrong pattern and the corrected version.}
+\`\`\`ts
+// Wrong
+...
 
-## Additional context
+// Correct
+...
+\`\`\`
 
-{Links to related docs, changelog, or related diagnostic codes. Optional.}
+{Short prose after the snippet if a pattern needs explanation.}
+
+## Related
+
+- {Links to related codes, changelog entries, or guides. Optional.}
 
 ## Example output
 
-{Terminal output showing the formatted diagnostic. Optional.}
+\`\`\`
+[{CODE}] {message}
+├▶ fix: {fix}
+╰▶ see: {URL}
+\`\`\`
+
+{Optional — helps users confirm they're on the right page.}
 ```
 
-## Deployment recommendations
+## Section guidance
 
-Host the error code pages on a public URL that matches your `docsBase`:
+**Title + code block.** Start with the code and a short title. Repeat the code and level below as a machine-readable header — agents and search engines latch onto this.
 
-- **GitHub Pages or static site generator** (VitePress, Nuxt Content, etc.) — create a directory of markdown files, one per code, with a catch-all route at `/e/[code].md`
-- **Dedicated `/errors` or `/e` route** in your existing documentation site
-- Ensure pages return proper HTTP status codes (200 for valid codes, 404 for unknown codes) so agents and crawlers can distinguish valid codes from missing ones
-- Use `<meta>` tags or frontmatter for structured data (code, level, title) to improve agent and search engine consumption
-- Keep pages lightweight — avoid heavy JavaScript or SPAs that block content rendering for fetch-based agents
+**What this error means.** Plain prose. Assume zero prior context. Describe expected vs actual. No code here — keep it narrative. This is the section an agent paraphrases to the user.
+
+**Why this happens.** Bulleted concrete scenarios the developer might be in. Avoid abstractions — "passing `undefined`", "a conditional branch that forgets to set `src`", not "invalid input handling". Recognizable triggers, not taxonomy.
+
+**How to fix it.** Copy-pasteable code. Show the wrong pattern and the corrected one side by side. This section is the payload — agents often skip directly here. Prefer showing over telling.
+
+**Related / Example output.** Optional. Use "Related" for links to adjacent codes or deeper docs. Use "Example output" so users can eyeball the terminal text they're seeing and confirm they're on the right page.
+
+## Deployment
+
+Host at a URL that matches your `docsBase`. VitePress, Nuxt Content, Astro, or any static site generator works — one markdown file per code under `/e/[code].md` (or the equivalent).
+
+Non-negotiable:
+- Pages render in plain HTML without JavaScript. Agents using `fetch`-based tools will not execute scripts, and neither will most crawlers.
+- Unknown codes return 404, not 200. Agents distinguish "valid code I couldn't find docs for" from "docs are missing" via status.
+- The code string appears in the page title and in the body. Keyword search is how users arrive.
+
+Nice to have:
+- Frontmatter (`code`, `level`, `title`) for structured consumption.
+- An index page listing every code with its message and level.
+
+## Optimizing for AI-agent consumption
+
+When an agent fetches the docs URL, it's usually because the inline `fix` wasn't enough. Write so the agent can extract the action without ambiguity:
+
+- Consistent heading hierarchy — `##` for sections, never jump levels.
+- Fix instructions **early**. If an agent stops reading after the first two sections, it should still have the fix.
+- No collapsed sections, tabs, or JS-rendered content hiding critical info.
+- Self-contained code examples. An agent should be able to suggest the fix from the page content alone — don't require "see linked repo for setup".
+- Echo the code string in headings and body. Exact-match matters for both agents and search.
 
 ## Keeping docs in sync with code
 
-- Store documentation markdown alongside your diagnostic definitions or in a dedicated `docs/errors/` directory
-- Generate an index page listing all codes with their messages and levels
-- In CI, validate that every code in `defineDiagnostics()` has a corresponding documentation page — fail the build if a page is missing
-- When adding a new diagnostic code, add the documentation page in the same PR
+The code registry is authoritative. A diagnostic without a docs page produces a broken `see:` link; a docs page without a code is noise. Enforce the invariant in CI:
 
-## Optimizing for AI agent consumption
+```ts
+// scripts/check-docs.ts
+import { readdirSync, existsSync } from 'node:fs'
+import { diagnostics } from '../src/diagnostics'
 
-Pages should be structured so that an AI agent fetching the URL can extract the relevant information without ambiguity:
+const docsDir = new URL('../docs/e/', import.meta.url).pathname
+const missing: string[] = []
 
-- Use consistent heading hierarchy (`##` for sections)
-- Put the most actionable content (fix instructions) early
-- Avoid hiding critical information in collapsed sections, tabs, or JavaScript-rendered content
-- Include the code in the page title and body so keyword matching works
-- Keep code examples self-contained — an agent should be able to suggest the fix from the page content alone
+for (const code of diagnostics.codes()) {
+  const page = `${docsDir}${code.toLowerCase()}.md`
+  if (!existsSync(page)) missing.push(code)
+}
+
+if (missing.length) {
+  console.error(`Missing docs pages:\n${missing.map(c => `  - ${c}`).join('\n')}`)
+  process.exit(1)
+}
+```
+
+Add a reverse check too — every docs page should correspond to a known code (`diagnostics.has(code)`), so deleting a code from the registry flags its stale doc.
+
+Add new codes and their docs page in the same PR. The `/add-diagnostic` skill (if installed) handles this flow.
