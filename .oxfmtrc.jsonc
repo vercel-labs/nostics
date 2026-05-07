@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "printWidth": 100,
+  "trailingComma": "all",
+  "experimentalSortPackageJson": false,
+  "singleQuote": true,
+  "ignorePatterns": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "typed-router.d.ts",
+    "components.d.ts",
+    "codemods/rule-tests/__snapshots__/",
+    // it breaks vitepress features
+    "docs/**/*.md",
+    "pnpm-lock.yaml"
+  ]
+}
