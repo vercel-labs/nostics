@@ -1,6 +1,7 @@
 import { defineDiagnostics } from 'logs-sdk'
 
 export const diagnostics = defineDiagnostics({
+  docsBase: code => `https://example.com/docs/diagnostics/${code.toLowerCase()}`,
   codes: {
     MATH_E001: {
       message: 'Division by zero',
