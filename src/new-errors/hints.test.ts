@@ -1,13 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mockConsoleError, mockConsoleWarn } from '../../test/mock-warn'
-import {
-  defineErrors,
-  Hint,
-  reporterError,
-  reporterLog,
-  reporterRequiredOptions,
-  toValueWithArgs,
-} from './hint'
+import { defineErrors, Hint, reporterError, reporterLog, reporterRequiredOptions } from './hint'
 
 mockConsoleWarn()
 mockConsoleError()
@@ -15,29 +8,70 @@ mockConsoleError()
 describe('hint', () => {
   describe('class basics', () => {
     it('is an instance of Error and Hint', () => {
-      const h = new Hint('boom')
+      const h = new Hint({ why: 'boom' })
       expect(h).toBeInstanceOf(Error)
       expect(h).toBeInstanceOf(Hint)
     })
 
     it('exposes message and default name', () => {
-      const h = new Hint('boom')
+      const h = new Hint({ why: 'boom' })
       expect(h.message).toBe('boom')
       expect(h.name).toBe('Hint')
     })
 
     it('captures a stack pointing at the call site', () => {
-      const h = new Hint('boom')
+      const h = new Hint({ why: 'boom' })
       expect(h.stack).toBeDefined()
       // take the first line of the stack
       expect(h.stack?.split('\n').at(1)).toContain('hints.test.ts')
     })
 
     it('toJSON returns a serializable { name, message, stack } shape', () => {
-      const h = new Hint('boom')
+      const h = new Hint({ why: 'boom' })
       expect(h.toJSON()).toEqual({
         name: 'Hint',
         message: 'boom',
+        stack: h.stack,
+      })
+    })
+
+    it('`why` getter mirrors `message`', () => {
+      const h = new Hint({ why: 'boom' })
+      expect(h.why).toBe('boom')
+      expect(h.why).toBe(h.message)
+    })
+
+    it('stores optional `fix` and exposes it on the instance', () => {
+      const h = new Hint({ why: 'boom', fix: 'restart it' })
+      expect(h.fix).toBe('restart it')
+    })
+
+    it('forwards `cause` to Error so `instanceof` chains work', () => {
+      const original = new Error('original')
+      const h = new Hint({ why: 'boom', cause: original })
+      expect(h.cause).toBe(original)
+    })
+
+    it('stores optional `sources` in `file:line:column` format', () => {
+      const sources = ['src/foo.ts:1:5', 'src/bar.ts:42:10']
+      const h = new Hint({ why: 'boom', sources })
+      expect(h.sources).toEqual(sources)
+    })
+
+    it('toJSON includes optional fields when present', () => {
+      const original = new Error('orig')
+      const h = new Hint({
+        why: 'boom',
+        fix: 'restart',
+        cause: original,
+        sources: ['a.ts:1:1'],
+      })
+      expect(h.toJSON()).toEqual({
+        name: 'Hint',
+        message: 'boom',
+        fix: 'restart',
+        cause: original,
+        sources: ['a.ts:1:1'],
         stack: h.stack,
       })
     })
@@ -132,14 +166,14 @@ describe('hint', () => {
 
 describe('built-in reporters', () => {
   it('reporterError logs `Hint: <msg>` to console.error', () => {
-    reporterError(new Hint('boom'))
+    reporterError(new Hint({ why: 'boom' }))
     expect('Hint: boom').toHaveBeenErrored()
   })
 
   it('reporterLog defaults to console.log', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
-      reporterLog(new Hint('boom'))
+      reporterLog(new Hint({ why: 'boom' }))
       expect(spy).toHaveBeenCalledWith('Hint: boom')
     }
     finally {
@@ -148,28 +182,22 @@ describe('built-in reporters', () => {
   })
 
   it('reporterLog routes to console.warn when method is "warn"', () => {
-    reporterLog(new Hint('boom'), { method: 'warn' })
+    reporterLog(new Hint({ why: 'boom' }), { method: 'warn' })
     expect('Hint: boom').toHaveBeenWarned()
   })
 
   it('reporterLog routes to console.error when method is "error"', () => {
-    reporterLog(new Hint('boom'), { method: 'error' })
+    reporterLog(new Hint({ why: 'boom' }), { method: 'error' })
     expect('Hint: boom').toHaveBeenErrored()
   })
 
   it('reporterRequiredOptions includes the priority value', () => {
-    reporterRequiredOptions(new Hint('boom'), { priority: 7 })
+    reporterRequiredOptions(new Hint({ why: 'boom' }), { priority: 7 })
     expect('priority: 7').toHaveBeenWarned()
   })
 })
 
 describe('defineErrors', () => {
-  // FIXME: move to a test-only test in hints.test-d.ts
-  it('returns undefined for an undefined code (no proxy guard)', () => {
-    const errs = defineErrors({ codes: { X: 'msg' } })
-    expect(errs.UNKNOWN).toBeUndefined()
-  })
-
   it('returns the same handle on repeated access', () => {
     const errs = defineErrors({ codes: { X: 'msg' } })
     expect(errs.X).toBe(errs.X)
@@ -272,26 +300,5 @@ describe('defineErrors', () => {
       const firstFrame = h.stack?.split('\n')[1] ?? ''
       expect(firstFrame).not.toContain('hint.ts')
     })
-  })
-})
-
-// TODO: move the function and the test to a utils file
-describe('toValueWithArgs', () => {
-  it('returns the value when not a function', () => {
-    expect(toValueWithArgs('hello')).toBe('hello')
-    expect(toValueWithArgs(42)).toBe(42)
-    expect(toValueWithArgs(undefined)).toBe(undefined)
-  })
-
-  it('invokes the function with forwarded args', () => {
-    const fn = vi.fn((a: number, b: number) => a + b)
-    expect(toValueWithArgs(fn, 1, 2)).toBe(3)
-    expect(fn).toHaveBeenCalledWith(1, 2)
-  })
-
-  it('invokes a zero-arg function with no args', () => {
-    const fn = vi.fn(() => 'ok')
-    expect(toValueWithArgs(fn)).toBe('ok')
-    expect(fn).toHaveBeenCalledWith()
   })
 })

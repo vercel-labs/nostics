@@ -1,4 +1,5 @@
 /* eslint-disable ts/explicit-function-return-type -- type tests intentionally construct values without using them and exist purely to exercise inference */
+/* eslint-disable unused-imports/no-unused-vars -- type tests intentionally construct values without using them and exist purely to exercise inference */
 
 import type { Hint } from './hint'
 import { describe, expectTypeOf, it } from 'vitest'
@@ -117,5 +118,10 @@ describe('defineErrors — return types', () => {
   it('.throw returns never', () => {
     const errs = defineErrors({ codes: { X: 'msg' } })
     expectTypeOf(errs.X.throw).returns.toBeNever()
+  })
+
+  it('rejects access to undefined codes at the type level', () => {
+    const errs = defineErrors({ codes: { X: 'msg' } })
+    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
   })
 })

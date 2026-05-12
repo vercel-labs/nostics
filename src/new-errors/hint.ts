@@ -1,11 +1,42 @@
 /* eslint-disable ts/no-empty-object-type -- `{}` is used as the neutral element when intersecting reporter option shapes */
-/* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace
+/* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace */
 
 /**
  * A template for a diagnostic text field — either a static string or a function
  * that receives interpolation parameters and returns a string.
  */
 export type MessageTemplate<P = any> = string | ((params: P) => string)
+
+/**
+ * Structured initializer for a {@link Hint}. `why` is the only required field
+ * — it becomes the {@link Error.message}. The remaining fields are optional
+ * metadata that reporters and consumers can render or forward.
+ */
+export interface HintInit {
+  /**
+   * The actual error message: why this failed.
+   * Mirrored to `Error.message`.
+   */
+  why: string
+
+  /**
+   * Optional actionable instructions on how to resolve the problem.
+   */
+  fix?: string
+
+  /**
+   * Original error or exception that triggered this hint. Pass it through
+   * when re-throwing so the original stack trace is preserved.
+   */
+  cause?: unknown
+
+  /**
+   * Locations in user code that contributed to this hint, in `file:line:column`
+   * format. Useful for compilers and other tools where the JS stack trace
+   * doesn't reflect the user's source.
+   */
+  sources?: string[]
+}
 
 /**
  * Represents how to report a hint. Could call `console.log()`, send the hint
@@ -136,21 +167,6 @@ type Errors<
   >
 }
 
-/**
- * Transforms a value or a function that returns a value to a value.
- *
- * @param valFn either a value or a function that returns a value
- * @param args  arguments to pass to the function if `valFn` is a function
- *
- * @internal
- */
-export function toValueWithArgs<T, Args extends any[]>(
-  valFn: T | ((...args: Args) => T),
-  ...args: Args
-): T {
-  return typeof valFn === 'function' ? (valFn as (...args: Args) => T)(...args) : valFn
-}
-
 const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: Function) => void }
 ).captureStackTrace
@@ -165,14 +181,34 @@ export class Hint extends Error {
   docs?: string
 
   /**
-   * @param message    rendered error message
+   * Optional actionable instructions on how to resolve the problem.
+   */
+  fix?: string
+
+  /**
+   * Locations in user code that contributed to this hint, in
+   * `file:line:column` format.
+   */
+  sources?: string[]
+
+  /**
+   * Alias for {@link Error.message}: the reason this hint was raised.
+   */
+  get why(): string {
+    return this.message
+  }
+
+  /**
+   * @param init        structured initializer; `why` is required
    * @param captureFrom V8 stack-cutoff frame. Defaults to {@link Hint} so the
    * top of the trace is the `new Hint(...)` call site. `defineErrors` passes
    * its action method to strip its own frames too. Ignored on engines without
    * `Error.captureStackTrace`.
    */
-  constructor(message: string, captureFrom: Function = Hint) {
-    super(message)
+  constructor(init: HintInit, captureFrom: Function = Hint) {
+    super(init.why, { cause: init.cause })
+    this.fix = init.fix
+    this.sources = init.sources
     // V8-only API, but also implemented pretty much everywhere. Worst case
     // scenario, we fall back to the stack `Error` captures by default — which
     // includes a couple of extra internal frames but is still usable.
@@ -186,6 +222,9 @@ export class Hint extends Error {
     return {
       name: this.name,
       message: this.message,
+      fix: this.fix,
+      sources: this.sources,
+      cause: this.cause,
       stack: this.stack,
     }
   }
@@ -221,7 +260,7 @@ export function defineErrors<
     const handle: HintHandle<any, any> = {
       report(...args: any[]): Hint {
         const message = isFn ? (template as (p: any) => string)(args[0]) : (template as string)
-        const hint = new Hint(message, handle.report)
+        const hint = new Hint({ why: message }, handle.report)
         hint.name = code
         const reporterOptions = (isFn ? args[1] : args[0]) ?? {}
         for (const reporter of reporters) reporter(hint, reporterOptions)
