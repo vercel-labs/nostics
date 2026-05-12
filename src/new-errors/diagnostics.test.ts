@@ -27,13 +27,16 @@ describe('diagnostic', () => {
       expect(d.name).toBe('X_001')
     })
 
-    it('toJSON returns a serializable { name, message, stack } shape', () => {
+    it('toJSON returns a serializable shape', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
       const d = errs.X_001.report()
       expect(d.toJSON()).toEqual({
         name: 'X_001',
-        message: 'boom',
-        stack: d.stack,
+        why: 'boom',
+        fix: undefined,
+        docs: undefined,
+        sources: undefined,
+        cause: undefined,
       })
     })
 
@@ -71,11 +74,11 @@ describe('diagnostic', () => {
       const d = errs.X_001.report({ cause: original, sources: ['a.ts:1:1'] })
       expect(d.toJSON()).toEqual({
         name: 'X_001',
-        message: 'boom',
+        why: 'boom',
         fix: 'restart',
+        docs: undefined,
         cause: original,
         sources: ['a.ts:1:1'],
-        stack: d.stack,
       })
     })
   })
