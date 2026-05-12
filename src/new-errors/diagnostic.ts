@@ -8,11 +8,11 @@
 export type MessageTemplate<P = any> = string | ((params: P) => string)
 
 /**
- * Structured initializer for a {@link Hint}. `why` is the only required field
- * — it becomes the {@link Error.message}. The remaining fields are optional
- * metadata that reporters and consumers can render or forward.
+ * Structured initializer for a {@link Diagnostic}. `why` is the only required
+ * field — it becomes the {@link Error.message}. The remaining fields are
+ * optional metadata that reporters and consumers can render or forward.
  */
-export interface HintInit {
+export interface DiagnosticInit {
   /**
    * The actual error message: why this failed.
    * Mirrored to `Error.message`.
@@ -25,26 +25,29 @@ export interface HintInit {
   fix?: string
 
   /**
-   * Original error or exception that triggered this hint. Pass it through
-   * when re-throwing so the original stack trace is preserved.
+   * Original error or exception that triggered this diagnostic. Pass it
+   * through when re-throwing so the original stack trace is preserved.
    */
   cause?: unknown
 
   /**
-   * Locations in user code that contributed to this hint, in `file:line:column`
-   * format. Useful for compilers and other tools where the JS stack trace
-   * doesn't reflect the user's source.
+   * Locations in user code that contributed to this diagnostic, in
+   * `file:line:column` format. Useful for compilers and other tools where the
+   * JS stack trace doesn't reflect the user's source.
    */
   sources?: string[]
 }
 
 /**
- * Represents how to report a hint. Could call `console.log()`, send the hint
- * to a server, or something else. Reporters declare the shape of options they
- * need via `Opts`; `defineErrors` intersects every reporter's options into a
- * single object passed at the call site.
+ * Represents how to report a diagnostic. Could call `console.log()`, send the
+ * diagnostic to a server, or something else. Reporters declare the shape of
+ * options they need via `Opts`; `defineDiagnostics` intersects every
+ * reporter's options into a single object passed at the call site.
  */
-export type HintReporter<Opts extends object = {}> = (hint: Hint, options: Opts) => void
+export type DiagnosticReporter<Opts extends object = {}> = (
+  diagnostic: Diagnostic,
+  options: Opts,
+) => void
 
 /**
  * Permissive reporter constraint used internally so reporters with 1 arg,
@@ -52,30 +55,33 @@ export type HintReporter<Opts extends object = {}> = (hint: Hint, options: Opts)
  *
  * @internal
  */
-type AnyHintReporter = (hint: Hint, options: any) => void
+type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
 
-export function reporterError(hint: Hint): void {
-  console.error(`Hint: ${hint.message}`)
+export function reporterError(diagnostic: Diagnostic): void {
+  console.error(`Diagnostic: ${diagnostic.message}`)
 }
 
 export function reporterLog(
-  hint: Hint,
+  diagnostic: Diagnostic,
   { method = 'log' }: { method?: 'log' | 'error' | 'warn' } = {},
 ): void {
   // eslint-disable-next-line no-console
-  console[method](`Hint: ${hint.message}`)
+  console[method](`Diagnostic: ${diagnostic.message}`)
 }
 
-export function reporterRequiredOptions(hint: Hint, options: { priority: number }): void {
-  console.warn(`Hint: ${hint.message} (priority: ${options.priority})`)
+export function reporterRequiredOptions(
+  diagnostic: Diagnostic,
+  options: { priority: number },
+): void {
+  console.warn(`Diagnostic: ${diagnostic.message} (priority: ${options.priority})`)
 }
 
 /**
- * Options for {@link defineErrors}.
+ * Options for {@link defineDiagnostics}.
  */
-export interface DefineErrorsOptions<
+export interface DefineDiagnosticsOptions<
   Codes extends Record<string, MessageTemplate | 0>,
-  Reporters extends readonly AnyHintReporter[],
+  Reporters extends readonly AnyDiagnosticReporter[],
 > {
   /**
    * Base URL or resolver for documentation links. When a string, the code is
@@ -97,7 +103,7 @@ export interface DefineErrorsOptions<
   reporters?: Reporters
 }
 
-export interface DefineErrorsOptionsProd<Codes extends string[]> {
+export interface DefineDiagnosticsOptionsProd<Codes extends string[]> {
   /**
    * Base URL or resolver for documentation links. When a string, the code is
    * appended as a lowercase path segment (e.g. `"https://docs.example.com"` →
@@ -138,30 +144,31 @@ type ActionArgs<Params, Opts> = Params extends undefined
   : [params: Params, ...OptionsArgs<Opts>]
 
 /**
- * Per-code handle exposed by {@link defineErrors}. Each code is a plain
+ * Per-code handle exposed by {@link defineDiagnostics}. Each code is a plain
  * object with `.report()` and `.throw()`
  */
-export interface HintHandle<Params, Opts> {
+export interface DiagnosticHandle<Params, Opts> {
   /**
-   * Builds the hint, runs every reporter, and returns the hint instance.
-   * The returned hint can be inspected, attached as `cause`, or ignored.
+   * Builds the diagnostic, runs every reporter, and returns the diagnostic
+   * instance. The returned diagnostic can be inspected, attached as `cause`,
+   * or ignored.
    */
-  report: (...args: ActionArgs<Params, Opts>) => Hint
+  report: (...args: ActionArgs<Params, Opts>) => Diagnostic
 
   /**
-   * Builds the hint, runs every reporter, then throws the hint.
+   * Builds the diagnostic, runs every reporter, then throws the diagnostic.
    */
   throw: (...args: ActionArgs<Params, Opts>) => never
 }
 
 /**
- * Return type of {@link defineErrors}.
+ * Return type of {@link defineDiagnostics}.
  */
-type Errors<
+type Diagnostics<
   Codes extends Record<string, MessageTemplate | 0>,
-  Reporters extends readonly AnyHintReporter[],
+  Reporters extends readonly AnyDiagnosticReporter[],
 > = {
-  [Code in keyof Codes]: HintHandle<
+  [Code in keyof Codes]: DiagnosticHandle<
     Codes[Code] extends (params: infer P) => string ? P : undefined,
     Prettify<ExtractReportersOptions<Reporters>>
   >
@@ -171,12 +178,12 @@ const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: Function) => void }
 ).captureStackTrace
 
-export class Hint extends Error {
-  name: string = 'Hint'
+export class Diagnostic extends Error {
+  name: string = 'Diagnostic'
 
   /**
    * URL to extended documentation for this diagnostic code.
-   * Auto-generated from {@link DefineErrorsOptions.docsBase}.
+   * Auto-generated from {@link DefineDiagnosticsOptions.docsBase}.
    */
   docs?: string
 
@@ -186,13 +193,13 @@ export class Hint extends Error {
   fix?: string
 
   /**
-   * Locations in user code that contributed to this hint, in
+   * Locations in user code that contributed to this diagnostic, in
    * `file:line:column` format.
    */
   sources?: string[]
 
   /**
-   * Alias for {@link Error.message}: the reason this hint was raised.
+   * Alias for {@link Error.message}: the reason this diagnostic was raised.
    */
   get why(): string {
     return this.message
@@ -200,12 +207,12 @@ export class Hint extends Error {
 
   /**
    * @param init        structured initializer; `why` is required
-   * @param captureFrom V8 stack-cutoff frame. Defaults to {@link Hint} so the
-   * top of the trace is the `new Hint(...)` call site. `defineErrors` passes
-   * its action method to strip its own frames too. Ignored on engines without
-   * `Error.captureStackTrace`.
+   * @param captureFrom V8 stack-cutoff frame. Defaults to {@link Diagnostic}
+   * so the top of the trace is the `new Diagnostic(...)` call site.
+   * `defineDiagnostics` passes its action method to strip its own frames too.
+   * Ignored on engines without `Error.captureStackTrace`.
    */
-  constructor(init: HintInit, captureFrom: Function = Hint) {
+  constructor(init: DiagnosticInit, captureFrom: Function = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.fix = init.fix
     this.sources = init.sources
@@ -216,7 +223,7 @@ export class Hint extends Error {
   }
 
   /**
-   * Converts the hint into a serializable structured object.
+   * Converts the diagnostic into a serializable structured object.
    */
   toJSON(): object {
     return {
@@ -234,37 +241,37 @@ export class Hint extends Error {
 
 // NOTE: we could override properties at runtime for dev only stuff
 if (process.env.NODE_ENV !== 'production') {
-  Hint.prototype.devOnly = function devOnly(this): void {
+  Diagnostic.prototype.devOnly = function devOnly(this): void {
     // eslint-disable-next-line no-console
-    console.log('This is a dev-only hint')
+    console.log('This is a dev-only diagnostic')
   }
 }
 
 /**
- * Creates a typed errors object from a set of code definitions. Each code
- * becomes a {@link HintHandle} with `.report()` / `.throw()` — no `new`
- * required, no proxy.
+ * Creates a typed diagnostics object from a set of code definitions. Each
+ * code becomes a {@link DiagnosticHandle} with `.report()` / `.throw()` — no
+ * `new` required, no proxy.
  */
-export function defineErrors<
+export function defineDiagnostics<
   Codes extends Record<string, MessageTemplate | 0>,
-  const Reporters extends readonly AnyHintReporter[],
->(options: DefineErrorsOptions<Codes, Reporters>): Errors<Codes, Reporters> {
+  const Reporters extends readonly AnyDiagnosticReporter[],
+>(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
-  const result = {} as Errors<Codes, Reporters>
+  const result = {} as Diagnostics<Codes, Reporters>
 
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const template = options.codes[code]
     const isFn = typeof template === 'function'
 
     // TODO: fix the any
-    const handle: HintHandle<any, any> = {
-      report(...args: any[]): Hint {
+    const handle: DiagnosticHandle<any, any> = {
+      report(...args: any[]): Diagnostic {
         const message = isFn ? (template as (p: any) => string)(args[0]) : (template as string)
-        const hint = new Hint({ why: message }, handle.report)
-        hint.name = code
+        const diagnostic = new Diagnostic({ why: message }, handle.report)
+        diagnostic.name = code
         const reporterOptions = (isFn ? args[1] : args[0]) ?? {}
-        for (const reporter of reporters) reporter(hint, reporterOptions)
-        return hint
+        for (const reporter of reporters) reporter(diagnostic, reporterOptions)
+        return diagnostic
       },
       throw(...args: any[]): never {
         throw this.report(...(args as any))
@@ -277,7 +284,7 @@ export function defineErrors<
   return result
 }
 
-export const errors = defineErrors({
+export const errors = defineDiagnostics({
   docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
   codes: {
     NUXT_B2011: 'This is a bad example of an error code because it has no info',
@@ -304,7 +311,7 @@ export type Prettify<Type> = {
  * merged shape).
  */
 type ExtractSingleReporterOptions<Reporter> = Reporter extends (
-  hint: Hint,
+  diagnostic: Diagnostic,
   options: infer Opts,
 ) => any
   ? IsUnknown<Opts> extends true
@@ -325,7 +332,7 @@ type ExtractReportersOptions<Reporters extends readonly any[]> = Reporters exten
   ? ExtractSingleReporterOptions<First> & ExtractReportersOptions<Rest>
   : {}
 
-export const errorsProd = defineErrors({
+export const errorsProd = defineDiagnostics({
   docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
   codes: {
     // zero is short and usually common in code
