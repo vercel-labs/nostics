@@ -1,3 +1,6 @@
+/* eslint-disable ts/no-empty-object-type -- `{}` is used as the neutral element when intersecting reporter option shapes */
+/* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace
+
 /**
  * A template for a diagnostic text field — either a static string or a function
  * that receives interpolation parameters and returns a string.
@@ -6,12 +9,19 @@ export type MessageTemplate<P = any> = string | ((params: P) => string)
 
 /**
  * Represents how to report a hint. Could call `console.log()`, send the hint
- * to a server, or something else.
+ * to a server, or something else. Reporters declare the shape of options they
+ * need via `Opts`; `defineErrors` intersects every reporter's options into a
+ * single object passed at the call site.
  */
-export type HintReporter<Opts = undefined> = (
-  hint: Hint,
-  ...args: Opts extends undefined ? [options?: Opts] : [options: Opts]
-) => void
+export type HintReporter<Opts extends object = {}> = (hint: Hint, options: Opts) => void
+
+/**
+ * Permissive reporter constraint used internally so reporters with 1 arg,
+ * required options, or optional options all satisfy the array constraint.
+ *
+ * @internal
+ */
+type AnyHintReporter = (hint: Hint, options: any) => void
 
 export function reporterError(hint: Hint): void {
   console.error(`Hint: ${hint.message}`)
@@ -34,7 +44,7 @@ export function reporterRequiredOptions(hint: Hint, options: { priority: number 
  */
 export interface DefineErrorsOptions<
   Codes extends Record<string, MessageTemplate | 0>,
-  Reporters extends HintReporter[],
+  Reporters extends readonly AnyHintReporter[],
 > {
   /**
    * Base URL or resolver for documentation links. When a string, the code is
@@ -50,8 +60,8 @@ export interface DefineErrorsOptions<
   codes: Codes
 
   /**
-   * Reporters called when {@link Hint.report} is called. Can be used to
-   * integrate with custom logging
+   * Reporters called on `.report()` / `.throw()`. Can be used to integrate
+   * with custom logging.
    */
   reporters?: Reporters
 }
@@ -72,27 +82,55 @@ export interface DefineErrorsOptionsProd<Codes extends string[]> {
 }
 
 /**
- * Typed constructor for a hint class
+ * Resolves the options portion of an action signature:
+ * - merged shape has no keys → no options arg
+ * - merged shape has only optional fields → optional `options?: Opts`
+ * - merged shape has any required field → required `options: Opts`
  *
  * @internal
  */
-interface HintConstructor<P, Opts> {
-  new (
-    ...args: P extends undefined
-      ? Opts extends undefined
-        ? [options?: Opts]
-        : [options: Opts]
-      : Opts extends undefined
-        ? [params: P, options?: Opts]
-        : [params: P, options: Opts]
-  ): Hint
+type OptionsArgs<Opts> = keyof Opts extends never
+  ? [arg?: undefined]
+  : {} extends Opts
+      ? [options?: Opts]
+      : [options: Opts]
+
+/**
+ * Resolves the full argument tuple for `.report()` / `.throw()`:
+ * - static-message codes (`Params = undefined`) → just the options tuple
+ * - function-message codes → `[params, ...options]`
+ *
+ * @internal
+ */
+type ActionArgs<Params, Opts> = Params extends undefined
+  ? OptionsArgs<Opts>
+  : [params: Params, ...OptionsArgs<Opts>]
+
+/**
+ * Per-code handle exposed by {@link defineErrors}. Each code is a plain
+ * object with `.report()` and `.throw()`
+ */
+export interface HintHandle<Params, Opts> {
+  /**
+   * Builds the hint, runs every reporter, and returns the hint instance.
+   * The returned hint can be inspected, attached as `cause`, or ignored.
+   */
+  report: (...args: ActionArgs<Params, Opts>) => Hint
+
+  /**
+   * Builds the hint, runs every reporter, then throws the hint.
+   */
+  throw: (...args: ActionArgs<Params, Opts>) => never
 }
 
 /**
- * Return type of {@link defineErrors}
+ * Return type of {@link defineErrors}.
  */
-type Errors<Codes extends Record<string, MessageTemplate | 0>, Reporters extends HintReporter[]> = {
-  [Code in keyof Codes]: HintConstructor<
+type Errors<
+  Codes extends Record<string, MessageTemplate | 0>,
+  Reporters extends readonly AnyHintReporter[],
+> = {
+  [Code in keyof Codes]: HintHandle<
     Codes[Code] extends (params: infer P) => string ? P : undefined,
     Prettify<ExtractReportersOptions<Reporters>>
   >
@@ -113,40 +151,42 @@ export function toValueWithArgs<T, Args extends any[]>(
   return typeof valFn === 'function' ? (valFn as (...args: Args) => T)(...args) : valFn
 }
 
-export class Hint<const Reporters extends HintReporter<any>[] = HintReporter[]> extends Error {
+const captureStackTrace = (
+  Error as { captureStackTrace?: (target: object, frame: Function) => void }
+).captureStackTrace
+
+export class Hint extends Error {
   name: string = 'Hint'
 
   /**
    * URL to extended documentation for this diagnostic code.
-   * Auto-generated from {@link DefineDiagnosticsOptions.docsBase}.
+   * Auto-generated from {@link DefineErrorsOptions.docsBase}.
    */
   docs?: string
 
-  constructor(
-    private reporters: Reporters,
-    message: string,
-    private reporterOptions?: Prettify<ExtractReportersOptions<Reporters>>,
-  ) {
-    super(message)
-  }
-
   /**
-   * Reports the hint using the provided reporters
+   * @param message    rendered error message
+   * @param captureFrom V8 stack-cutoff frame. Defaults to {@link Hint} so the
+   * top of the trace is the `new Hint(...)` call site. `defineErrors` passes
+   * its action method to strip its own frames too. Ignored on engines without
+   * `Error.captureStackTrace`.
    */
-  report(): void {
-    for (const reporter of this.reporters) {
-      reporter(this, this.reporterOptions)
-    }
+  constructor(message: string, captureFrom: Function = Hint) {
+    super(message)
+    // V8-only API, but also implemented pretty much everywhere. Worst case
+    // scenario, we fall back to the stack `Error` captures by default — which
+    // includes a couple of extra internal frames but is still usable.
+    captureStackTrace?.(this, captureFrom)
   }
 
   /**
-   * Converts the hint into a serializable structured object
+   * Converts the hint into a serializable structured object.
    */
   toJSON(): object {
     return {
+      name: this.name,
       message: this.message,
       stack: this.stack,
-      options: this.reporterOptions,
     }
   }
 
@@ -161,92 +201,45 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-new Hint([], 'hello').devOnly?.()
-
-function _howToWriteIt(): void {
-  // can be logged
-  new Hint([], 'This is a hint').report()
-  // what Vue Router and Vue do
-  new Hint([reporterLog], 'This is a hint', {
-    method: 'warn',
-  }).report()
-
-  // can be thrown
-  if (Math.random() > 0.5) {
-    throw new Hint([], 'This is a hint')
-  }
-}
-
-function _becomesOption1(): void {
-  /**
-   * The id is just printed as a message and can be converted. It could also be
-   * used to show a link to the docs or something else. The point is that it is
-   * a stable identifier that can be used to find more information about the
-   * hint.
-   */
-  new Hint([], 'NUXT_E001').report()
-}
-
-function _becomesOption2(): void {
-  // auto injected and auto generated
-  // import { NUXT_E0001 } from './diagnostics'
-  // new Hint(NUXT_E0001).print()
-  /* this requires way more setup, it's only useful to keep the same codebase
-   * but I think that with AI, it's really easy to refactor even large code
-   * bases
-   */
-}
-
-/*
- * more advanced with structured data
- * requires same transformation as option 2
- */
-function _howToWriteItWithDiagnostic(): void {
-  // new Hint({
-  //   code: 'HINT001',
-  //   message: 'This is a hint with a code',
-  //   cause,
-  // }).report()
-}
-
 /**
  * Creates a typed errors object from a set of code definitions. Each code
- * becomes a callable factory that produces {@link Hint} errors with
- * template interpolation.
+ * becomes a {@link HintHandle} with `.report()` / `.throw()` — no `new`
+ * required, no proxy.
  */
 export function defineErrors<
   Codes extends Record<string, MessageTemplate | 0>,
-  const Reporters extends HintReporter[],
+  const Reporters extends readonly AnyHintReporter[],
 >(options: DefineErrorsOptions<Codes, Reporters>): Errors<Codes, Reporters> {
-  return new Proxy({} as Partial<Errors<Codes, Reporters>>, {
-    get(target, prop: Extract<keyof Codes, string>) {
-      if (!options.codes[prop]) {
-        throw new Error(`Error code "${prop}" is not defined.`)
-      }
-      if (!target[prop]) {
-        target[prop] = new Proxy(Hint, {
-          construct(Target, args: any[]) {
-            const hint = new Target(
-              options.reporters ?? [],
-              toValueWithArgs(
-                options.codes[prop],
-                // @ts-expect-error: FIXME: ?
-                ...args,
-              ),
-            )
-            // remove the constructor line from the stack trace for cleaner output
-            hint.stack = hint.stack?.split('\n').toSpliced(1, 1).join('\n')
-            return hint
-          },
-        }) as any
-      }
-      return target[prop]
-    },
-  }) as any
+  const reporters = options.reporters ?? []
+  const result = {} as Errors<Codes, Reporters>
+
+  for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
+    const template = options.codes[code]
+    const isFn = typeof template === 'function'
+
+    // TODO: fix the any
+    const handle: HintHandle<any, any> = {
+      report(...args: any[]): Hint {
+        const message = isFn ? (template as (p: any) => string)(args[0]) : (template as string)
+        const hint = new Hint(message, handle.report)
+        hint.name = code
+        const reporterOptions = (isFn ? args[1] : args[0]) ?? {}
+        for (const reporter of reporters) reporter(hint, reporterOptions)
+        return hint
+      },
+      throw(...args: any[]): never {
+        throw this.report(...(args as any))
+      },
+    }
+
+    result[code] = handle
+  }
+
+  return result
 }
 
 export const errors = defineErrors({
-  docsBase: (code) => `https://example.com/docs/errors/${code.toLowerCase()}`,
+  docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
   codes: {
     NUXT_B2011: 'This is a bad example of an error code because it has no info',
 
@@ -258,8 +251,6 @@ export const errors = defineErrors({
   },
 
   reporters: [reporterLog],
-
-  // reporters: [reporterLog, reporterError, reporterRequiredOptions],
 })
 
 export type IsAny<Type> = 0 extends 1 & Type ? true : false
@@ -268,33 +259,35 @@ export type Prettify<Type> = {
   [Key in keyof Type]: Type[Key]
 }
 
+/**
+ * Extracts the options object a reporter accepts as its 2nd argument. Returns
+ * `{}` when the reporter has no 2nd arg (so it contributes nothing to the
+ * merged shape).
+ */
 type ExtractSingleReporterOptions<Reporter> = Reporter extends (
   hint: Hint,
   options: infer Opts,
-) => void
+) => any
   ? IsUnknown<Opts> extends true
-    ?
-        // eslint-disable-next-line ts/no-empty-object-type
-        {} | undefined
-    : Opts
-  : never
+    ? {}
+    : Exclude<Opts, undefined>
+  : {}
 
-type logOpts = ExtractSingleReporterOptions<typeof reporterLog>
-type errOpts = ExtractSingleReporterOptions<typeof reporterError>
-type kk = logOpts & errOpts
-
-type ExtractReportersOptions<Reporters extends any[]> = Reporters extends readonly [
+/**
+ * Intersects every reporter's options shape into a single object. If any
+ * reporter has a required field, the merged shape has a required field — and
+ * {@link OptionsArgs} flips `options` from optional to required via
+ * `{} extends Merged`.
+ */
+type ExtractReportersOptions<Reporters extends readonly any[]> = Reporters extends readonly [
   infer First,
   ...infer Rest,
 ]
   ? ExtractSingleReporterOptions<First> & ExtractReportersOptions<Rest>
-  : {} | undefined
-
-type ErrRep = typeof errors extends Errors<any, infer R> ? R : 'FAIL'
-type C = Prettify<ExtractReportersOptions<typeof errors extends Errors<any, infer R> ? R : 'FAIL'>>
+  : {}
 
 export const errorsProd = defineErrors({
-  docsBase: (code) => `https://example.com/docs/errors/${code.toLowerCase()}`,
+  docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
   codes: {
     // zero is short and usually common in code
     NUXT_B2011: 0,
@@ -303,31 +296,25 @@ export const errorsProd = defineErrors({
   },
 })
 
-// function _usageProd() {
-//   new errorsProd.NUXT_B2011().print()
-//   new errorsProd.NUXT_B2011(undefined).print()
-//   new errorsProd.NUXT_B2011(
-//     'ohno',
-//   ).print()
-//   new errorsProd.NUXT_E033('my-module').print()
-//   new errorsProd.NUXT_E033().print()
-//   new errorsProd.NUXT_E033(
-//     20,
-//   ).print()
-// }
-
 function _usage(): void {
-  new errors.NUXT_B2011().report()
-  new errors.NUXT_B2011(undefined).report()
-  new errors.NUXT_B2011(
+  errors.NUXT_B2011.report()
+  errors.NUXT_B2011.report(undefined)
+  errors.NUXT_B2011.report(
     // @ts-expect-error: only undefined
     'ohno',
-  ).report()
-  new errors.NUXT_E033('my-module').report()
+  )
+  errors.NUXT_E033.report('my-module')
   // @ts-expect-error: requires a parameter
-  new errors.NUXT_E033().report()
-  new errors.NUXT_E033(
+  errors.NUXT_E033.report()
+  errors.NUXT_E033.report(
     // @ts-expect-error: requires a string parameter
     20,
-  ).report()
+  )
+
+  const a: number | undefined = 2 as number | undefined
+  // throwing
+  if (typeof a === 'number') {
+    errors.NUXT_E033.throw('my-module')
+    console.error(a.toFixed(2))
+  }
 }
