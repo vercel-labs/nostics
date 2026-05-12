@@ -12,68 +12,65 @@ mockConsoleWarn()
 mockConsoleError()
 
 describe('diagnostic', () => {
-  describe('class basics', () => {
+  describe('instance shape (via defineDiagnostics)', () => {
     it('is an instance of Error and Diagnostic', () => {
-      const d = new Diagnostic({ why: 'boom' })
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      const d = errs.X_001.report()
       expect(d).toBeInstanceOf(Error)
       expect(d).toBeInstanceOf(Diagnostic)
     })
 
-    it('exposes message and default name', () => {
-      const d = new Diagnostic({ why: 'boom' })
+    it('exposes message and uses the code as the instance name', () => {
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      const d = errs.X_001.report()
       expect(d.message).toBe('boom')
-      expect(d.name).toBe('Diagnostic')
-    })
-
-    it('captures a stack pointing at the call site', () => {
-      const d = new Diagnostic({ why: 'boom' })
-      expect(d.stack).toBeDefined()
-      // take the first line of the stack
-      expect(d.stack?.split('\n').at(1)).toContain('diagnostics.test.ts')
+      expect(d.name).toBe('X_001')
     })
 
     it('toJSON returns a serializable { name, message, stack } shape', () => {
-      const d = new Diagnostic({ why: 'boom' })
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      const d = errs.X_001.report()
       expect(d.toJSON()).toEqual({
-        name: 'Diagnostic',
+        name: 'X_001',
         message: 'boom',
         stack: d.stack,
       })
     })
 
     it('`why` getter mirrors `message`', () => {
-      const d = new Diagnostic({ why: 'boom' })
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      const d = errs.X_001.report()
       expect(d.why).toBe('boom')
       expect(d.why).toBe(d.message)
     })
 
     it('stores optional `fix` and exposes it on the instance', () => {
-      const d = new Diagnostic({ why: 'boom', fix: 'restart it' })
-      expect(d.fix).toBe('restart it')
+      const errs = defineDiagnostics({
+        codes: { X_001: { why: 'boom', fix: 'restart it' } },
+      })
+      expect(errs.X_001.report().fix).toBe('restart it')
     })
 
-    it('forwards `cause` to Error so `instanceof` chains work', () => {
-      const original = new Error('original')
-      const d = new Diagnostic({ why: 'boom', cause: original })
-      expect(d.cause).toBe(original)
-    })
-
-    it('stores optional `sources` in `file:line:column` format', () => {
+    it('stores `sources` passed at the call site', () => {
       const sources = ['src/foo.ts:1:5', 'src/bar.ts:42:10']
-      const d = new Diagnostic({ why: 'boom', sources })
-      expect(d.sources).toEqual(sources)
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      expect(errs.X_001.report({ sources }).sources).toEqual(sources)
+    })
+
+    it('stores `cause` passed at the call site', () => {
+      const original = new Error('original')
+      const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
+      expect(errs.X_001.report({ cause: original }).cause).toBe(original)
     })
 
     it('toJSON includes optional fields when present', () => {
       const original = new Error('orig')
-      const d = new Diagnostic({
-        why: 'boom',
-        fix: 'restart',
-        cause: original,
-        sources: ['a.ts:1:1'],
+      const errs = defineDiagnostics({
+        codes: { X_001: { why: 'boom', fix: 'restart' } },
       })
+      const d = errs.X_001.report({ cause: original, sources: ['a.ts:1:1'] })
       expect(d.toJSON()).toEqual({
-        name: 'Diagnostic',
+        name: 'X_001',
         message: 'boom',
         fix: 'restart',
         cause: original,
@@ -107,7 +104,7 @@ describe('diagnostic', () => {
         codes: { X: { why: 'msg' } },
         reporters: [r1, r2],
       })
-      const d = errs.X.report({ priority: 5 })
+      const d = errs.X.report(undefined, { priority: 5 })
       expect(r1).toHaveBeenCalledWith(d, { priority: 5 })
       expect(r2).toHaveBeenCalledWith(d, { priority: 5 })
     })
@@ -160,16 +157,24 @@ describe('diagnostic', () => {
 })
 
 describe('built-in reporters', () => {
-  it('reporterError logs `Diagnostic: <msg>` to console.error', () => {
-    reporterError(new Diagnostic({ why: 'boom' }))
-    expect('Diagnostic: boom').toHaveBeenErrored()
+  it('reporterError logs `[<code>] <msg>` to console.error', () => {
+    const errs = defineDiagnostics({
+      codes: { NUXT_E001: { why: 'boom' } },
+      reporters: [reporterError],
+    })
+    errs.NUXT_E001.report()
+    expect('[NUXT_E001] boom').toHaveBeenErrored()
   })
 
-  it('reporterLog defaults to console.log', () => {
+  it('reporterLog defaults to console.log and includes the code', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
-      reporterLog(new Diagnostic({ why: 'boom' }))
-      expect(spy).toHaveBeenCalledWith('Diagnostic: boom')
+      const errs = defineDiagnostics({
+        codes: { NUXT_E001: { why: 'boom' } },
+        reporters: [reporterLog],
+      })
+      errs.NUXT_E001.report()
+      expect(spy).toHaveBeenCalledWith('[NUXT_E001] boom')
     }
     finally {
       spy.mockRestore()
@@ -177,17 +182,43 @@ describe('built-in reporters', () => {
   })
 
   it('reporterLog routes to console.warn when method is "warn"', () => {
-    reporterLog(new Diagnostic({ why: 'boom' }), { method: 'warn' })
-    expect('Diagnostic: boom').toHaveBeenWarned()
+    const errs = defineDiagnostics({
+      codes: { NUXT_E001: { why: 'boom' } },
+      reporters: [(d: Diagnostic) => reporterLog(d, { method: 'warn' })],
+    })
+    errs.NUXT_E001.report()
+    expect('[NUXT_E001] boom').toHaveBeenWarned()
   })
 
   it('reporterLog routes to console.error when method is "error"', () => {
-    reporterLog(new Diagnostic({ why: 'boom' }), { method: 'error' })
-    expect('Diagnostic: boom').toHaveBeenErrored()
+    const errs = defineDiagnostics({
+      codes: { NUXT_E001: { why: 'boom' } },
+      reporters: [(d: Diagnostic) => reporterLog(d, { method: 'error' })],
+    })
+    errs.NUXT_E001.report()
+    expect('[NUXT_E001] boom').toHaveBeenErrored()
   })
 
-  it('reporterRequiredOptions includes the priority value', () => {
-    reporterRequiredOptions(new Diagnostic({ why: 'boom' }), { priority: 7 })
+  it('renders the code, fix, and sources with unicode connectors', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        NUXT_E033: { why: 'boom', fix: 'restart it' },
+      },
+      reporters: [reporterError],
+    })
+    errs.NUXT_E033.report({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
+    expect(
+      '[NUXT_E033] boom\n├▶ fix: restart it\n╰▶ sources: a.ts:1:1, b.ts:2:2',
+    ).toHaveBeenErrored()
+  })
+
+  it('reporterRequiredOptions includes the code and the priority value', () => {
+    const errs = defineDiagnostics({
+      codes: { NUXT_E001: { why: 'boom' } },
+      reporters: [reporterRequiredOptions],
+    })
+    errs.NUXT_E001.report(undefined, { priority: 7 })
+    expect('[NUXT_E001] boom').toHaveBeenWarned()
     expect('priority: 7').toHaveBeenWarned()
   })
 })
@@ -231,14 +262,28 @@ describe('defineDiagnostics', () => {
       expect(d.message).toBe('static why')
       expect(d.fix).toBe('static fix')
     })
+  })
 
-    it('accepts static sources', () => {
+  describe('call-site params', () => {
+    it('forwards `cause` from the call site to the diagnostic', () => {
+      const original = new Error('original')
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
+      expect(errs.X.report({ cause: original }).cause).toBe(original)
+    })
+
+    it('forwards `sources` from the call site to the diagnostic', () => {
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
+      expect(errs.X.report({ sources: ['a.ts:1:1'] }).sources).toEqual(['a.ts:1:1'])
+    })
+
+    it('merges cause and sources with interpolation params', () => {
+      const original = new Error('original')
       const errs = defineDiagnostics({
-        codes: {
-          X: { why: 'msg', sources: ['a.ts:1:1'] },
-        },
+        codes: { X: { why: (p: { name: string }) => `hi ${p.name}` } },
       })
-      const d = errs.X.report()
+      const d = errs.X.report({ name: 'world', cause: original, sources: ['a.ts:1:1'] })
+      expect(d.message).toBe('hi world')
+      expect(d.cause).toBe(original)
       expect(d.sources).toEqual(['a.ts:1:1'])
     })
   })
@@ -266,16 +311,6 @@ describe('defineDiagnostics', () => {
       expect(d.fix).toBe('update foo')
     })
 
-    it('interpolates params through sources', () => {
-      const errs = defineDiagnostics({
-        codes: {
-          X: { why: 'msg', sources: (p: { file: string }) => [p.file] },
-        },
-      })
-      const d = errs.X.report({ file: 'a.ts:1:1' })
-      expect(d.sources).toEqual(['a.ts:1:1'])
-    })
-
     it('shares params across multiple function fields', () => {
       const errs = defineDiagnostics({
         codes: {
@@ -296,12 +331,11 @@ describe('defineDiagnostics', () => {
           X: {
             why: (p: { name: string }) => `hi ${p.name}`,
             fix: 'restart',
-            sources: (p: { name: string }) => [`${p.name}.ts:1:1`],
           },
         },
       })
       try {
-        errs.X.throw({ name: 'world' })
+        errs.X.throw({ name: 'world', sources: ['world.ts:1:1'] })
       }
       catch (e) {
         expect(e).toBeInstanceOf(Diagnostic)
@@ -318,7 +352,7 @@ describe('defineDiagnostics', () => {
         codes: { X: { why: 'static' } },
         reporters: [reporterRequiredOptions],
       })
-      errs.X.report({ priority: 1 })
+      errs.X.report(undefined, { priority: 1 })
       expect('priority: 1').toHaveBeenWarned()
     })
 
@@ -336,7 +370,7 @@ describe('defineDiagnostics', () => {
         codes: { X: { why: 'static' } },
         reporters: [reporterRequiredOptions],
       })
-      expect(() => errs.X.throw({ priority: 3 })).toThrow()
+      expect(() => errs.X.throw(undefined, { priority: 3 })).toThrow()
       expect('priority: 3').toHaveBeenWarned()
     })
   })

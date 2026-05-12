@@ -1,7 +1,7 @@
 /* eslint-disable ts/explicit-function-return-type -- type tests intentionally construct values without using them and exist purely to exercise inference */
 /* eslint-disable unused-imports/no-unused-vars -- type tests intentionally construct values without using them and exist purely to exercise inference */
 
-import type { Diagnostic } from './diagnostic'
+import type { Diagnostic, DiagnosticCallParams } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { defineDiagnostics, reporterLog, reporterRequiredOptions } from './diagnostic'
 
@@ -15,14 +15,18 @@ describe('defineDiagnostics — reporter options inference', () => {
       },
     })
     expectTypeOf(errs.X.report()).toEqualTypeOf<Diagnostic>()
-    expectTypeOf(errs.X.report).parameters.toEqualTypeOf<[arg?: undefined]>()
+    expectTypeOf(errs.X.report).parameters.toEqualTypeOf<
+      [params?: DiagnosticCallParams | undefined, reporterOptions?: undefined]
+    >()
   })
 
   it('options is optional when every reporter ignores options', () => {
     const r1 = (_diagnostic: Diagnostic): void => {}
     const r2 = (_diagnostic: Diagnostic): void => {}
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
-    expectTypeOf(errs.X.report).parameters.toEqualTypeOf<[arg?: undefined]>()
+    expectTypeOf(errs.X.report).parameters.toEqualTypeOf<
+      [params?: DiagnosticCallParams | undefined, reporterOptions?: undefined]
+    >()
   })
 
   it('options is optional when every reporter has only optional fields', () => {
@@ -31,9 +35,9 @@ describe('defineDiagnostics — reporter options inference', () => {
       reporters: [reporterLog],
     })
     errs.X.report()
-    errs.X.report({ method: 'warn' })
+    errs.X.report(undefined, { method: 'warn' })
     errs.X.throw()
-    errs.X.throw({ method: 'warn' })
+    errs.X.throw(undefined, { method: 'warn' })
   })
 
   it('options is required when any reporter has a required field', () => {
@@ -41,8 +45,8 @@ describe('defineDiagnostics — reporter options inference', () => {
       codes: { X: { why: 'msg' } },
       reporters: [reporterRequiredOptions],
     })
-    errs.X.report({ priority: 1 })
-    errs.X.throw({ priority: 1 })
+    errs.X.report(undefined, { priority: 1 })
+    errs.X.throw(undefined, { priority: 1 })
     // @ts-expect-error: options is required
     errs.X.report()
     // @ts-expect-error: options is required
@@ -53,11 +57,11 @@ describe('defineDiagnostics — reporter options inference', () => {
     const r1 = (_diagnostic: Diagnostic) => {}
     const r2 = (_diagnostic: Diagnostic, _options: { priority: number }) => {}
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
-    errs.X.report({ priority: 5 })
+    errs.X.report(undefined, { priority: 5 })
     // @ts-expect-error: options is required
     errs.X.report()
     // @ts-expect-error: priority is required
-    errs.X.report({})
+    errs.X.report(undefined, {})
   })
 
   it('merges optional + required reporters → required, fields intersected', () => {
@@ -65,21 +69,24 @@ describe('defineDiagnostics — reporter options inference', () => {
       codes: { X: { why: 'msg' } },
       reporters: [reporterLog, reporterRequiredOptions],
     })
-    errs.X.report({ priority: 1 })
-    errs.X.report({ priority: 1, method: 'warn' })
+    errs.X.report(undefined, { priority: 1 })
+    errs.X.report(undefined, { priority: 1, method: 'warn' })
     // @ts-expect-error: priority is required even though method is optional
-    errs.X.report({ method: 'warn' })
+    errs.X.report(undefined, { method: 'warn' })
   })
 })
 
 describe('defineDiagnostics — params inference', () => {
-  it('all-static object takes no params', () => {
+  it('all-static object takes only the call-site params (cause/sources)', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'static', fix: 'static fix' } },
     })
     errs.X.report()
     errs.X.report(undefined)
-    // @ts-expect-error: no params expected
+    errs.X.report({ cause: new Error('orig') })
+    errs.X.report({ sources: ['a.ts:1:1'] })
+    errs.X.report({ cause: new Error('orig'), sources: ['a.ts:1:1'] })
+    // @ts-expect-error: only cause/sources are allowed
     errs.X.report({ anything: true })
   })
 
@@ -103,13 +110,16 @@ describe('defineDiagnostics — params inference', () => {
     errs.X.report()
   })
 
-  it('inherits params from sources', () => {
+  it('merges cause and sources into interpolation params', () => {
     const errs = defineDiagnostics({
-      codes: { X: { why: 'static', sources: (p: { file: string }) => [p.file] } },
+      codes: { X: { why: (p: { name: string }) => `hi ${p.name}` } },
     })
-    errs.X.report({ file: 'a.ts:1:1' })
-    // @ts-expect-error: params required
-    errs.X.report()
+    errs.X.report({ name: 'me' })
+    errs.X.report({ name: 'me', cause: new Error('orig') })
+    errs.X.report({ name: 'me', sources: ['a.ts:1:1'] })
+    errs.X.report({ name: 'me', cause: new Error('orig'), sources: ['a.ts:1:1'] })
+    // @ts-expect-error: name is still required
+    errs.X.report({ cause: new Error('orig') })
   })
 
   it('intersects params across multiple function fields', () => {

@@ -7,8 +7,9 @@ import { toValueWithArgs } from './utils'
 /**
  * Define-time shape of a diagnostic. Each field can be a static value or a
  * function that resolves it from a shared `params` object passed at
- * `.report()` / `.throw()` time. The runtime-only `cause` field from
- * {@link DiagnosticInit} is intentionally omitted.
+ * `.report()` / `.throw()` time. Runtime-only fields (`cause`, `sources`)
+ * from {@link DiagnosticInit} are intentionally omitted — they're only
+ * meaningful at the call site.
  */
 export interface DiagnosticDefinition<P = any> {
   /**
@@ -31,17 +32,26 @@ export interface DiagnosticDefinition<P = any> {
    * ```
    */
   fix?: ValueOrFn<string, P>
+}
+
+/**
+ * Runtime-only fields that can be passed alongside the interpolation params
+ * at `.report()` / `.throw()` time. Merged into the same object so callers
+ * pass everything in one place.
+ */
+export interface DiagnosticCallParams {
+  /**
+   * Original error or exception that triggered this diagnostic. Pass it
+   * through when re-throwing so the original stack trace is preserved.
+   */
+  cause?: unknown
 
   /**
    * Locations in user code that contributed to this diagnostic, in
-   * `file:line:column` format. Array, or a function of `params`.
-   *
-   * @example
-   * ```ts
-   * sources: (p: { file: string }) => [`${p.file}:1:1`]
-   * ```
+   * `file:line:column` format. Useful for compilers and other tools where the
+   * JS stack trace doesn't reflect the user's source.
    */
-  sources?: ValueOrFn<string[], P>
+  sources?: string[]
 }
 
 /**
@@ -78,12 +88,12 @@ export interface DiagnosticInit {
 /**
  * Represents how to report a diagnostic. Could call `console.log()`, send the
  * diagnostic to a server, or something else. Reporters declare the shape of
- * options they need via `Opts`; `defineDiagnostics` intersects every
+ * options they need via `ReporterOpts`; `defineDiagnostics` intersects every
  * reporter's options into a single object passed at the call site.
  */
-export type DiagnosticReporter<Opts extends object = {}> = (
+export type DiagnosticReporter<ReporterOpts extends object = {}> = (
   diagnostic: Diagnostic,
-  options: Opts,
+  options: ReporterOpts,
 ) => void
 
 /**
@@ -94,8 +104,35 @@ export type DiagnosticReporter<Opts extends object = {}> = (
  */
 type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
 
+/**
+ * Renders a diagnostic into a multi-line, unicode-decorated string suitable
+ * for terminal output. The first line is `[<name>] <message>`; optional
+ * details (`fix`, `sources`, `docs`) follow with `├▶`/`╰▶` connectors.
+ */
+export function formatDiagnostic(diagnostic: Diagnostic): string {
+  const header = `[${diagnostic.name}] ${diagnostic.message}`
+
+  const details: string[] = []
+  if (diagnostic.fix)
+    details.push(`fix: ${diagnostic.fix}`)
+  if (diagnostic.sources?.length)
+    details.push(`sources: ${diagnostic.sources.join(', ')}`)
+  if (diagnostic.docs)
+    details.push(`see: ${diagnostic.docs}`)
+
+  if (details.length === 0)
+    return header
+
+  const lines = details.map((detail, i) => {
+    const connector = i < details.length - 1 ? '├▶' : '╰▶'
+    return `${connector} ${detail}`
+  })
+
+  return [header, ...lines].join('\n')
+}
+
 export function reporterError(diagnostic: Diagnostic): void {
-  console.error(`Diagnostic: ${diagnostic.message}`)
+  console.error(formatDiagnostic(diagnostic))
 }
 
 export function reporterLog(
@@ -103,25 +140,25 @@ export function reporterLog(
   { method = 'log' }: { method?: 'log' | 'error' | 'warn' } = {},
 ): void {
   // eslint-disable-next-line no-console
-  console[method](`Diagnostic: ${diagnostic.message}`)
+  console[method](formatDiagnostic(diagnostic))
 }
 
 export function reporterRequiredOptions(
   diagnostic: Diagnostic,
   options: { priority: number },
 ): void {
-  console.warn(`Diagnostic: ${diagnostic.message} (priority: ${options.priority})`)
+  console.warn(`${formatDiagnostic(diagnostic)}\n(priority: ${options.priority})`)
 }
 
 /**
  * Resolves the `params` type a code expects from the intersection of params
- * across all function-typed fields, falling back to `undefined` when every
- * field is static.
+ * across all function-typed fields, falling back to `{}` when every field is
+ * static. Merged with {@link DiagnosticCallParams} at the call site.
  *
  * @internal
  */
 type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
-  ? undefined
+  ? {}
   : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
 
 /**
@@ -152,46 +189,58 @@ export interface DefineDiagnosticsOptions<
 }
 
 /**
- * Resolves the options portion of an action signature:
- * - merged shape has no keys → no options arg
- * - merged shape has only optional fields → optional `options?: Opts`
- * - merged shape has any required field → required `options: Opts`
+ * Resolves the reporter-options element of an action signature: the merged
+ * shape required by all reporters, or `undefined` when no reporter takes
+ * options.
  *
  * @internal
  */
-type OptionsArgs<Opts> = keyof Opts extends never
-  ? [arg?: undefined]
-  : {} extends Opts
-      ? [options?: Opts]
-      : [options: Opts]
+type ResolvedReporterOptions<ReporterOpts> = keyof ReporterOpts extends never
+  ? undefined
+  : ReporterOpts
 
 /**
- * Resolves the full argument tuple for `.report()` / `.throw()`:
- * - static-message codes (`Params = undefined`) → just the options tuple
- * - function-message codes → `[params, ...options]`
+ * The first positional argument of `.report()` / `.throw()`: interpolation
+ * params merged with the runtime-only call-site fields (`cause`, `sources`).
  *
  * @internal
  */
-type ActionArgs<Params, Opts> = Params extends undefined
-  ? OptionsArgs<Opts>
-  : [params: Params, ...OptionsArgs<Opts>]
+type CallSiteParams<Params> = Params & DiagnosticCallParams
+
+/**
+ * Resolves the full argument tuple for `.report()` / `.throw()`. Branches on
+ * whether params and reporter options each have required fields — required
+ * positions become required tuple elements, all-optional ones become `?`.
+ *
+ * @internal
+ */
+type ActionArgs<Params, ReporterOpts> = {} extends Params
+  ? {} extends ReporterOpts
+      ? [params?: CallSiteParams<Params>, reporterOptions?: ResolvedReporterOptions<ReporterOpts>]
+      : [
+        params: CallSiteParams<Params> | undefined,
+        reporterOptions: ResolvedReporterOptions<ReporterOpts>,
+        ]
+  : {} extends ReporterOpts
+      ? [params: CallSiteParams<Params>, reporterOptions?: ResolvedReporterOptions<ReporterOpts>]
+      : [params: CallSiteParams<Params>, reporterOptions: ResolvedReporterOptions<ReporterOpts>]
 
 /**
  * Per-code handle exposed by {@link defineDiagnostics}. Each code is a plain
  * object with `.report()` and `.throw()`
  */
-export interface DiagnosticHandle<Params, Opts> {
+export interface DiagnosticHandle<Params, ReporterOpts> {
   /**
    * Builds the diagnostic, runs every reporter, and returns the diagnostic
    * instance. The returned diagnostic can be inspected, attached as `cause`,
    * or ignored.
    */
-  report: (...args: ActionArgs<Params, Opts>) => Diagnostic
+  report: (...args: ActionArgs<Params, ReporterOpts>) => Diagnostic
 
   /**
    * Builds the diagnostic, runs every reporter, then throws the diagnostic.
    */
-  throw: (...args: ActionArgs<Params, Opts>) => never
+  throw: (...args: ActionArgs<Params, ReporterOpts>) => never
 }
 
 /**
@@ -294,19 +343,18 @@ export function defineDiagnostics<
 
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const def = options.codes[code]
-    // since reporter params go second, we need this to pass the correct args[]
-    // in report
-    const needsParams = [def.why, def.fix, def.sources].some(v => typeof v === 'function')
 
-    const handle: Diagnostics<Codes, Reporters>[string] = {
-      report(...args): Diagnostic {
-        const params = needsParams ? args[0] : undefined
-        const reporterOptions = (needsParams ? args[1] : args[0]) ?? {}
+    const handle = {
+      report(
+        params: DiagnosticCallParams & Record<string, unknown> = {},
+        reporterOptions: any = {},
+      ): Diagnostic {
         const diagnostic = new Diagnostic(
           {
             why: toValueWithArgs(def.why, params),
             fix: toValueWithArgs(def.fix, params),
-            sources: toValueWithArgs(def.sources, params),
+            cause: params.cause,
+            sources: params.sources,
           },
           handle.report,
         )
@@ -314,12 +362,15 @@ export function defineDiagnostics<
         for (const reporter of reporters) reporter(diagnostic, reporterOptions)
         return diagnostic
       },
-      throw(...args): never {
-        throw this.report(...args)
+      throw(
+        params: DiagnosticCallParams & Record<string, unknown> = {},
+        reporterOptions: any = {},
+      ): never {
+        throw this.report(params, reporterOptions)
       },
     }
 
-    result[code] = handle
+    result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]
   }
 
   return result
@@ -351,17 +402,17 @@ export const errors = defineDiagnostics({
  */
 type ExtractSingleReporterOptions<Reporter> = Reporter extends (
   diagnostic: Diagnostic,
-  options: infer Opts,
+  options: infer ReporterOpts,
 ) => any
-  ? IsUnknown<Opts> extends true
+  ? IsUnknown<ReporterOpts> extends true
     ? {}
-    : Exclude<Opts, undefined>
+    : Exclude<ReporterOpts, undefined>
   : {}
 
 /**
  * Intersects every reporter's options shape into a single object. If any
  * reporter has a required field, the merged shape has a required field — and
- * {@link OptionsArgs} flips `options` from optional to required via
+ * {@link ActionArgs} flips `reporterOptions` from optional to required via
  * `{} extends Merged`.
  */
 type ExtractReportersOptions<Reporters extends readonly any[]> = Reporters extends readonly [
