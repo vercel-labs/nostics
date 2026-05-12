@@ -83,22 +83,11 @@ describe('diagnostic', () => {
     })
   })
 
-  it('supports mixed static and function message templates', () => {
-    const errs = defineDiagnostics({
-      codes: {
-        STATIC: 'static message',
-        DYNAMIC: (name: string) => `hello ${name}`,
-      },
-    })
-    expect(errs.STATIC.report().message).toBe('static message')
-    expect(errs.DYNAMIC.report('world').message).toBe('hello world')
-  })
-
   describe('reporters', () => {
     it('calls every reporter once', () => {
       const r1 = vi.fn((_diagnostic: Diagnostic) => {})
       const r2 = vi.fn((_diagnostic: Diagnostic) => {})
-      const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r1, r2] })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
       errs.X.report()
       expect(r1).toHaveBeenCalledTimes(1)
       expect(r2).toHaveBeenCalledTimes(1)
@@ -106,7 +95,7 @@ describe('diagnostic', () => {
 
     it('passes the diagnostic as the first argument', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
-      const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r] })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
       const d = errs.X.report()
       expect(r.mock.calls[0]?.[0]).toBe(d)
     })
@@ -115,7 +104,7 @@ describe('diagnostic', () => {
       const r1 = vi.fn((_diagnostic: Diagnostic) => {})
       const r2 = vi.fn((_diagnostic: Diagnostic, _options: { priority: number }) => {})
       const errs = defineDiagnostics({
-        codes: { X: 'msg' },
+        codes: { X: { why: 'msg' } },
         reporters: [r1, r2],
       })
       const d = errs.X.report({ priority: 5 })
@@ -124,7 +113,7 @@ describe('diagnostic', () => {
     })
 
     it('no reporters → no-op', () => {
-      const errs = defineDiagnostics({ codes: { X: 'msg' } })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
       expect(() => errs.X.report()).not.toThrow()
     })
 
@@ -136,7 +125,7 @@ describe('diagnostic', () => {
       const r2 = vi.fn((_diagnostic: Diagnostic) => {
         calls.push('b')
       })
-      const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r1, r2] })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
       errs.X.report()
       expect(calls).toEqual(['a', 'b'])
     })
@@ -144,21 +133,21 @@ describe('diagnostic', () => {
 
   describe('throw()', () => {
     it('throws the produced diagnostic', () => {
-      const errs = defineDiagnostics({ codes: { X: 'msg' } })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
       expect(() => errs.X.throw()).toThrow(Diagnostic)
       expect(() => errs.X.throw()).toThrow('msg')
     })
 
     it('runs reporters before throwing', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
-      const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r] })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
       expect(() => errs.X.throw()).toThrow()
       expect(r).toHaveBeenCalledTimes(1)
     })
 
     it('supports `throw errs.X.report(...)` — report-then-throw', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
-      const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r] })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
       expect(() => {
         throw errs.X.report()
       }).toThrow(Diagnostic)
@@ -205,12 +194,12 @@ describe('built-in reporters', () => {
 
 describe('defineDiagnostics', () => {
   it('returns the same handle on repeated access', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expect(errs.X).toBe(errs.X)
   })
 
   it('produces fresh Diagnostic instances per call', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     const a = errs.X.report()
     const b = errs.X.report()
     expect(a).not.toBe(b)
@@ -218,70 +207,10 @@ describe('defineDiagnostics', () => {
     expect(b).toBeInstanceOf(Diagnostic)
   })
 
-  describe('static-message codes', () => {
-    it('uses the configured string as message', () => {
-      const errs = defineDiagnostics({ codes: { X: 'static text' } })
-      expect(errs.X.report().message).toBe('static text')
-    })
-
-    it('accepts undefined explicitly', () => {
-      const errs = defineDiagnostics({ codes: { X: 'static' } })
-      expect(errs.X.report(undefined).message).toBe('static')
-    })
-  })
-
-  describe('function-message codes', () => {
-    it('interpolates a single object param', () => {
-      const errs = defineDiagnostics({
-        codes: {
-          X: (p: { name: string }) => `hello ${p.name}`,
-        },
-      })
-      expect(errs.X.report({ name: 'world' }).message).toBe('hello world')
-    })
-
-    it('supports primitive params', () => {
-      const errs = defineDiagnostics({
-        codes: { X: (n: number) => `n=${n}` },
-      })
-      expect(errs.X.report(1).message).toBe('n=1')
-      expect(errs.X.report(2).message).toBe('n=2')
-    })
-  })
-
   describe('per-code name', () => {
     it('sets the diagnostic code as the instance `name`', () => {
-      const errs = defineDiagnostics({ codes: { NUXT_E033: 'msg' } })
+      const errs = defineDiagnostics({ codes: { NUXT_E033: { why: 'msg' } } })
       expect(errs.NUXT_E033.report().name).toBe('NUXT_E033')
-    })
-  })
-
-  describe('reporterOptions propagation', () => {
-    it('forwards options from .report() to reporters — static template', () => {
-      const errs = defineDiagnostics({
-        codes: { X: 'static' },
-        reporters: [reporterRequiredOptions],
-      })
-      errs.X.report({ priority: 1 })
-      expect('priority: 1').toHaveBeenWarned()
-    })
-
-    it('forwards options from .report() to reporters — function template', () => {
-      const errs = defineDiagnostics({
-        codes: { X: (p: { who: string }) => `hi ${p.who}` },
-        reporters: [reporterRequiredOptions],
-      })
-      errs.X.report({ who: 'me' }, { priority: 2 })
-      expect('priority: 2').toHaveBeenWarned()
-    })
-
-    it('forwards options through .throw() too', () => {
-      const errs = defineDiagnostics({
-        codes: { X: 'static' },
-        reporters: [reporterRequiredOptions],
-      })
-      expect(() => errs.X.throw({ priority: 3 })).toThrow()
-      expect('priority: 3').toHaveBeenWarned()
     })
   })
 
@@ -291,9 +220,130 @@ describe('defineDiagnostics', () => {
     it.todo('leaves Diagnostic.docs undefined when docsBase is omitted')
   })
 
+  describe('static fields', () => {
+    it('accepts a static object with why and fix', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: { why: 'static why', fix: 'static fix' },
+        },
+      })
+      const d = errs.X.report()
+      expect(d.message).toBe('static why')
+      expect(d.fix).toBe('static fix')
+    })
+
+    it('accepts static sources', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: { why: 'msg', sources: ['a.ts:1:1'] },
+        },
+      })
+      const d = errs.X.report()
+      expect(d.sources).toEqual(['a.ts:1:1'])
+    })
+  })
+
+  describe('param interpolation', () => {
+    it('interpolates params through why', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: { why: (p: { name: string }) => `hi ${p.name}`, fix: 'static fix' },
+        },
+      })
+      const d = errs.X.report({ name: 'world' })
+      expect(d.message).toBe('hi world')
+      expect(d.fix).toBe('static fix')
+    })
+
+    it('interpolates params through fix when why is static', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: { why: 'msg', fix: (p: { module: string }) => `update ${p.module}` },
+        },
+      })
+      const d = errs.X.report({ module: 'foo' })
+      expect(d.message).toBe('msg')
+      expect(d.fix).toBe('update foo')
+    })
+
+    it('interpolates params through sources', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: { why: 'msg', sources: (p: { file: string }) => [p.file] },
+        },
+      })
+      const d = errs.X.report({ file: 'a.ts:1:1' })
+      expect(d.sources).toEqual(['a.ts:1:1'])
+    })
+
+    it('shares params across multiple function fields', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: {
+            why: (p: { name: string }) => `hi ${p.name}`,
+            fix: (p: { name: string }) => `restart ${p.name}`,
+          },
+        },
+      })
+      const d = errs.X.report({ name: 'world' })
+      expect(d.message).toBe('hi world')
+      expect(d.fix).toBe('restart world')
+    })
+
+    it('throws with the resolved init', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X: {
+            why: (p: { name: string }) => `hi ${p.name}`,
+            fix: 'restart',
+            sources: (p: { name: string }) => [`${p.name}.ts:1:1`],
+          },
+        },
+      })
+      try {
+        errs.X.throw({ name: 'world' })
+      }
+      catch (e) {
+        expect(e).toBeInstanceOf(Diagnostic)
+        expect((e as Diagnostic).message).toBe('hi world')
+        expect((e as Diagnostic).fix).toBe('restart')
+        expect((e as Diagnostic).sources).toEqual(['world.ts:1:1'])
+      }
+    })
+  })
+
+  describe('reporterOptions propagation', () => {
+    it('forwards options from .report() to reporters — no params', () => {
+      const errs = defineDiagnostics({
+        codes: { X: { why: 'static' } },
+        reporters: [reporterRequiredOptions],
+      })
+      errs.X.report({ priority: 1 })
+      expect('priority: 1').toHaveBeenWarned()
+    })
+
+    it('forwards options from .report() to reporters — with params', () => {
+      const errs = defineDiagnostics({
+        codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
+        reporters: [reporterRequiredOptions],
+      })
+      errs.X.report({ who: 'me' }, { priority: 2 })
+      expect('priority: 2').toHaveBeenWarned()
+    })
+
+    it('forwards options through .throw() too', () => {
+      const errs = defineDiagnostics({
+        codes: { X: { why: 'static' } },
+        reporters: [reporterRequiredOptions],
+      })
+      expect(() => errs.X.throw({ priority: 3 })).toThrow()
+      expect('priority: 3').toHaveBeenWarned()
+    })
+  })
+
   describe('stack trace cleanup', () => {
     it('points back to the call site', () => {
-      const errs = defineDiagnostics({ codes: { X: 'msg' } })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
       const d = errs.X.report()
       expect(d.stack).toBeDefined()
       // take the first line of the stack
@@ -301,7 +351,7 @@ describe('defineDiagnostics', () => {
     })
 
     it('does not include internal defineDiagnostics frames at the top', () => {
-      const errs = defineDiagnostics({ codes: { X: 'msg' } })
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
       const d = errs.X.report()
       const firstFrame = d.stack?.split('\n')[1] ?? ''
       expect(firstFrame).not.toContain('diagnostic.ts')

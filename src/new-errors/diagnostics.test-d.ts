@@ -7,7 +7,13 @@ import { defineDiagnostics, reporterLog, reporterRequiredOptions } from './diagn
 
 describe('defineDiagnostics — reporter options inference', () => {
   it('options is optional when there are no reporters', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({
+      codes: {
+        X: {
+          why: 'msg',
+        },
+      },
+    })
     expectTypeOf(errs.X.report()).toEqualTypeOf<Diagnostic>()
     expectTypeOf(errs.X.report).parameters.toEqualTypeOf<[arg?: undefined]>()
   })
@@ -15,13 +21,13 @@ describe('defineDiagnostics — reporter options inference', () => {
   it('options is optional when every reporter ignores options', () => {
     const r1 = (_diagnostic: Diagnostic): void => {}
     const r2 = (_diagnostic: Diagnostic): void => {}
-    const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r1, r2] })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
     expectTypeOf(errs.X.report).parameters.toEqualTypeOf<[arg?: undefined]>()
   })
 
   it('options is optional when every reporter has only optional fields', () => {
     const errs = defineDiagnostics({
-      codes: { X: 'msg' },
+      codes: { X: { why: 'msg' } },
       reporters: [reporterLog],
     })
     errs.X.report()
@@ -32,7 +38,7 @@ describe('defineDiagnostics — reporter options inference', () => {
 
   it('options is required when any reporter has a required field', () => {
     const errs = defineDiagnostics({
-      codes: { X: 'msg' },
+      codes: { X: { why: 'msg' } },
       reporters: [reporterRequiredOptions],
     })
     errs.X.report({ priority: 1 })
@@ -46,7 +52,7 @@ describe('defineDiagnostics — reporter options inference', () => {
   it('merges required + no-options reporters → required options on the required shape', () => {
     const r1 = (_diagnostic: Diagnostic) => {}
     const r2 = (_diagnostic: Diagnostic, _options: { priority: number }) => {}
-    const errs = defineDiagnostics({ codes: { X: 'msg' }, reporters: [r1, r2] })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
     errs.X.report({ priority: 5 })
     // @ts-expect-error: options is required
     errs.X.report()
@@ -56,7 +62,7 @@ describe('defineDiagnostics — reporter options inference', () => {
 
   it('merges optional + required reporters → required, fields intersected', () => {
     const errs = defineDiagnostics({
-      codes: { X: 'msg' },
+      codes: { X: { why: 'msg' } },
       reporters: [reporterLog, reporterRequiredOptions],
     })
     errs.X.report({ priority: 1 })
@@ -67,28 +73,64 @@ describe('defineDiagnostics — reporter options inference', () => {
 })
 
 describe('defineDiagnostics — params inference', () => {
-  it('static-message code takes no params', () => {
-    const errs = defineDiagnostics({ codes: { X: 'static' } })
+  it('all-static object takes no params', () => {
+    const errs = defineDiagnostics({
+      codes: { X: { why: 'static', fix: 'static fix' } },
+    })
     errs.X.report()
     errs.X.report(undefined)
-    // @ts-expect-error: static codes do not accept a string param
-    errs.X.report('nope')
+    // @ts-expect-error: no params expected
+    errs.X.report({ anything: true })
   })
 
-  it('function-message code requires its param', () => {
+  it('inherits params from why', () => {
     const errs = defineDiagnostics({
-      codes: { X: (p: { name: string }) => `hi ${p.name}` },
+      codes: { X: { why: (p: { name: string }) => `hi ${p.name}`, fix: 'static' } },
     })
-    errs.X.report({ name: 'world' })
+    errs.X.report({ name: 'me' })
     // @ts-expect-error: params required
     errs.X.report()
-    // @ts-expect-error: wrong param shape
+    // @ts-expect-error: wrong shape
     errs.X.report({ wrong: true })
   })
 
-  it('function-message + required-options reporter → both required, in order', () => {
+  it('inherits params from fix when why is static', () => {
     const errs = defineDiagnostics({
-      codes: { X: (p: { who: string }) => `hi ${p.who}` },
+      codes: { X: { why: 'static', fix: (p: { module: string }) => p.module } },
+    })
+    errs.X.report({ module: 'foo' })
+    // @ts-expect-error: params required
+    errs.X.report()
+  })
+
+  it('inherits params from sources', () => {
+    const errs = defineDiagnostics({
+      codes: { X: { why: 'static', sources: (p: { file: string }) => [p.file] } },
+    })
+    errs.X.report({ file: 'a.ts:1:1' })
+    // @ts-expect-error: params required
+    errs.X.report()
+  })
+
+  it('intersects params across multiple function fields', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        X: {
+          why: (p: { name: string }) => p.name,
+          fix: (p: { module: string }) => p.module,
+        },
+      },
+    })
+    errs.X.report({ name: 'me', module: 'foo' })
+    // @ts-expect-error: params required
+    errs.X.report()
+    // @ts-expect-error: missing module
+    errs.X.report({ name: 'me' })
+  })
+
+  it('params + required-options reporter → both required, in order', () => {
+    const errs = defineDiagnostics({
+      codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
       reporters: [reporterRequiredOptions],
     })
     errs.X.report({ who: 'me' }, { priority: 2 })
@@ -99,9 +141,9 @@ describe('defineDiagnostics — params inference', () => {
     errs.X.report()
   })
 
-  it('function-message + optional-options reporter → params required, options optional', () => {
+  it('params + optional-options reporter → params required, options optional', () => {
     const errs = defineDiagnostics({
-      codes: { X: (p: { who: string }) => `hi ${p.who}` },
+      codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
       reporters: [reporterLog],
     })
     errs.X.report({ who: 'me' })
@@ -111,17 +153,17 @@ describe('defineDiagnostics — params inference', () => {
 
 describe('defineDiagnostics — return types', () => {
   it('.report returns Diagnostic', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expectTypeOf(errs.X.report()).toEqualTypeOf<Diagnostic>()
   })
 
   it('.throw returns never', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expectTypeOf(errs.X.throw).returns.toBeNever()
   })
 
   it('rejects access to undefined codes at the type level', () => {
-    const errs = defineDiagnostics({ codes: { X: 'msg' } })
+    const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
   })
 })

@@ -1,11 +1,48 @@
 /* eslint-disable ts/no-empty-object-type -- `{}` is used as the neutral element when intersecting reporter option shapes */
 /* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace */
 
+import type { ExtractFnParam, IsUnknown, Prettify, UnionToIntersection, ValueOrFn } from './utils'
+import { toValueWithArgs } from './utils'
+
 /**
- * A template for a diagnostic text field — either a static string or a function
- * that receives interpolation parameters and returns a string.
+ * Define-time shape of a diagnostic. Each field can be a static value or a
+ * function that resolves it from a shared `params` object passed at
+ * `.report()` / `.throw()` time. The runtime-only `cause` field from
+ * {@link DiagnosticInit} is intentionally omitted.
  */
-export type MessageTemplate<P = any> = string | ((params: P) => string)
+export interface DiagnosticDefinition<P = any> {
+  /**
+   * The error message: why this failed. String, or a function of `params`.
+   *
+   * @example
+   * ```ts
+   * why: (p: { name: string }) => `module "${p.name}" failed to load`
+   * ```
+   */
+  why: ValueOrFn<string, P>
+
+  /**
+   * Actionable instructions on how to resolve the problem. String, or a
+   * function of `params`.
+   *
+   * @example
+   * ```ts
+   * fix: (p: { name: string }) => `run \`npm install ${p.name}\``
+   * ```
+   */
+  fix?: ValueOrFn<string, P>
+
+  /**
+   * Locations in user code that contributed to this diagnostic, in
+   * `file:line:column` format. Array, or a function of `params`.
+   *
+   * @example
+   * ```ts
+   * sources: (p: { file: string }) => [`${p.file}:1:1`]
+   * ```
+   */
+  sources?: ValueOrFn<string[], P>
+}
 
 /**
  * Structured initializer for a {@link Diagnostic}. `why` is the only required
@@ -77,10 +114,21 @@ export function reporterRequiredOptions(
 }
 
 /**
+ * Resolves the `params` type a code expects from the intersection of params
+ * across all function-typed fields, falling back to `undefined` when every
+ * field is static.
+ *
+ * @internal
+ */
+type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
+  ? undefined
+  : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
+
+/**
  * Options for {@link defineDiagnostics}.
  */
 export interface DefineDiagnosticsOptions<
-  Codes extends Record<string, MessageTemplate | 0>,
+  Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
 > {
   /**
@@ -101,21 +149,6 @@ export interface DefineDiagnosticsOptions<
    * with custom logging.
    */
   reporters?: Reporters
-}
-
-export interface DefineDiagnosticsOptionsProd<Codes extends string[]> {
-  /**
-   * Base URL or resolver for documentation links. When a string, the code is
-   * appended as a lowercase path segment (e.g. `"https://docs.example.com"` →
-   * `"https://docs.example.com/math_e001"`). When a function, receives the
-   * code and returns a URL or `undefined`.
-   */
-  docsBase?: string | ((code: Codes[number]) => string | undefined)
-
-  /**
-   * Map of diagnostic codes to their definitions.
-   */
-  codes: Codes
 }
 
 /**
@@ -165,11 +198,11 @@ export interface DiagnosticHandle<Params, Opts> {
  * Return type of {@link defineDiagnostics}.
  */
 type Diagnostics<
-  Codes extends Record<string, MessageTemplate | 0>,
+  Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
 > = {
   [Code in keyof Codes]: DiagnosticHandle<
-    Codes[Code] extends (params: infer P) => string ? P : undefined,
+    InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>
   >
 }
@@ -253,28 +286,36 @@ if (process.env.NODE_ENV !== 'production') {
  * `new` required, no proxy.
  */
 export function defineDiagnostics<
-  Codes extends Record<string, MessageTemplate | 0>,
+  const Codes extends Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   const result = {} as Diagnostics<Codes, Reporters>
 
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
-    const template = options.codes[code]
-    const isFn = typeof template === 'function'
+    const def = options.codes[code]
+    // since reporter params go second, we need this to pass the correct args[]
+    // in report
+    const needsParams = [def.why, def.fix, def.sources].some(v => typeof v === 'function')
 
-    // TODO: fix the any
-    const handle: DiagnosticHandle<any, any> = {
-      report(...args: any[]): Diagnostic {
-        const message = isFn ? (template as (p: any) => string)(args[0]) : (template as string)
-        const diagnostic = new Diagnostic({ why: message }, handle.report)
+    const handle: Diagnostics<Codes, Reporters>[string] = {
+      report(...args): Diagnostic {
+        const params = needsParams ? args[0] : undefined
+        const reporterOptions = (needsParams ? args[1] : args[0]) ?? {}
+        const diagnostic = new Diagnostic(
+          {
+            why: toValueWithArgs(def.why, params),
+            fix: toValueWithArgs(def.fix, params),
+            sources: toValueWithArgs(def.sources, params),
+          },
+          handle.report,
+        )
         diagnostic.name = code
-        const reporterOptions = (isFn ? args[1] : args[0]) ?? {}
         for (const reporter of reporters) reporter(diagnostic, reporterOptions)
         return diagnostic
       },
-      throw(...args: any[]): never {
-        throw this.report(...(args as any))
+      throw(...args): never {
+        throw this.report(...args)
       },
     }
 
@@ -287,23 +328,21 @@ export function defineDiagnostics<
 export const errors = defineDiagnostics({
   docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
   codes: {
-    NUXT_B2011: 'This is a bad example of an error code because it has no info',
-
-    // a good error: why it failed and how to fix it
-    NUXT_E032: 'The server failed reload the configuration file. Manually restart the server.',
-
-    NUXT_E033: (moduleName: string) =>
-      `The module "${moduleName}" is not compatible with the current version of Nuxt. Please check the module documentation for compatibility information.`,
+    NUXT_B2011: {
+      why: 'This is a bad example of an error code because it has no info',
+    },
+    NUXT_E032: {
+      why: 'The server failed reload the configuration file.',
+      fix: 'Manually restart the server.',
+    },
+    NUXT_E033: {
+      why: (p: { moduleName: string }) =>
+        `The module "${p.moduleName}" is not compatible with the current version of Nuxt.`,
+      fix: 'Please check the module documentation for compatibility information.',
+    },
   },
-
   reporters: [reporterLog],
 })
-
-export type IsAny<Type> = 0 extends 1 & Type ? true : false
-export type IsUnknown<Type> = IsAny<Type> extends true ? false : unknown extends Type ? true : false
-export type Prettify<Type> = {
-  [Key in keyof Type]: Type[Key]
-}
 
 /**
  * Extracts the options object a reporter accepts as its 2nd argument. Returns
@@ -331,36 +370,3 @@ type ExtractReportersOptions<Reporters extends readonly any[]> = Reporters exten
 ]
   ? ExtractSingleReporterOptions<First> & ExtractReportersOptions<Rest>
   : {}
-
-export const errorsProd = defineDiagnostics({
-  docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
-  codes: {
-    // zero is short and usually common in code
-    NUXT_B2011: 0,
-    NUXT_E032: 0,
-    NUXT_E033: 0,
-  },
-})
-
-function _usage(): void {
-  errors.NUXT_B2011.report()
-  errors.NUXT_B2011.report(undefined)
-  errors.NUXT_B2011.report(
-    // @ts-expect-error: only undefined
-    'ohno',
-  )
-  errors.NUXT_E033.report('my-module')
-  // @ts-expect-error: requires a parameter
-  errors.NUXT_E033.report()
-  errors.NUXT_E033.report(
-    // @ts-expect-error: requires a string parameter
-    20,
-  )
-
-  const a: number | undefined = 2 as number | undefined
-  // throwing
-  if (typeof a === 'number') {
-    errors.NUXT_E033.throw('my-module')
-    console.error(a.toFixed(2))
-  }
-}
