@@ -59,7 +59,7 @@ export interface DiagnosticCallParams {
  * field — it becomes the {@link Error.message}. The remaining fields are
  * optional metadata that reporters and consumers can render or forward.
  */
-export interface DiagnosticInit {
+export interface DiagnosticInit extends DiagnosticCallParams {
   /**
    * The actual error message: why this failed.
    * Mirrored to `Error.message`.
@@ -72,17 +72,9 @@ export interface DiagnosticInit {
   fix?: string
 
   /**
-   * Original error or exception that triggered this diagnostic. Pass it
-   * through when re-throwing so the original stack trace is preserved.
+   * URL to extended documentation for this diagnostic.
    */
-  cause?: unknown
-
-  /**
-   * Locations in user code that contributed to this diagnostic, in
-   * `file:line:column` format. Useful for compilers and other tools where the
-   * JS stack trace doesn't reflect the user's source.
-   */
-  sources?: string[]
+  docs?: string
 }
 
 /**
@@ -189,17 +181,6 @@ export interface DefineDiagnosticsOptions<
 }
 
 /**
- * Resolves the reporter-options element of an action signature: the merged
- * shape required by all reporters, or `undefined` when no reporter takes
- * options.
- *
- * @internal
- */
-type ResolvedReporterOptions<ReporterOpts> = keyof ReporterOpts extends never
-  ? undefined
-  : ReporterOpts
-
-/**
  * The first positional argument of `.report()` / `.throw()`: interpolation
  * params merged with the runtime-only call-site fields (`cause`, `sources`).
  *
@@ -210,20 +191,22 @@ type CallSiteParams<Params> = Params & DiagnosticCallParams
 /**
  * Resolves the full argument tuple for `.report()` / `.throw()`. Branches on
  * whether params and reporter options each have required fields — required
- * positions become required tuple elements, all-optional ones become `?`.
+ * positions become required tuple elements, all-optional ones become `?`, and
+ * when no reporter declares any options the parameter is omitted entirely.
  *
  * @internal
  */
-type ActionArgs<Params, ReporterOpts> = {} extends Params
-  ? {} extends ReporterOpts
-      ? [params?: CallSiteParams<Params>, reporterOptions?: ResolvedReporterOptions<ReporterOpts>]
-      : [
-        params: CallSiteParams<Params> | undefined,
-        reporterOptions: ResolvedReporterOptions<ReporterOpts>,
-        ]
+type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
+  ? {} extends Params
+      ? [params?: CallSiteParams<Params>]
+      : [params: CallSiteParams<Params>]
   : {} extends ReporterOpts
-      ? [params: CallSiteParams<Params>, reporterOptions?: ResolvedReporterOptions<ReporterOpts>]
-      : [params: CallSiteParams<Params>, reporterOptions: ResolvedReporterOptions<ReporterOpts>]
+      ? {} extends Params
+          ? [params?: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
+          : [params: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
+      : {} extends Params
+          ? [params: CallSiteParams<Params> | undefined, reporterOptions: ReporterOpts]
+          : [params: CallSiteParams<Params>, reporterOptions: ReporterOpts]
 
 /**
  * Per-code handle exposed by {@link defineDiagnostics}. Each code is a plain
@@ -297,6 +280,7 @@ export class Diagnostic extends Error {
   constructor(init: DiagnosticInit, captureFrom: Function = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.fix = init.fix
+    this.docs = init.docs
     this.sources = init.sources
     // V8-only API, but also implemented pretty much everywhere. Worst case
     // scenario, we fall back to the stack `Error` captures by default — which
@@ -312,6 +296,7 @@ export class Diagnostic extends Error {
       name: this.name,
       message: this.message,
       fix: this.fix,
+      docs: this.docs,
       sources: this.sources,
       cause: this.cause,
       stack: this.stack,
@@ -341,8 +326,12 @@ export function defineDiagnostics<
   const reporters = options.reporters ?? []
   const result = {} as Diagnostics<Codes, Reporters>
 
+  const { docsBase } = options
+
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const def = options.codes[code]
+    const docs
+      = typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code)
 
     const handle = {
       report(
@@ -353,6 +342,7 @@ export function defineDiagnostics<
           {
             why: toValueWithArgs(def.why, params),
             fix: toValueWithArgs(def.fix, params),
+            docs,
             cause: params.cause,
             sources: params.sources,
           },

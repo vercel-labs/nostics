@@ -245,10 +245,29 @@ describe('defineDiagnostics', () => {
     })
   })
 
-  describe('docsBase wiring (it.todo — not yet implemented)', () => {
-    it.todo('sets Diagnostic.docs when docsBase is a string')
-    it.todo('sets Diagnostic.docs from a function docsBase invoked with the code')
-    it.todo('leaves Diagnostic.docs undefined when docsBase is omitted')
+  describe('docsBase wiring', () => {
+    it('sets Diagnostic.docs when docsBase is a string', () => {
+      const errs = defineDiagnostics({
+        docsBase: 'https://example.com/errors',
+        codes: { NUXT_E001: { why: 'boom' } },
+      })
+      expect(errs.NUXT_E001.report().docs).toBe('https://example.com/errors/nuxt_e001')
+    })
+
+    it('sets Diagnostic.docs from a function docsBase invoked with the code', () => {
+      const docsBase = vi.fn((code: string) => `https://example.com/${code.toLowerCase()}`)
+      const errs = defineDiagnostics({
+        docsBase,
+        codes: { NUXT_E033: { why: 'boom' } },
+      })
+      expect(errs.NUXT_E033.report().docs).toBe('https://example.com/nuxt_e033')
+      expect(docsBase).toHaveBeenCalledWith('NUXT_E033')
+    })
+
+    it('leaves Diagnostic.docs undefined when docsBase is omitted', () => {
+      const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
+      expect(errs.X.report().docs).toBeUndefined()
+    })
   })
 
   describe('static fields', () => {
