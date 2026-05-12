@@ -16,7 +16,7 @@ describe('defineDiagnostics — reporter options inference', () => {
     })
     expectTypeOf(errs.X.report()).toEqualTypeOf<Diagnostic>()
     expectTypeOf(errs.X.report).parameters.toEqualTypeOf<
-      [params?: DiagnosticCallParams | undefined, reporterOptions?: undefined]
+      [params?: DiagnosticCallParams | undefined]
     >()
   })
 
@@ -25,7 +25,7 @@ describe('defineDiagnostics — reporter options inference', () => {
     const r2 = (_diagnostic: Diagnostic): void => {}
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
     expectTypeOf(errs.X.report).parameters.toEqualTypeOf<
-      [params?: DiagnosticCallParams | undefined, reporterOptions?: undefined]
+      [params?: DiagnosticCallParams | undefined]
     >()
   })
 
