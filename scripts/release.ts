@@ -75,7 +75,7 @@ const IS_MAIN_PKG_AT_ROOT = true
 const PKG_FOLDERS = [
   // comment for multiline format
   join(__dirname, '..'),
-  join(__dirname, '..', 'demo-lib'),
+  // join(__dirname, '..', 'demo-lib'),
 ]
 
 const FILES_TO_COMMIT = [
