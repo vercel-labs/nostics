@@ -1,6 +1,4 @@
-import type { Diagnostic } from '../diagnostics'
-import type { Formatter } from '../format'
-import { formatTag } from '../format'
+import type { Diagnostic } from '../diagnostic'
 
 export interface Colors {
   red: (s: string) => string
@@ -11,33 +9,16 @@ export interface Colors {
   dim: (s: string) => string
 }
 
-function levelColor(colors: Colors, level: string): (s: string) => string {
-  switch (level) {
-    case 'error':
-      return colors.red
-    case 'warn':
-    case 'deprecation':
-      return colors.yellow
-    case 'suggestion':
-      return colors.cyan
-    default:
-      return s => s
-  }
-}
-
-export function ansiFormatter(colors: Colors): Formatter {
-  return (d: Diagnostic): string => {
-    const colorize = levelColor(colors, d.level)
-    const tag = colors.bold(colorize(formatTag(d)))
+export function ansiFormatter(colors: Colors): (d: Diagnostic) => string {
+  return (d) => {
+    const tag = colors.bold(colors.red(`[${d.name}]`))
     const header = `${tag} ${d.message}`
 
     const details: string[] = []
-    if (d.why)
-      details.push(`${colors.dim('why:')} ${d.why}`)
     if (d.fix)
       details.push(`${colors.dim('fix:')} ${d.fix}`)
-    if (d.hint)
-      details.push(`${colors.dim('hint:')} ${colors.gray(d.hint)}`)
+    if (d.sources?.length)
+      details.push(`${colors.dim('sources:')} ${d.sources.join(', ')}`)
     if (d.docs)
       details.push(`${colors.dim('see:')} ${colors.cyan(d.docs)}`)
 
@@ -45,12 +26,9 @@ export function ansiFormatter(colors: Colors): Formatter {
       return header
 
     const lines = details.map((detail, i) => {
-      const connector = i < details.length - 1
-        ? colors.dim('├▶')
-        : colors.dim('╰▶')
+      const connector = colors.dim(i < details.length - 1 ? '├▶' : '╰▶')
       return `${connector} ${detail}`
     })
-
     return [header, ...lines].join('\n')
   }
 }

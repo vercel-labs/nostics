@@ -1,10 +1,10 @@
-import type { Reporter } from '../reporter'
+import type { DiagnosticReporter } from '../diagnostic'
 import { appendFileSync } from 'node:fs'
 
 export interface FileReporterOptions {
   /**
    * Path to the log file.
-   * @default '.diagnostics.log'
+   * @default '.nostics.log'
    */
   logFile?: string
 }
@@ -15,17 +15,18 @@ export interface FileReporterOptions {
  *
  * @example
  * ```ts
+ * import { defineDiagnostics } from 'logs-sdk'
  * import { createFileReporter } from 'logs-sdk/reporters/node'
  *
- * const log = createLogger({
- *   diagnostics: [diagnostics],
- *   reporters: [consoleReporter, createFileReporter()],
+ * const diagnostics = defineDiagnostics({
+ *   codes: { ... },
+ *   reporters: [createFileReporter()],
  * })
  * ```
  */
-export function createFileReporter(options?: FileReporterOptions): Reporter {
-  const logFile = options?.logFile ?? '.diagnostics.log'
-  return (diagnostic, _formatted) => {
+export function createFileReporter(options?: FileReporterOptions): DiagnosticReporter {
+  const logFile = options?.logFile ?? '.nostics.log'
+  return (diagnostic) => {
     try {
       appendFileSync(logFile, `${JSON.stringify(diagnostic)}\n`)
     }

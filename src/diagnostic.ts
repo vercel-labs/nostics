@@ -56,7 +56,7 @@ export interface DiagnosticCallParams {
 
 /**
  * Structured initializer for a {@link Diagnostic}. `why` is the only required
- * field — it becomes the {@link Error.message}. The remaining fields are
+ * field — it becomes the {@link Diagnostic.message}. The remaining fields are
  * optional metadata that reporters and consumers can render or forward.
  */
 export interface DiagnosticInit extends DiagnosticCallParams {
@@ -105,15 +105,19 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
   const header = `[${diagnostic.name}] ${diagnostic.message}`
 
   const details: string[] = []
-  if (diagnostic.fix)
+  if (diagnostic.fix) {
     details.push(`fix: ${diagnostic.fix}`)
-  if (diagnostic.sources?.length)
+  }
+  if (diagnostic.sources?.length) {
     details.push(`sources: ${diagnostic.sources.join(', ')}`)
-  if (diagnostic.docs)
+  }
+  if (diagnostic.docs) {
     details.push(`see: ${diagnostic.docs}`)
+  }
 
-  if (details.length === 0)
+  if (details.length === 0) {
     return header
+  }
 
   const lines = details.map((detail, i) => {
     const connector = i < details.length - 1 ? '├▶' : '╰▶'
@@ -129,7 +133,7 @@ export function reporterError(diagnostic: Diagnostic): void {
 
 export function reporterLog(
   diagnostic: Diagnostic,
-  { method = 'log' }: { method?: 'log' | 'error' | 'warn' } = {},
+  { method = 'warn' }: { method?: 'log' | 'error' | 'warn' } = {},
 ): void {
   // eslint-disable-next-line no-console
   console[method](formatDiagnostic(diagnostic))
@@ -382,25 +386,6 @@ export function defineDiagnostics<
 
   return result
 }
-
-export const errors = defineDiagnostics({
-  docsBase: code => `https://example.com/docs/errors/${code.toLowerCase()}`,
-  codes: {
-    NUXT_B2011: {
-      why: 'This is a bad example of an error code because it has no info',
-    },
-    NUXT_E032: {
-      why: 'The server failed reload the configuration file.',
-      fix: 'Manually restart the server.',
-    },
-    NUXT_E033: {
-      why: (p: { moduleName: string }) =>
-        `The module "${p.moduleName}" is not compatible with the current version of Nuxt.`,
-      fix: 'Please check the module documentation for compatibility information.',
-    },
-  },
-  reporters: [reporterLog],
-})
 
 /**
  * Extracts the options object a reporter accepts as its 2nd argument. Returns

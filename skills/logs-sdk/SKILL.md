@@ -1,65 +1,57 @@
 ---
 name: logs-sdk
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors, warnings, suggestions, and deprecations into typed, machine-readable Diagnostic objects with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `logs-sdk`, or works with `defineDiagnostics`, `createLogger`, `CodedError`, diagnostic code registries, structured error handling, or error code documentation pages. Also use when building custom formatters, reporters (consoleReporter, createFetchReporter, createFileReporter from logs-sdk/reporters/node, devReporter from logs-sdk/reporters/dev), Vite plugins (logsSDK, logsSDKServer from logs-sdk/unplugin), or integrating diagnostic codes into a library or framework."
+description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `logs-sdk`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`reporterLog`, `reporterError`, `createFetchReporter` from logs-sdk/reporters/fetch, `createFileReporter` from logs-sdk/reporters/node, `devReporter` from logs-sdk/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`logsSDK`, `logsSDKServer` from logs-sdk/unplugin).'
 ---
 
 # logs-sdk
 
-Structured diagnostic code library for JavaScript/TypeScript. Every error, warning, suggestion, and deprecation becomes a typed, serializable `Diagnostic` object with a stable code, docs URL, and actionable fields.
+Structured diagnostic code library for JavaScript/TypeScript. Every error condition becomes a typed `Diagnostic` instance (which extends `Error`) with a stable code, docs URL, and actionable fields, serializable via `toJSON()`.
 
 ## Core Concepts
 
-### Object-first design
+### Diagnostic class
 
-The fundamental unit is a plain `Diagnostic` object — serializable, transportable (client-server, worker-main, build tool-IDE). An `Error` class (`CodedError`) is only created at the moment `.throw()` is called.
+The fundamental unit is a `Diagnostic` instance — it extends `Error`, so it can be thrown, caught with `instanceof`, and inspected like any other error. It's serializable via `.toJSON()` for transport across process boundaries.
 
 ```ts
-interface Diagnostic {
-  code: string // e.g. 'NUXT_B2011'
-  level: 'error' | 'warn' | 'suggestion' | 'deprecation'
+class Diagnostic extends Error {
+  name: string // the code, e.g. 'NUXT_B2011'
   message: string // human-readable, already interpolated
-  why?: string // why this happened
+  get why(): string // alias for `message`
   fix?: string // how to resolve it
-  hint?: string // additional guidance
   docs?: string // URL to documentation page for this code
-  sources?: SourceLocation[]
-  cause?: unknown
-  context?: Record<string, unknown>
+  sources?: string[] // 'file:line:column' strings contributed by the call site
+  cause?: unknown // original error if passed at call time
+  toJSON(): object // plain object with name/why/fix/docs/sources/cause
 }
 ```
 
-### Diagnostic levels
+### Handles
 
-- `error` — something is broken and must be fixed
-- `warn` — something may cause issues
-- `suggestion` — an improvement the user could make
-- `deprecation` — something that will be removed in a future version
+`defineDiagnostics()` returns one handle per code. Each handle has `.report()` and `.throw()`. Reporters are wired in at definition time and fire on every call.
 
 ## API Reference
 
 ### `defineDiagnostics(options)` — Define diagnostic codes
 
-Creates typed factory functions that produce plain `Diagnostic` objects. No side effects, no logging.
-
 ```ts
-import { defineDiagnostics } from 'logs-sdk'
+import { defineDiagnostics, reporterLog } from 'logs-sdk'
 
 const diagnostics = defineDiagnostics({
-  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
+  docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
+  reporters: [reporterLog],
   codes: {
     NUXT_B1001: {
-      message: 'Could not compile template.',
+      why: 'Could not compile template.',
       fix: 'Check the template for syntax errors.',
     },
     NUXT_B2011: {
-      message: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
+      why: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
     },
     NUXT_B5001: {
-      message: 'Missing compatibilityDate in nuxt.config.',
+      why: 'Missing compatibilityDate in nuxt.config.',
       fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your nuxt.config.`,
-      hint: 'This ensures consistent behavior across Nuxt versions.',
-      level: 'warn',
     },
   },
 })
@@ -67,121 +59,80 @@ const diagnostics = defineDiagnostics({
 
 **Options:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `docsBase` | `string \| ((code: string) => string \| undefined)?` | Docs URL source. As a string, auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. As a function, receives the code key and returns the full URL (or `undefined` to omit). |
-| `codes` | `Record<string, DiagnosticDefinition>` | Map of code keys to their definitions |
+| Field       | Type                                         | Description                                                                                                                                                                         |
+| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docsBase`  | `string \| ((code) => string \| undefined)?` | Docs URL source. As a string, auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. As a function, receives the code key and returns the full URL (or `undefined` to omit). |
+| `codes`     | `Record<string, DiagnosticDefinition>`       | Map of code keys to their definitions.                                                                                                                                              |
+| `reporters` | `readonly DiagnosticReporter[]?`             | Reporters fired on every `.report()` / `.throw()`. Their options are inferred and intersected — required reporter options become required at the call site.                         |
 
 **DiagnosticDefinition fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `message` | `string \| (params) => string` | Required. The diagnostic message |
-| `fix` | `string \| (params) => string` | Optional. How to resolve the issue |
-| `why` | `string \| (params) => string` | Optional. Why this diagnostic was triggered |
-| `hint` | `string \| (params) => string` | Optional. Additional contextual guidance |
-| `level` | `DiagnosticLevel` | Optional. Defaults to `'error'` |
+| Field | Type                           | Description                                             |
+| ----- | ------------------------------ | ------------------------------------------------------- |
+| `why` | `string \| (params) => string` | Required. Why this failed. Becomes the `Error.message`. |
+| `fix` | `string \| (params) => string` | Optional. How to resolve the issue.                     |
 
-**Type inference:** Parameters are extracted from ALL template fields (`message`, `fix`, `why`, `hint`) and intersected. If `message` needs `{ src }` and `fix` needs `{ date }`, the factory requires `{ src, date }`.
+**Type inference:** Parameters are extracted from ALL template fields (`why`, `fix`) and intersected. If `why` needs `{ src }` and `fix` needs `{ date }`, the call site requires `{ src, date }`.
 
-**Factory usage:**
+### `.report()` and `.throw()` — Call sites
 
 ```ts
-// No params — factory takes optional overrides only
-diagnostics.NUXT_B1001()
-diagnostics.NUXT_B1001({ level: 'warn' })
+// No params — call signature omits the params arg.
+diagnostics.NUXT_B1001.report()
 
-// With params — first arg is params, second is optional overrides
-diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' })
-diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' }, { cause: originalError })
-```
+// With params — first arg is the params object.
+diagnostics.NUXT_B2011.report({ src: '/plugins/bad.ts' })
 
-**Registry methods** (non-enumerable on the result):
-
-```ts
-diagnostics.codes() // → ['NUXT_B1001', 'NUXT_B2011', 'NUXT_B5001']
-diagnostics.has('NUXT_B1001') // → true (type guard: narrows to known code key)
-diagnostics.get('NUXT_B1001') // → the raw DiagnosticDefinition
-diagnostics.extend({ // → new diagnostics set with additional codes merged in
-  NUXT_B9999: { message: 'New code.' }
-})
-```
-
-### `createLogger(options)` — Bind diagnostics to output
-
-Merges diagnostic sets and wraps each code factory to return `DiagnosticActions` — a `Diagnostic` enriched with action methods.
-
-```ts
-import { consoleReporter, createLogger, plainFormatter } from 'logs-sdk'
-import { ansiFormatter } from 'logs-sdk/formatters/ansi'
-
-const log = createLogger({
-  diagnostics: [diagnostics],
-  formatter: ansiFormatter(colors), // or plainFormatter (default)
-  reporters: consoleReporter, // default — pass a single function or an array
-})
-```
-
-**Usage:**
-
-```ts
-log.NUXT_B2011({ src: pluginPath }).throw() // formats, reports, then throws CodedError
-log.NUXT_B1001().warn() // overrides level to 'warn', formats, reports
-log.NUXT_B5001({ date: '2025-01-01' }).log() // uses the definition's level ('warn')
-log.NUXT_B1001().format() // returns the formatted string only
-
-// Raw methods for pre-built Diagnostic objects
-log.throw(diagnostics.NUXT_B2011({ src: pluginPath }))
-log.warn(diagnostics.NUXT_B1001())
-```
-
-**Multiple diagnostic sets:**
-
-```ts
-const log = createLogger({
-  diagnostics: [nuxtDiagnostics, i18nDiagnostics],
+// Runtime call-site fields (`cause`, `sources`) merge into the same object.
+diagnostics.NUXT_B2011.report({
+  src: pluginPath,
+  cause: originalError,
+  sources: ['nuxt.config.ts:42:3'],
 })
 
-log.NUXT_B2011({ src: pluginPath }).throw() // [NUXT_B2011] ...
-log.I18N_I001({ locale: 'fr' }).warn() // [I18N_I001] ...
+// `.throw()` reports then throws the diagnostic.
+diagnostics.NUXT_B2011.throw({ src: pluginPath })
 ```
 
-### `CodedError` — Error class
+`.report()` returns the `Diagnostic` instance; `.throw()` returns `never`. Both fire every reporter in order.
 
-Created only when `.throw()` is called. Extends `Error` with `name: 'CodedError'`.
+### Catching diagnostics
 
-```ts
-class CodedError extends Error {
-  readonly diagnostic: Diagnostic // the full object
-}
-```
-
-The `message` is formatted as `[CODE] message text`. Access all diagnostic fields via `err.diagnostic`.
-
-**Catch and inspect:**
+`Diagnostic` extends `Error`, so it behaves like any other thrown error.
 
 ```ts
+import { Diagnostic } from 'logs-sdk'
+
 try {
-  log.NUXT_B2011({ src: pluginPath }).throw()
-}
-catch (err) {
-  if (err instanceof CodedError) {
-    console.log(err.diagnostic.code) // 'NUXT_B2011'
-    console.log(err.diagnostic.docs) // 'https://nuxt.com/e/b2011'
-    console.log(err.diagnostic.fix) // 'Pass a string path...'
+  diagnostics.NUXT_B2011.throw({ src: pluginPath })
+} catch (err) {
+  if (err instanceof Diagnostic) {
+    console.log(err.name) // 'NUXT_B2011'
+    console.log(err.message) // already-interpolated text
+    console.log(err.docs) // 'https://nuxt.com/e/b2011'
+    console.log(err.fix) // 'Pass a string path...'
   }
 }
 ```
 
 ### Formatters
 
-All are plain functions: `(d: Diagnostic) => string`.
+| Formatter               | Import                     | Description                                                     |
+| ----------------------- | -------------------------- | --------------------------------------------------------------- |
+| `formatDiagnostic`      | `logs-sdk`                 | Plain unicode-decorated string. Used by the built-in reporters. |
+| `ansiFormatter(colors)` | `logs-sdk/formatters/ansi` | Colorized variant — accepts a generic `Colors` interface.       |
+| `jsonFormatter`         | `logs-sdk/formatters/json` | `JSON.stringify(diagnostic)` (calls `Diagnostic.toJSON()`).     |
 
-| Formatter | Import | Description |
-|-----------|--------|-------------|
-| `plainFormatter` | `logs-sdk` | Unicode box-drawing, no colors. Default. |
-| `ansiFormatter(colors)` | `logs-sdk/formatters/ansi` | Accepts a generic `Colors` interface — no hard ANSI dependency |
-| `jsonFormatter` | `logs-sdk/formatters/json` | `JSON.stringify(diagnostic)` |
+**`formatDiagnostic` output:**
+
+```
+[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
+├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
+├▶ sources: nuxt.config.ts:42:3
+╰▶ see: https://nuxt.com/e/b2011
+```
+
+Detail line order is fixed: `fix` → `sources` → `see` (docs URL). Missing fields are omitted.
 
 **ANSI formatter `Colors` interface:**
 
@@ -196,96 +147,35 @@ interface Colors {
 }
 ```
 
-**Plain formatter output:**
-
-```
-[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ why: The plugin object was passed without a src path
-├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-├▶ hint: Check your module's addPlugin() calls
-╰▶ see: https://nuxt.com/e/b2011
-```
-
-Detail line order is fixed: `why` → `fix` → `hint` → `see` (docs URL). Missing fields are omitted.
-
-**Writing a custom formatter:**
-
-```ts
-import type { Formatter } from 'logs-sdk'
-
-const myFormatter: Formatter = (d) => {
-  return `[${d.code}] ${d.message}${d.fix ? ` (fix: ${d.fix})` : ''}`
-}
-```
-
-### Formatting utilities
-
-Two lower-level functions are exported for building custom formatters:
-
-- `formatTag(d: Diagnostic)` — returns the `[CODE]` tag string (e.g. `[NUXT_B2011]` for code `'NUXT_B2011'`)
-- `renderFrame(d: Diagnostic)` — returns the full box-drawing formatted string (same as `plainFormatter`)
-
 ### Reporters
 
-All are plain functions: `(d: Diagnostic, formatted: string) => void`. Pass a single reporter or an array.
+A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnostics` infers the union of every reporter's `options` and requires it at the call site only if any reporter has required fields.
 
-| Reporter | Import | Description |
-|----------|--------|-------------|
-| `consoleReporter` | `logs-sdk` | `console.error` for `'error'` level, `console.warn` for all others |
-| `createFetchReporter(url)` | `logs-sdk` | POSTs diagnostic JSON to the given URL (silently ignores fetch errors) |
-| `createFileReporter(options?)` | `logs-sdk/reporters/node` | Appends diagnostics as NDJSON to a local file (default `.diagnostics.log`) |
-| `devReporter` | `logs-sdk/reporters/dev` | Sends diagnostics to the Vite dev server via `import.meta.hot.send()` for dev-time collection |
-
-**File reporter usage:**
-
-```ts
-import { createFileReporter } from 'logs-sdk/reporters/node'
-
-const log = createLogger({
-  diagnostics: [diagnostics],
-  reporters: [consoleReporter, createFileReporter()],
-})
-
-// Or with a custom path:
-createFileReporter({ logFile: 'my-app.log' })
-```
-
-**Dev reporter usage:**
-
-```ts
-import { consoleReporter, createLogger } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/reporters/dev'
-
-const log = createLogger({
-  diagnostics: [diagnostics],
-  reporters: [consoleReporter, devReporter],
-})
-```
+| Reporter                       | Import                     | Description                                                                                                                    |
+| ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `reporterError`                | `logs-sdk`                 | `console.error(formatDiagnostic(d))`.                                                                                          |
+| `reporterLog`                  | `logs-sdk`                 | `console[method](formatDiagnostic(d))`. Method defaults to `'log'`; pass `{ method: 'warn' \| 'error' }` to route differently. |
+| `createFetchReporter(url)`     | `logs-sdk/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                      |
+| `createFileReporter(options?)` | `logs-sdk/reporters/node`  | Appends diagnostics as NDJSON to a local file (default `.nostics.log`).                                                        |
+| `devReporter`                  | `logs-sdk/reporters/dev`   | Sends `diagnostic.toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                               |
 
 **Writing a custom reporter:**
 
 ```ts
-import type { Reporter } from 'logs-sdk'
+import type { DiagnosticReporter } from 'logs-sdk'
 
-const fileReporter: Reporter = (diagnostic, formatted) => {
-  fs.appendFileSync('errors.log', `${formatted}\n`)
+const sentryReporter: DiagnosticReporter = (diagnostic) => {
+  sentry.captureMessage(diagnostic.message, { tags: { code: diagnostic.name } })
 }
 ```
 
-### Overrides
-
-When calling a factory, you can pass `Overrides` to attach runtime context:
+To require options at the call site, declare a second parameter:
 
 ```ts
-type Overrides = Partial<Pick<Diagnostic, 'level' | 'sources' | 'cause' | 'context'>>
-```
-
-```ts
-diagnostics.NUXT_B2011({ src: pluginPath }, {
-  cause: originalError,
-  sources: [{ file: 'nuxt.config.ts', line: 42 }],
-  context: { moduleName: 'my-module' },
-})
+const audited: DiagnosticReporter<{ priority: number }> = (d, options) => {
+  audit.log({ name: d.name, priority: options.priority })
+}
+// → diagnostics.X.report({...}, { priority: 1 }) — the second arg is required and type-checked.
 ```
 
 ## Vite Plugins
@@ -294,22 +184,20 @@ Two unplugin-based plugins for build-time optimization and dev-time diagnostic c
 
 ### `logsSDK` — Build-time AST transform
 
-Marks `defineDiagnostics()` and `createLogger()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard so diagnostics tree-shake out of production builds. Supports `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
+Marks `defineDiagnostics()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard so diagnostics tree-shake out of production builds. Supports `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
 
 ```ts
 import { logsSDK } from 'logs-sdk/unplugin'
 
 export default defineConfig({
-  plugins: [
-    logsSDK.vite(),
-  ],
+  plugins: [logsSDK.vite()],
 })
 ```
 
 **Options (`LogsSdkPluginOptions`):**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field         | Type      | Description                                                    |
+| ------------- | --------- | -------------------------------------------------------------- |
 | `packageName` | `string?` | The package name to detect imports from. Default: `'logs-sdk'` |
 
 ### `logsSDKServer` — Dev server diagnostic collector
@@ -320,18 +208,16 @@ Listens for diagnostics sent over the Vite WebSocket (from `devReporter` in the 
 import { logsSDKServer } from 'logs-sdk/unplugin'
 
 export default defineConfig({
-  plugins: [
-    logsSDKServer.vite(),
-  ],
+  plugins: [logsSDKServer.vite()],
 })
 ```
 
 **Options (`LogsSdkServerOptions`):**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `logFile` | `string?` | Path to the log file. Default: `'.diagnostics.log'` |
-| `debug` | `boolean?` | Enable debug logging for the plugin. Default: `!!process.env.DEBUG` |
+| Field     | Type       | Description                                                         |
+| --------- | ---------- | ------------------------------------------------------------------- |
+| `logFile` | `string?`  | Path to the log file. Default: `'.nostics.log'`                     |
+| `debug`   | `boolean?` | Enable debug logging for the plugin. Default: `!!process.env.DEBUG` |
 
 ### Typical dev setup
 
@@ -347,13 +233,15 @@ export default defineConfig({
 ```
 
 ```ts
-// src/logger.ts
-import { consoleReporter, createLogger } from 'logs-sdk'
+// src/diagnostics.ts
+import { defineDiagnostics, reporterLog } from 'logs-sdk'
 import { devReporter } from 'logs-sdk/reporters/dev'
 
-export const log = createLogger({
-  diagnostics: [diagnostics],
-  reporters: [consoleReporter, devReporter],
+export const diagnostics = defineDiagnostics({
+  reporters: [reporterLog, devReporter],
+  codes: {
+    /* ... */
+  },
 })
 ```
 
@@ -367,12 +255,11 @@ export const log = createLogger({
 
 ### Structuring diagnostic definitions
 
-- Always provide `message` — it is the only required field
+- Always provide `why` — it is the only required field and becomes `Error.message`
 - Provide `fix` whenever the solution is known — this is the most actionable field for both humans and AI agents
-- Provide `why` to explain root causes when the reason may not be obvious from the message alone
-- Use `hint` for supplementary guidance that doesn't fit in `fix` (e.g. links to related docs, edge cases)
-- Set the appropriate `level` — default is `'error'`, override to `'warn'`, `'suggestion'`, or `'deprecation'` as needed
 - Use parameterized templates for messages that include runtime values — avoid string concatenation outside the factory
+- Pass `cause` at the call site (not in the definition) when re-raising from an original error
+- Pass `sources` at the call site as `'file:line:column'` strings when the JS stack trace doesn't reflect the user's source
 
 ### Organizing diagnostic files
 
@@ -384,7 +271,7 @@ src/
     build.ts       # NUXT_B-series codes
     runtime.ts     # NUXT_R-series codes
     config.ts      # NUXT_C-series codes
-    index.ts       # re-exports and merges all sets
+    index.ts       # re-exports each set
 ```
 
 Each file calls `defineDiagnostics()` with the same `docsBase` but different code ranges.
@@ -392,5 +279,3 @@ Each file calls `defineDiagnostics()` with the same `docsBase` but different cod
 ## Documentation Site
 
 For guidance on building error code documentation pages (structure, templates, deployment, and AI-agent optimization), read `references/documentation-site.md`.
-
-<!-- synced-sha: 7c2392fb4716118fa84b469b01c7eff2c057221e -->

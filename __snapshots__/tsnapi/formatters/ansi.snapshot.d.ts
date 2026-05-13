@@ -11,4 +11,4 @@ export interface Colors {
 }
 
 // Functions
-export declare function ansiFormatter(_: Colors): Formatter;
+export declare function ansiFormatter(_: Colors): (_: Diagnostic) => string;

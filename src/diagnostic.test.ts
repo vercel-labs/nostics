@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest'
-import { mockConsoleError, mockConsoleWarn } from '../../test/mock-warn'
 import {
   defineDiagnostics,
   Diagnostic,
@@ -7,6 +6,7 @@ import {
   reporterLog,
   reporterRequiredOptions,
 } from './diagnostic'
+import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
 mockConsoleWarn()
 mockConsoleError()
@@ -403,7 +403,7 @@ describe('defineDiagnostics', () => {
       const d = errs.X.report()
       expect(d.stack).toBeDefined()
       // take the first line of the stack
-      expect(d.stack?.split('\n').at(1)).toContain('diagnostics.test.ts')
+      expect(d.stack?.split('\n').at(1)).toContain('diagnostic.test.ts')
     })
 
     it('does not include internal defineDiagnostics frames at the top', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { transform } from '../../src/code-transform/transform'
+import { transform } from './transform'
 
 function expectTransform(input: string, expected: string) {
   const result = transform(input, 'test.ts')

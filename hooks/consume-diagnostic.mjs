@@ -2,12 +2,11 @@
 
 import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import process from 'node:process'
 
 const projectDir = process.env.CLAUDE_PROJECT_DIR || '.'
-const logFile = join(projectDir, '.diagnostics.log')
+const logFile = join(projectDir, '.nostics.log')
 const debugEnabled = !!process.env.DEBUG
-const debugLog = join(projectDir, '.diagnostics-hook-debug.log')
+const debugLog = join(projectDir, '.nostics-hook-debug.log')
 
 function debug(msg) {
   if (!debugEnabled)
@@ -22,7 +21,7 @@ try {
   const stdin = readFileSync(0, 'utf-8')
   input = JSON.parse(stdin)
 }
-catch { }
+catch {}
 
 debug(`Hook fired. stop_hook_active=${input.stop_hook_active}`)
 
@@ -63,7 +62,7 @@ try {
   dropCode = d.code
   dropFile = d.sources?.[0]?.file
 }
-catch { }
+catch {}
 
 const remaining = lines.slice(1).filter((line) => {
   // keep l
@@ -81,7 +80,9 @@ const remaining = lines.slice(1).filter((line) => {
   }
 })
 
-debug(`Consumed 1, removed ${lines.length - 1 - remaining.length} duplicate(s), remaining: ${remaining.length}`)
+debug(
+  `Consumed 1, removed ${lines.length - 1 - remaining.length} duplicate(s), remaining: ${remaining.length}`,
+)
 writeFileSync(logFile, remaining.length ? `${remaining.join('\n')}\n` : '')
 
 // Block stop and pass the diagnostic as reason

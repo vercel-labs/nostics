@@ -18,18 +18,18 @@ export interface TransformOptions {
 
 /**
  * Cross-file state: maps file paths to sets of exported variable names
- * that are derived from logs-sdk function calls (createLogger, defineDiagnostics, etc.)
+ * that are derived from logs-sdk function calls (e.g. `defineDiagnostics`)
  */
 export type TrackedExportsMap = Map<string, Set<string>>
 
 /**
  * Transforms code that imports from `logs-sdk`:
- * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` and `createLogger()` call expressions
- * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using logger variables
+ * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` call expressions
+ * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using diagnostics variables
  *
  * Also handles cross-file patterns: if a file imports a variable that was
- * created from `createLogger()` or `defineDiagnostics()` in another file,
- * the usage is tracked and wrapped.
+ * created from `defineDiagnostics()` in another file, the usage is tracked
+ * and wrapped.
  */
 export function transform(
   code: string,
@@ -48,7 +48,8 @@ export function transform(
     if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
-          const importedName = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+          const importedName
+            = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
           importedNames.set(spec.local.name, importedName)
         }
       }
@@ -78,7 +79,8 @@ export function transform(
         if (trackedNames) {
           for (const spec of node.specifiers) {
             if (spec.type === 'ImportSpecifier') {
-              const importedName = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+              const importedName
+                = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
               if (trackedNames.has(importedName)) {
                 crossFileTracked.add(spec.local.name)
               }
@@ -105,7 +107,10 @@ export function transform(
   if (trackedExportsMap) {
     const exportedTracked = new Set<string>()
     for (const node of ast.body) {
-      if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+      if (
+        node.type === 'ExportNamedDeclaration'
+        && node.declaration?.type === 'VariableDeclaration'
+      ) {
         for (const decl of node.declaration.declarations) {
           if (decl.id?.type === 'Identifier' && trackedVars.has(decl.id.name)) {
             exportedTracked.add(decl.id.name)
@@ -173,7 +178,11 @@ function resolveModulePath(source: string, importer: string): string | undefined
  * Analyze a module to find exported variables derived from logs-sdk calls.
  * Results are cached in trackedExportsMap.
  */
-function analyzeModule(filePath: string, packageName: string, trackedExportsMap: TrackedExportsMap): void {
+function analyzeModule(
+  filePath: string,
+  packageName: string,
+  trackedExportsMap: TrackedExportsMap,
+): void {
   // Mark as analyzed (even if no tracked exports) to avoid re-analysis
   trackedExportsMap.set(filePath, new Set())
 
@@ -209,7 +218,10 @@ function analyzeModule(filePath: string, packageName: string, trackedExportsMap:
   // Find exported variables assigned from imported function calls
   const trackedExports = new Set<string>()
   for (const node of ast.body) {
-    if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+    if (
+      node.type === 'ExportNamedDeclaration'
+      && node.declaration?.type === 'VariableDeclaration'
+    ) {
       for (const decl of node.declaration.declarations) {
         if (
           decl.init?.type === 'CallExpression'
@@ -278,7 +290,11 @@ function walkStatements(
         walkStatements(stmt.alternate.body, s, importedNames, trackedVars)
       }
     }
-    if (stmt.type === 'ForStatement' || stmt.type === 'WhileStatement' || stmt.type === 'DoWhileStatement') {
+    if (
+      stmt.type === 'ForStatement'
+      || stmt.type === 'WhileStatement'
+      || stmt.type === 'DoWhileStatement'
+    ) {
       if (stmt.body?.type === 'BlockStatement') {
         walkStatements(stmt.body.body, s, importedNames, trackedVars)
       }
@@ -319,14 +335,18 @@ function expressionUsesTrackedVar(node: any, trackedVars: Set<string>): boolean 
 
   // Logical expression: check either side
   if (node.type === 'LogicalExpression') {
-    return expressionUsesTrackedVar(node.left, trackedVars)
+    return (
+      expressionUsesTrackedVar(node.left, trackedVars)
       || expressionUsesTrackedVar(node.right, trackedVars)
+    )
   }
 
   // Conditional (ternary): check consequent or alternate
   if (node.type === 'ConditionalExpression') {
-    return expressionUsesTrackedVar(node.consequent, trackedVars)
+    return (
+      expressionUsesTrackedVar(node.consequent, trackedVars)
       || expressionUsesTrackedVar(node.alternate, trackedVars)
+    )
   }
 
   // Unary expression: check argument

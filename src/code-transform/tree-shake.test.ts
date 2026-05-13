@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 import { describe, expect, it } from 'vitest'
-import { transform } from '../../src/code-transform/transform'
+import { transform } from './transform'
 
 async function bundleProduction(input: string): Promise<string> {
   // First, apply the plugin transform
@@ -21,23 +21,25 @@ async function bundleProduction(input: string): Promise<string> {
     format: 'esm',
     // Mark logs-sdk as external so we can see if it's still imported
     // Actually, we need to provide a stub so esbuild can resolve it
-    plugins: [{
-      name: 'logs-sdk-stub',
-      setup(build) {
-        build.onResolve({ filter: /^logs-sdk/ }, () => ({
-          path: 'logs-sdk',
-          namespace: 'logs-sdk-stub',
-        }))
-        build.onLoad({ filter: /.*/, namespace: 'logs-sdk-stub' }, () => ({
-          contents: `
+    plugins: [
+      {
+        name: 'logs-sdk-stub',
+        setup(build) {
+          build.onResolve({ filter: /^logs-sdk/ }, () => ({
+            path: 'logs-sdk',
+            namespace: 'logs-sdk-stub',
+          }))
+          build.onLoad({ filter: /.*/, namespace: 'logs-sdk-stub' }, () => ({
+            contents: `
             export function defineDiagnostics(opts) { return opts }
             export function createLogger(opts) { return opts }
             export const consoleReporter = { report() {} }
           `,
-          loader: 'js',
-        }))
+            loader: 'js',
+          }))
+        },
       },
-    }],
+    ],
   })
 
   return new TextDecoder().decode(result.outputFiles[0].contents)
