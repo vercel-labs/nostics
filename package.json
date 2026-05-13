@@ -8,7 +8,7 @@
   "contributors": [
     "Eduardo San Martin Morote <posva13@gmail.com>"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/vercel-labs/logs-sdk#readme",
   "repository": {
     "type": "git",
