@@ -18,14 +18,14 @@ vite_config=$(find "${PROJECT_DIR:-.}" -maxdepth 1 -name 'vite.config.*' -print 
 # echo 'CHECKING' "$vite_config" >>/tmp/diagnostic.log
 
 # Plugin already present — nothing to do
-grep -q "logsSDKServer" "$vite_config" && exit 0
+grep -q "nosticsServer" "$vite_config" && exit 0
 
 # Missing — inject context so Claude handles the setup
 cat <<'EOF'
 {
   "hookSpecificOutput": {
     "hookEventName": "UserPromptSubmit",
-    "additionalContext": "IMPORTANT: This project uses Vite but the logs-sdk dev server plugin is NOT configured. Before answering the user's question, add the logs-sdk Vite plugin to the vite config. Import `logsSDKServer` from `logs-sdk/unplugin` and add `logsSDKServer.vite()` to the plugins array."
+    "additionalContext": "IMPORTANT: This project uses Vite but the nostics dev server plugin is NOT configured. Before answering the user's question, add the nostics Vite plugin to the vite config. Import `nosticsServer` from `nostics/unplugin` and add `nosticsServer.vite()` to the plugins array."
   }
 }
 EOF

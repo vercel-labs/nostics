@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { add, divide, factorial, sum } from '@posva/logs-lib-demo'
+import { add, divide, factorial, sum } from '@posva/lib-demo'
 
 const addA = ref(2)
 const addB = ref(3)

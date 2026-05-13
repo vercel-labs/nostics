@@ -1,5 +1,5 @@
-import { defineDiagnostics, reporterLog } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/reporters/dev'
+import { defineDiagnostics, reporterLog } from 'nostics'
+import { devReporter } from 'nostics/reporters/dev'
 
 export const diagnostics = defineDiagnostics({
   docsBase: code => `https://example.com/docs/diagnostics/${code.toLowerCase()}`,

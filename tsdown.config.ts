@@ -19,7 +19,7 @@ export default defineConfig({
   },
   deps: {
     // virtual module so we can warn if plugin is missing during dev
-    neverBundle: ['logs-sdk/reporters/dev'],
+    neverBundle: ['nostics/reporters/dev'],
     onlyBundle: [],
   },
   target: 'esnext',

@@ -5,8 +5,8 @@ name: Publish to npm
 # npm login
 # npm publish
 #
-# Add "repository": "vercel/logs-sdk", to package.json
-# Go to the settings page on npm: https://www.npmjs.com/package/logs-sdk/access
+# Add "repository": "vercel/nostics", to package.json
+# Go to the settings page on npm: https://www.npmjs.com/package/nostics/access
 # Set the Trusted Published, add an environment if added on GitHub repository settings / Environments
 # Disallow tokens
 #
@@ -26,7 +26,7 @@ jobs:
     if: |
       (startsWith(github.ref_name, 'v') ||
       contains(github.ref_name, '@')) &&
-      github.repository == 'vercel-labs/logs-sdk'
+      github.repository == 'vercel-labs/nostics'
 
     environment: release
 
@@ -62,7 +62,7 @@ jobs:
 
             # Package folder mapping
             declare -A MAP=(
-              ["@posva/logs-lib-demo"]="demo-lib"
+              ["@posva/lib-demo"]="demo-lib"
             )
 
             if [[ -z "${MAP[$PKG_NAME]}" ]]; then

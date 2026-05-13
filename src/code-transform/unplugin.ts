@@ -3,16 +3,16 @@ import type { TrackedExportsMap, TransformOptions } from './transform'
 import { createUnplugin } from 'unplugin'
 import { transform } from './transform'
 
-export type LogsSdkPluginOptions = TransformOptions
+export type NosticsPluginOptions = TransformOptions
 
 const JS_EXTENSIONS_RE = /\.[jt]sx?$/
 const NODE_MODULES_RE = /\/node_modules\//
 
-const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (options) => {
+const unpluginFactory: UnpluginFactory<NosticsPluginOptions | undefined> = (options) => {
   const trackedExportsMap: TrackedExportsMap = new Map()
 
   return {
-    name: 'logs-sdk',
+    name: 'nostics',
 
     transform: {
       filter: {
@@ -34,8 +34,9 @@ const unpluginFactory: UnpluginFactory<LogsSdkPluginOptions | undefined> = (opti
   }
 }
 
-export const logsSDK: UnpluginInstance<LogsSdkPluginOptions | undefined> = /* #__PURE__ */ createUnplugin<LogsSdkPluginOptions | undefined>(unpluginFactory)
-export default logsSDK
+export const nostics: UnpluginInstance<NosticsPluginOptions | undefined>
+  /* #__PURE__ */ = createUnplugin<NosticsPluginOptions | undefined>(unpluginFactory)
+export default nostics
 
-export { logsSDKServer } from './server-plugin'
-export type { LogsSdkServerOptions } from './server-plugin'
+export { nosticsServer } from './server-plugin'
+export type { NosticsServerOptions } from './server-plugin'

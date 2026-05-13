@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
-# logs-sdk Claude Code Plugin Installer
+# nostics Claude Code Plugin Installer
 #
 # Adds the repo as a marketplace and installs the plugin project-scoped.
 # Run from your project root — the plugin is scoped to $PWD.
 #
-# Usage: gh api repos/vercel-labs/logs-sdk/contents/install.sh --jq '.content' | base64 -d | bash
+# Usage: gh api repos/vercel-labs/nostics/contents/install.sh --jq '.content' | base64 -d | bash
 #
 
 set -e
 
-PLUGIN_NAME="logs-sdk"
+PLUGIN_NAME="nostics"
 MARKETPLACE_NAME="vercel-labs"
-REPO="vercel-labs/logs-sdk"
+REPO="vercel-labs/nostics"
 
-echo "logs-sdk Claude Code Plugin Installer"
+echo "nostics Claude Code Plugin Installer"
 echo ""
 
 # Add the marketplace (skip if already registered)

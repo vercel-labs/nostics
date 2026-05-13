@@ -1,4 +1,4 @@
-# logs-sdk
+# nostics
 
 **Errors and warnings your users — and their agents — can actually act on.**
 
@@ -13,12 +13,12 @@ Every diagnostic is a typed, structured object with a stable code, a clear expla
 
 ## Why
 
-Library errors today are strings. Users scan them, agents pattern-match them, and everyone loses context. `logs-sdk` turns each diagnostic into a `Diagnostic` instance — stable code, human `why`, actionable `fix`, structured `sources`, and a per-code docs URL. Humans get a searchable code and a fix in the same glance. Agents get machine-readable fields they can dispatch on directly, instead of regexing message text.
+Library errors today are strings. Users scan them, agents pattern-match them, and everyone loses context. `nostics` turns each diagnostic into a `Diagnostic` instance — stable code, human `why`, actionable `fix`, structured `sources`, and a per-code docs URL. Humans get a searchable code and a fix in the same glance. Agents get machine-readable fields they can dispatch on directly, instead of regexing message text.
 
 ## Quick start
 
 ```ts
-import { defineDiagnostics, reporterLog } from 'logs-sdk'
+import { defineDiagnostics, reporterLog } from 'nostics'
 
 const diagnostics = defineDiagnostics({
   docsBase: 'https://nuxt.com/e',
@@ -44,8 +44,8 @@ Diagnostics that fire in the browser are invisible to terminal-bound agents. The
 
 ```ts
 // src/diagnostics.ts
-import { defineDiagnostics, reporterLog } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/reporters/dev'
+import { defineDiagnostics, reporterLog } from 'nostics'
+import { devReporter } from 'nostics/reporters/dev'
 
 export const diagnostics = defineDiagnostics({
   reporters: [reporterLog, devReporter],
@@ -56,13 +56,13 @@ export const diagnostics = defineDiagnostics({
 ```
 
 ```ts
-import { logsSDKServer } from 'logs-sdk/unplugin'
+import { nosticsServer } from 'nostics/unplugin'
 // vite.config.ts
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
-    logsSDKServer.vite({
+    nosticsServer.vite({
       logFile: '.nostics.log', // default: .nostics.log
     }),
   ],
@@ -84,7 +84,7 @@ Now every `.report()` / `.throw()` call in the browser is appended to `.nostics.
 Ships with a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/skills) so agents understand the API out of the box — auto-loaded reference skill plus a `/add-diagnostic` command for scaffolding new codes.
 
 ```bash
-gh api repos/vercel-labs/logs-sdk/contents/install.sh --jq '.content' | base64 -d | bash
+gh api repos/vercel-labs/nostics/contents/install.sh --jq '.content' | base64 -d | bash
 ```
 
 ## License

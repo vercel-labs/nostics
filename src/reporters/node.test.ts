@@ -13,7 +13,7 @@ describe('createFileReporter', () => {
   let logFile: string
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'logs-sdk-'))
+    dir = mkdtempSync(join(tmpdir(), 'nostics-'))
     logFile = join(dir, 'out.log')
   })
 

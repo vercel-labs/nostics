@@ -1,9 +1,9 @@
 ---
-name: logs-sdk
-description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `logs-sdk`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`reporterLog`, `reporterError`, `createFetchReporter` from logs-sdk/reporters/fetch, `createFileReporter` from logs-sdk/reporters/node, `devReporter` from logs-sdk/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`logsSDK`, `logsSDKServer` from logs-sdk/unplugin).'
+name: nostics
+description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`reporterLog`, `reporterError`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `devReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nostics`, `nosticsServer` from nostics/unplugin).'
 ---
 
-# logs-sdk
+# nostics
 
 Structured diagnostic code library for JavaScript/TypeScript. Every error condition becomes a typed `Diagnostic` instance (which extends `Error`) with a stable code, docs URL, and actionable fields, serializable via `toJSON()`.
 
@@ -35,7 +35,7 @@ class Diagnostic extends Error {
 ### `defineDiagnostics(options)` — Define diagnostic codes
 
 ```ts
-import { defineDiagnostics, reporterLog } from 'logs-sdk'
+import { defineDiagnostics, reporterLog } from 'nostics'
 
 const diagnostics = defineDiagnostics({
   docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
@@ -101,7 +101,7 @@ diagnostics.NUXT_B2011.throw({ src: pluginPath })
 `Diagnostic` extends `Error`, so it behaves like any other thrown error.
 
 ```ts
-import { Diagnostic } from 'logs-sdk'
+import { Diagnostic } from 'nostics'
 
 try {
   diagnostics.NUXT_B2011.throw({ src: pluginPath })
@@ -119,9 +119,9 @@ try {
 
 | Formatter               | Import                     | Description                                                     |
 | ----------------------- | -------------------------- | --------------------------------------------------------------- |
-| `formatDiagnostic`      | `logs-sdk`                 | Plain unicode-decorated string. Used by the built-in reporters. |
-| `ansiFormatter(colors)` | `logs-sdk/formatters/ansi` | Colorized variant — accepts a generic `Colors` interface.       |
-| `jsonFormatter`         | `logs-sdk/formatters/json` | `JSON.stringify(diagnostic)` (calls `Diagnostic.toJSON()`).     |
+| `formatDiagnostic`      | `nostics`                 | Plain unicode-decorated string. Used by the built-in reporters. |
+| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colorized variant — accepts a generic `Colors` interface.       |
+| `jsonFormatter`         | `nostics/formatters/json` | `JSON.stringify(diagnostic)` (calls `Diagnostic.toJSON()`).     |
 
 **`formatDiagnostic` output:**
 
@@ -153,16 +153,16 @@ A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnos
 
 | Reporter                       | Import                     | Description                                                                                                                    |
 | ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `reporterError`                | `logs-sdk`                 | `console.error(formatDiagnostic(d))`.                                                                                          |
-| `reporterLog`                  | `logs-sdk`                 | `console[method](formatDiagnostic(d))`. Method defaults to `'log'`; pass `{ method: 'warn' \| 'error' }` to route differently. |
-| `createFetchReporter(url)`     | `logs-sdk/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                      |
-| `createFileReporter(options?)` | `logs-sdk/reporters/node`  | Appends diagnostics as NDJSON to a local file (default `.nostics.log`).                                                        |
-| `devReporter`                  | `logs-sdk/reporters/dev`   | Sends `diagnostic.toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                               |
+| `reporterError`                | `nostics`                 | `console.error(formatDiagnostic(d))`.                                                                                          |
+| `reporterLog`                  | `nostics`                 | `console[method](formatDiagnostic(d))`. Method defaults to `'log'`; pass `{ method: 'warn' \| 'error' }` to route differently. |
+| `createFetchReporter(url)`     | `nostics/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                      |
+| `createFileReporter(options?)` | `nostics/reporters/node`  | Appends diagnostics as NDJSON to a local file (default `.nostics.log`).                                                        |
+| `devReporter`                  | `nostics/reporters/dev`   | Sends `diagnostic.toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                               |
 
 **Writing a custom reporter:**
 
 ```ts
-import type { DiagnosticReporter } from 'logs-sdk'
+import type { DiagnosticReporter } from 'nostics'
 
 const sentryReporter: DiagnosticReporter = (diagnostic) => {
   sentry.captureMessage(diagnostic.message, { tags: { code: diagnostic.name } })
@@ -180,39 +180,39 @@ const audited: DiagnosticReporter<{ priority: number }> = (d, options) => {
 
 ## Vite Plugins
 
-Two unplugin-based plugins for build-time optimization and dev-time diagnostic collection, imported from `logs-sdk/unplugin`.
+Two unplugin-based plugins for build-time optimization and dev-time diagnostic collection, imported from `nostics/unplugin`.
 
-### `logsSDK` — Build-time AST transform
+### `nostics` — Build-time AST transform
 
 Marks `defineDiagnostics()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard so diagnostics tree-shake out of production builds. Supports `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
 
 ```ts
-import { logsSDK } from 'logs-sdk/unplugin'
+import { nostics } from 'nostics/unplugin'
 
 export default defineConfig({
-  plugins: [logsSDK.vite()],
+  plugins: [nostics.vite()],
 })
 ```
 
-**Options (`LogsSdkPluginOptions`):**
+**Options (`NosticsPluginOptions`):**
 
 | Field         | Type      | Description                                                    |
 | ------------- | --------- | -------------------------------------------------------------- |
-| `packageName` | `string?` | The package name to detect imports from. Default: `'logs-sdk'` |
+| `packageName` | `string?` | The package name to detect imports from. Default: `'nostics'` |
 
-### `logsSDKServer` — Dev server diagnostic collector
+### `nosticsServer` — Dev server diagnostic collector
 
 Listens for diagnostics sent over the Vite WebSocket (from `devReporter` in the browser) and writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
 
 ```ts
-import { logsSDKServer } from 'logs-sdk/unplugin'
+import { nosticsServer } from 'nostics/unplugin'
 
 export default defineConfig({
-  plugins: [logsSDKServer.vite()],
+  plugins: [nosticsServer.vite()],
 })
 ```
 
-**Options (`LogsSdkServerOptions`):**
+**Options (`NosticsServerOptions`):**
 
 | Field     | Type       | Description                                                         |
 | --------- | ---------- | ------------------------------------------------------------------- |
@@ -225,17 +225,17 @@ Use both plugins together with `devReporter` for full dev-time diagnostic captur
 
 ```ts
 // vite.config.ts
-import { logsSDK, logsSDKServer } from 'logs-sdk/unplugin'
+import { nostics, nosticsServer } from 'nostics/unplugin'
 
 export default defineConfig({
-  plugins: [logsSDK.vite(), logsSDKServer.vite()],
+  plugins: [nostics.vite(), nosticsServer.vite()],
 })
 ```
 
 ```ts
 // src/diagnostics.ts
-import { defineDiagnostics, reporterLog } from 'logs-sdk'
-import { devReporter } from 'logs-sdk/reporters/dev'
+import { defineDiagnostics, reporterLog } from 'nostics'
+import { devReporter } from 'nostics/reporters/dev'
 
 export const diagnostics = defineDiagnostics({
   reporters: [reporterLog, devReporter],

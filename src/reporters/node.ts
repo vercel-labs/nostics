@@ -15,8 +15,8 @@ export interface FileReporterOptions {
  *
  * @example
  * ```ts
- * import { defineDiagnostics } from 'logs-sdk'
- * import { createFileReporter } from 'logs-sdk/reporters/node'
+ * import { defineDiagnostics } from 'nostics'
+ * import { createFileReporter } from 'nostics/reporters/node'
  *
  * const diagnostics = defineDiagnostics({
  *   codes: { ... },
@@ -31,7 +31,7 @@ export function createFileReporter(options?: FileReporterOptions): DiagnosticRep
       appendFileSync(logFile, `${JSON.stringify(diagnostic)}\n`)
     }
     catch (err: unknown) {
-      console.error(`[logs-sdk]: Failed to write log to "${logFile}":`, err)
+      console.error(`[nostics]: Failed to write log to "${logFile}":`, err)
     }
   }
 }

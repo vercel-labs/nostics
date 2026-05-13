@@ -1,5 +1,5 @@
 {
-  "name": "logs-sdk",
+  "name": "nostics",
   "type": "module",
   "version": "0.0.6",
   "packageManager": "pnpm@11.1.1+sha512.d1fdf5f73c617b64fa1a56a81c3c8dfe0e966e33a6010aa256b517ae77be21d93e05affc0de1a83b0e4f29d569f68b446ae8f068cd7247c0bb3df0fb4d7bdf9a",
@@ -9,12 +9,12 @@
     "Eduardo San Martin Morote <posva13@gmail.com>"
   ],
   "license": "Apache-2.0",
-  "homepage": "https://github.com/vercel-labs/logs-sdk#readme",
+  "homepage": "https://github.com/vercel-labs/nostics#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel-labs/logs-sdk.git"
+    "url": "git+https://github.com/vercel-labs/nostics.git"
   },
-  "bugs": "https://github.com/vercel-labs/logs-sdk/issues",
+  "bugs": "https://github.com/vercel-labs/nostics/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
@@ -63,7 +63,7 @@
     "esbuild": "catalog:",
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
-    "logs-sdk": "workspace:*",
+    "nostics": "workspace:*",
     "oxfmt": "catalog:cli",
     "publint": "catalog:cli",
     "semver": "catalog:cli",

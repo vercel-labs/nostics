@@ -1,7 +1,7 @@
 {
-  "name": "logs-sdk",
-  "version": "0.0.4",
-  "description": "Claude Code plugin for logs-sdk",
+  "name": "nostics",
+  "version": "0.0.5",
+  "description": "Claude Code plugin for nostics",
   "author": {
     "name": "Eduardo San Martin Morote"
   }

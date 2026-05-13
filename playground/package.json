@@ -9,13 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@posva/logs-lib-demo": "workspace:*",
+    "@posva/lib-demo": "workspace:*",
     "vue": "catalog:playground"
   },
   "devDependencies": {
     "@vitejs/devtools": "catalog:cli",
     "@vitejs/plugin-vue": "catalog:playground",
-    "logs-sdk": "workspace:*",
+    "nostics": "workspace:*",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
     "vite-plugin-inspect": "catalog:cli"
