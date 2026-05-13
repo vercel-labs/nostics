@@ -39,49 +39,35 @@ function runSum(a?: number, b?: number) {
 
   <section>
     <h2><code>add(a, b)</code></h2>
-    <label>a <input v-model.number="addA" type="number"></label>
-    <label>b <input v-model.number="addB" type="number"></label>
-    <button @click="runAdd()">
-      Run
-    </button>
+    <label>a <input v-model.number="addA" type="number" /></label>
+    <label>b <input v-model.number="addB" type="number" /></label>
+    <button @click="runAdd()">Run</button>
     <span v-if="addResult !== undefined" class="result">= {{ addResult }}</span>
   </section>
 
   <section>
     <h2><code>divide(a, b)</code></h2>
-    <label>a <input v-model.number="divA" type="number"></label>
-    <label>b <input v-model.number="divB" type="number"></label>
-    <button @click="runDivide()">
-      Run
-    </button>
-    <button class="warn" @click="runDivide(1, 0)">
-      Divide by zero
-    </button>
+    <label>a <input v-model.number="divA" type="number" /></label>
+    <label>b <input v-model.number="divB" type="number" /></label>
+    <button @click="runDivide()">Run</button>
+    <button class="warn" @click="runDivide(1, 0)">Divide by zero</button>
     <span v-if="divResult !== undefined" class="result">= {{ divResult }}</span>
   </section>
 
   <section>
     <h2><code>factorial(n)</code></h2>
-    <label>n <input v-model.number="factN" type="number"></label>
-    <button @click="runFactorial()">
-      Run
-    </button>
-    <button class="warn" @click="runFactorial(-5)">
-      Negative (-5)
-    </button>
-    <button class="warn" @click="runFactorial(200)">
-      Overflow (200)
-    </button>
+    <label>n <input v-model.number="factN" type="number" /></label>
+    <button @click="runFactorial()">Run</button>
+    <button class="warn" @click="runFactorial(-5)">Negative (-5)</button>
+    <button class="warn" @click="runFactorial(200)">Overflow (200)</button>
     <span v-if="factResult !== undefined" class="result">= {{ factResult }}</span>
   </section>
 
   <section>
     <h2><code>sum(a, b)</code></h2>
-    <label>a <input v-model.number="sumA" type="number"></label>
-    <label>b <input v-model.number="sumB" type="number"></label>
-    <button @click="runSum()">
-      Run
-    </button>
+    <label>a <input v-model.number="sumA" type="number" /></label>
+    <label>b <input v-model.number="sumB" type="number" /></label>
+    <button @click="runSum()">Run</button>
     <span v-if="sumResult !== undefined" class="result">= {{ sumResult }}</span>
   </section>
 </template>
@@ -108,7 +94,7 @@ label {
   margin-right: 0.5rem;
 }
 
-input[type="number"] {
+input[type='number'] {
   width: 5rem;
   padding: 0.25rem;
   background: var(--color-input-bg);

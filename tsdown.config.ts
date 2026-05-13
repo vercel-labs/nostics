@@ -9,6 +9,7 @@ export default defineConfig({
     'unplugin': 'src/code-transform/unplugin.ts',
     'reporters/dev': 'src/reporters/dev.ts',
     'reporters/node': 'src/reporters/node.ts',
+    'reporters/fetch': 'src/reporters/fetch.ts',
   },
   dts: {
     enabled: true,
@@ -25,7 +26,5 @@ export default defineConfig({
   sourcemap: true,
   exports: true,
   publint: true,
-  plugins: [
-    ApiSnapshot(),
-  ],
+  plugins: [ApiSnapshot()],
 })

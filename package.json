@@ -22,6 +22,7 @@
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
     "./reporters/dev": "./dist/reporters/dev.mjs",
+    "./reporters/fetch": "./dist/reporters/fetch.mjs",
     "./reporters/node": "./dist/reporters/node.mjs",
     "./unplugin": "./dist/unplugin.mjs",
     "./package.json": "./package.json"
@@ -38,7 +39,7 @@
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "node scripts/release.ts",
-    "test": "pnpm run build && pnpm -r run build && tsc && eslint && vitest run",
+    "test": "pnpm run build && pnpm -r run build && tsc && eslint && vitest run --coverage",
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },
@@ -54,6 +55,8 @@
     "@posva/prompts": "catalog:cli",
     "@types/node": "catalog:types",
     "@types/semver": "catalog:types",
+    "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "bumpp": "catalog:cli",
     "conventional-changelog": "catalog:cli",
     "conventional-changelog-angular": "catalog:cli",
@@ -61,6 +64,7 @@
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
     "logs-sdk": "workspace:*",
+    "oxfmt": "catalog:cli",
     "publint": "catalog:cli",
     "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",

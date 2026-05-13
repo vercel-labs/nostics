@@ -6,4 +6,4 @@ export interface FileReporterOptions {
 }
 
 // Functions
-export declare function createFileReporter(_?: FileReporterOptions): Reporter;
+export declare function createFileReporter(_?: FileReporterOptions): DiagnosticReporter;

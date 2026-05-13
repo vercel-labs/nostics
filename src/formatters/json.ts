@@ -1,3 +1,3 @@
-import type { Formatter } from '../format'
+import type { Diagnostic } from '../diagnostic'
 
-export const jsonFormatter: Formatter = diagnostic => JSON.stringify(diagnostic)
+export const jsonFormatter = (d: Diagnostic): string => JSON.stringify(d)

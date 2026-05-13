@@ -10,6 +10,8 @@ packages:
   - packages/*
   - examples/*
 catalog:
+  '@vitest/coverage-v8': 4.1.4
+  '@vitest/ui': 4.1.4
   esbuild: ^0.28.0
 catalogs:
   cli:
@@ -22,6 +24,7 @@ catalogs:
     conventional-changelog-angular: ^8.3.1
     eslint: ^10.2.0
     lint-staged: ^16.4.0
+    oxfmt: ^0.47.0
     publint: ^0.3.18
     semver: ^7.7.4
     simple-git-hooks: ^2.13.1

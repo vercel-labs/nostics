@@ -1,6 +1,6 @@
 ---
 name: add-diagnostic
-description: "Add a new diagnostic code following the defineDiagnostics() conventions from logs-sdk"
+description: 'Add a new diagnostic code following the defineDiagnostics() conventions from logs-sdk'
 user-invocable: true
 allowed-tools: Read Grep Glob Edit Write
 ---
@@ -29,22 +29,24 @@ Add the new entry to the `codes` object inside `defineDiagnostics()`:
 
 ```ts
 CODE_NAME: {
-  message: 'Static message.',
+  why: 'Static explanation of why this failed.',
   // OR with parameters:
-  message: (p: { paramName: string }) => `Template with ${p.paramName}.`,
-  fix: 'How to resolve the issue.',        // optional but recommended
-  why: 'Why this diagnostic was triggered.', // optional
-  hint: 'Additional guidance.',              // optional
-  level: 'error',                            // 'error' | 'warn' | 'suggestion' | 'deprecation'
-                                             // defaults to 'error' if omitted
+  why: (p: { paramName: string }) => `Template with ${p.paramName}.`,
+  fix: 'How to resolve the issue.', // optional but recommended
 },
 ```
 
 Rules:
-- `message` is the only required field
-- Parameters can appear in any template field (`message`, `fix`, `why`, `hint`) — TypeScript unions them all
-- Always provide `fix` when the solution is known
-- Set `level` explicitly if it's not `'error'`
-- Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
 
-<!-- synced-sha: 7c2392fb4716118fa84b469b01c7eff2c057221e -->
+- `why` is the only required field — it becomes `Error.message` on the resulting `Diagnostic` instance
+- Parameters can appear in any template field (`why`, `fix`) — TypeScript unions them and requires them at the call site
+- Always provide `fix` when the solution is known
+- Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
+- Runtime fields (`cause`, `sources`) are passed at the call site, not in the definition
+
+## Step 4: Call the Code
+
+```ts
+diagnostics.CODE_NAME.report({ paramName: 'value' })
+diagnostics.CODE_NAME.throw({ paramName: 'value', cause: originalError })
+```

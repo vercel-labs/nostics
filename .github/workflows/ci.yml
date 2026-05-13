@@ -24,4 +24,4 @@ jobs:
       - run: pnpm -r run build
       - run: pnpm run typecheck
       - run: pnpm run lint
-      - run: pnpm exec vitest run
+      - run: pnpm exec vitest run --coverage
