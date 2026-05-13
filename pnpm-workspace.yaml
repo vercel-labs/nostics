@@ -47,6 +47,6 @@ catalogs:
   types:
     '@types/node': ^25.6.0
     '@types/semver': ^7.7.1
-onlyBuiltDependencies:
-  - esbuild
-  - simple-git-hooks
+allowBuilds:
+  esbuild: false
+  simple-git-hooks: true

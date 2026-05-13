@@ -16,5 +16,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
+  "include": ["src", "vitest.config.ts", "tsdown.config.ts"],
   "exclude": ["playground"]
 }
