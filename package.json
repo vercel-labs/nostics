@@ -39,7 +39,7 @@
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "node scripts/release.ts",
-    "test": "pnpm run build && pnpm -r run build && tsc && eslint && vitest run",
+    "test": "pnpm run build && pnpm -r run build && tsc && eslint && vitest run --coverage",
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },

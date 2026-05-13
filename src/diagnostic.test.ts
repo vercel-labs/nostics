@@ -170,18 +170,12 @@ describe('built-in reporters', () => {
   })
 
   it('reporterLog defaults to console.log and includes the code', () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    try {
-      const errs = defineDiagnostics({
-        codes: { NUXT_E001: { why: 'boom' } },
-        reporters: [reporterLog],
-      })
-      errs.NUXT_E001.report()
-      expect(spy).toHaveBeenCalledWith('[NUXT_E001] boom')
-    }
-    finally {
-      spy.mockRestore()
-    }
+    const errs = defineDiagnostics({
+      codes: { NUXT_E001: { why: 'boom' } },
+      reporters: [reporterLog],
+    })
+    errs.NUXT_E001.report()
+    expect('[NUXT_E001] boom').toHaveBeenWarned()
   })
 
   it('reporterLog routes to console.warn when method is "warn"', () => {
