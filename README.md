@@ -1,5 +1,8 @@
 # nostics
 
+[![npm version](https://img.shields.io/npm/v/nostics?color=blue)](https://npmx.dev/nostics)
+[![CI](https://github.com/vercel-labs/nostics/actions/workflows/ci.yml/badge.svg)](https://github.com/vercel-labs/nostics/actions/workflows/ci.yml)
+
 **Errors and warnings your users — and their agents — can actually act on.**
 
 Every diagnostic is a typed, structured object with a stable code, a clear explanation, a suggested fix, and a docs link. No more grepping log output or guessing what an error means.
