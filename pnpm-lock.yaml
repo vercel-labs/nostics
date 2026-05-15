@@ -10,7 +10,7 @@ catalogs:
       specifier: ^9.0.0
       version: 9.0.0
     '@antfu/ni':
-      specifier: ^30.0.0
+      specifier: ^30.1.0
       version: 30.1.0
     '@posva/prompts':
       specifier: ^2.4.4
@@ -28,7 +28,7 @@ catalogs:
       specifier: ^0.28.0
       version: 0.28.0
     eslint:
-      specifier: ^10.2.0
+      specifier: ^10.3.0
       version: 10.3.0
     lint-staged:
       specifier: ^17.0.4
@@ -37,10 +37,10 @@ catalogs:
       specifier: ^0.49.0
       version: 0.49.0
     publint:
-      specifier: ^0.3.18
-      version: 0.3.20
+      specifier: ^0.3.21
+      version: 0.3.21
     semver:
-      specifier: ^7.7.4
+      specifier: ^7.8.0
       version: 7.8.0
     simple-git-hooks:
       specifier: ^2.13.1
@@ -49,10 +49,10 @@ catalogs:
       specifier: ^0.22.0
       version: 0.22.0
     typescript:
-      specifier: ^6.0.2
+      specifier: ^6.0.3
       version: 6.0.3
     vite:
-      specifier: ^8.0.8
+      specifier: ^8.0.12
       version: 8.0.12
     vite-plugin-inspect:
       specifier: ^12.0.0-beta.1
@@ -86,14 +86,14 @@ catalogs:
       specifier: 4.1.6
       version: 4.1.6
     tsnapi:
-      specifier: ^0.3.0
+      specifier: ^0.3.3
       version: 0.3.3
     vitest:
-      specifier: ^4.1.4
+      specifier: ^4.1.6
       version: 4.1.6
   types:
     '@types/node':
-      specifier: ^25.6.0
+      specifier: ^25.7.0
       version: 25.7.0
     '@types/semver':
       specifier: ^7.7.1
@@ -160,7 +160,7 @@ importers:
         version: 0.49.0
       publint:
         specifier: catalog:cli
-        version: 0.3.20
+        version: 0.3.21
       semver:
         specifier: catalog:cli
         version: 7.8.0
@@ -169,7 +169,7 @@ importers:
         version: 2.13.1
       tsdown:
         specifier: catalog:cli
-        version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.20)(typescript@6.0.3)
+        version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.21)(typescript@6.0.3)
       tsnapi:
         specifier: catalog:testing
         version: 0.3.3(vitest@4.1.6)
@@ -191,7 +191,7 @@ importers:
     devDependencies:
       tsdown:
         specifier: catalog:cli
-        version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.20)(typescript@6.0.3)
+        version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.21)(typescript@6.0.3)
 
   playground:
     dependencies:
@@ -1886,8 +1886,8 @@ packages:
       oxc-resolver:
         optional: true
 
-  electron-to-chromium@1.5.353:
-    resolution: {integrity: sha512-kOrWphBi8TOZyiJZqsgqIle0lw+tzmnQK83pV9dZUd01Nm2POECSyFQMAuarzZdYqQW7FH9RaYOuaRo3h+bQ3w==}
+  electron-to-chromium@1.5.355:
+    resolution: {integrity: sha512-LUPZhKzZPYSPme1jEYohpkA+ybYCJztr1quAdBd7E7h3+VOBVcKkwwtBJu41nrjawrRzfb8mtMfzWozoaK0ZIQ==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -2416,8 +2416,8 @@ packages:
     resolution: {integrity: sha512-75EA7EWZExL/j+MDKQrRbdzcRI2HOkRlmUw8fZJc1ioqFEOvBsq7Rt+A6yCxOt9w/TYNpkt52gC6nm/g5tFIng==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  katex@0.16.45:
-    resolution: {integrity: sha512-pQpZbdBu7wCTmQUh7ufPmLr0pFoObnGUoL/yhtwJDgmmQpbkg/0HSVti25Fu4rmd1oCR6NGWe9vqTWuWv3GcNA==}
+  katex@0.16.46:
+    resolution: {integrity: sha512-WHy4Coo+bGZyH7NwJKHkS04YFsFcarWbAEOAC3EMndzdN6VSZqklLLIgfxzyaW9jDoeGYJX9SWbJPKpecox0Uw==}
     hasBin: true
 
   keyv@4.5.4:
@@ -2548,8 +2548,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  magicast@0.5.2:
-    resolution: {integrity: sha512-E3ZJh4J3S9KfwdjZhe2afj6R9lGIN5Pher1pF39UGrXRqq/VDaGVIGN13BjHd2u8B61hArAGOnso7nBOouW3TQ==}
+  magicast@0.5.3:
+    resolution: {integrity: sha512-pVKE4UdSQ7DvHzivsCIFx2BJn1mHG6KsyrFcaxFx6tONdneEuThrDx0Cj3AMg58KyN4pzYT+LHOotxDQDjNvkw==}
 
   make-dir@4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
@@ -2883,8 +2883,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  publint@0.3.20:
-    resolution: {integrity: sha512-UWqFYP7VBVCe9l/leEEGJrDs6Am4K4KapLmLi5qbt+9fA+Ny38ghdW+bw1nYfVqCK8/3kgsxjjhFjTYqYYRpyw==}
+  publint@0.3.21:
+    resolution: {integrity: sha512-OqejcnMV6E9zel2oCrUOJEiiFkGiAAni0A6ibfQNh1k9Gu5z4F+Yso8lllam7AzmV6Do0vp7u3UpZNRBwuXaHQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -4492,7 +4492,7 @@ snapshots:
       mrmime: 2.0.1
       p-limit: 7.3.0
       pathe: 2.0.3
-      publint: 0.3.20
+      publint: 0.3.21
       split2: 4.2.0
       tinyglobby: 0.2.16
       unconfig: 7.5.0
@@ -4584,7 +4584,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-reports: 3.2.0
-      magicast: 0.5.2
+      magicast: 0.5.3
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
@@ -4777,7 +4777,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.10.29
       caniuse-lite: 1.0.30001792
-      electron-to-chromium: 1.5.353
+      electron-to-chromium: 1.5.355
       node-releases: 2.0.44
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
@@ -4953,7 +4953,7 @@ snapshots:
 
   dts-resolver@3.0.0: {}
 
-  electron-to-chromium@1.5.353: {}
+  electron-to-chromium@1.5.355: {}
 
   emoji-regex@10.6.0: {}
 
@@ -5505,7 +5505,7 @@ snapshots:
       eslint-visitor-keys: 5.0.1
       semver: 7.8.0
 
-  katex@0.16.45:
+  katex@0.16.46:
     dependencies:
       commander: 8.3.0
 
@@ -5624,7 +5624,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  magicast@0.5.2:
+  magicast@0.5.3:
     dependencies:
       '@babel/parser': 7.29.3
       '@babel/types': 7.29.0
@@ -5851,7 +5851,7 @@ snapshots:
     dependencies:
       '@types/katex': 0.16.8
       devlop: 1.1.0
-      katex: 0.16.45
+      katex: 0.16.46
       micromark-factory-space: 2.0.1
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
@@ -6229,7 +6229,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  publint@0.3.20:
+  publint@0.3.21:
     dependencies:
       '@publint/pack': 0.1.4
       package-manager-detector: 1.6.0
@@ -6450,7 +6450,7 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  tsdown@0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.20)(typescript@6.0.3):
+  tsdown@0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.21)(typescript@6.0.3):
     dependencies:
       ansis: 4.3.0
       cac: 7.0.0
@@ -6469,7 +6469,7 @@ snapshots:
       unconfig-core: 7.5.0
     optionalDependencies:
       '@vitejs/devtools': 0.1.22(@pnpm/logger@1001.0.1)(typescript@6.0.3)(vite@8.0.12)
-      publint: 0.3.20
+      publint: 0.3.21
       typescript: 6.0.3
     transitivePeerDependencies:
       - '@ts-macro/tsc'
