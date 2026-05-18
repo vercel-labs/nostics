@@ -253,14 +253,22 @@ const captureStackTrace = (
  */
 function cleanStack(raw: string): string {
   const lines = raw.split('\n')
-  return lines
-    .filter((line) => {
-      const trimmed = line.trimStart()
-      if (!trimmed.startsWith('at '))
-        return true
-      return !line.includes('/node_modules/') && !line.includes('(node:')
-    })
-    .join('\n')
+  return (
+    lines
+      /**
+       * NOTE: shorter version of the code below
+       * if (!line.trimStart().startsWith('at ')) {
+       *   return true
+       * }
+       * return !line.includes('/node_modules/') && !line.includes('(node:')
+       */
+      .filter(
+        line =>
+          !line.trimStart().startsWith('at ')
+          || (!line.includes('/node_modules/') && !line.includes('(node:')),
+      )
+      .join('\n')
+  )
 }
 
 export class Diagnostic extends Error {
