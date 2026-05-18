@@ -14,6 +14,7 @@ export interface DiagnosticCallParams {
 export interface DiagnosticDefinition<P = any> {
   why: ValueOrFn<string, P>;
   fix?: ValueOrFn<string, P>;
+  docs?: string | false;
 }
 export interface DiagnosticHandle<Params, ReporterOpts> {
   report: (..._: ActionArgs<Params, ReporterOpts>) => Diagnostic;

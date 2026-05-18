@@ -32,6 +32,14 @@ export interface DiagnosticDefinition<P = any> {
    * ```
    */
   fix?: ValueOrFn<string, P>
+
+  /**
+   * Per-code docs URL. A string overrides
+   * {@link DefineDiagnosticsOptions.docsBase} for this code; `false` opts this
+   * code out entirely, even when `docsBase` is set. When omitted, the URL is
+   * derived from `docsBase`.
+   */
+  docs?: string | false
 }
 
 /**
@@ -359,8 +367,12 @@ export function defineDiagnostics<
 
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const def = options.codes[code]
+    // skip docs if set to false, otherwise use it or derive it from docsBase
     const docs
-      = typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code)
+      = def.docs === false
+        ? undefined
+        : def.docs
+          || (typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code))
 
     const handle = {
       report(

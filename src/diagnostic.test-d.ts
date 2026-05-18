@@ -161,6 +161,38 @@ describe('defineDiagnostics — params inference', () => {
   })
 })
 
+describe('defineDiagnostics — per-code docs', () => {
+  it('accepts `docs: string` on a code definition', () => {
+    defineDiagnostics({
+      codes: { X: { why: 'msg', docs: 'https://example.com/x' } },
+    })
+  })
+
+  it('accepts `docs: false` on a code definition', () => {
+    defineDiagnostics({
+      codes: { X: { why: 'msg', docs: false } },
+    })
+  })
+
+  it('rejects `docs: true` on a code definition', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: docs must be a string or false
+        X: { why: 'msg', docs: true },
+      },
+    })
+  })
+
+  it('rejects non-string/non-false on docs', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: docs must be a string or false
+        X: { why: 'msg', docs: 42 },
+      },
+    })
+  })
+})
+
 describe('defineDiagnostics — return types', () => {
   it('.report returns Diagnostic', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   defineDiagnostics,
   Diagnostic,
+  formatDiagnostic,
   reporterError,
   reporterLog,
   reporterRequiredOptions,
@@ -209,6 +210,27 @@ describe('built-in reporters', () => {
     ).toHaveBeenErrored()
   })
 
+  it('omits the `see:` line when docsBase is undefined', () => {
+    const errs = defineDiagnostics({ codes: { X: { why: 'boom' } } })
+    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom')
+  })
+
+  it('omits the `see:` line when a code opts out with `docs: false`', () => {
+    const errs = defineDiagnostics({
+      docsBase: 'https://example.com/errors',
+      codes: { X: { why: 'boom', docs: false } },
+    })
+    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom')
+  })
+
+  it('includes the `see:` line when docs is set', () => {
+    const errs = defineDiagnostics({
+      docsBase: 'https://example.com/errors',
+      codes: { X: { why: 'boom' } },
+    })
+    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom\n╰▶ see: https://example.com/errors/x')
+  })
+
   it('reporterRequiredOptions includes the code and the priority value', () => {
     const errs = defineDiagnostics({
       codes: { NUXT_E001: { why: 'boom' } },
@@ -264,6 +286,31 @@ describe('defineDiagnostics', () => {
     it('leaves Diagnostic.docs undefined when docsBase is omitted', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
       expect(errs.X.report().docs).toBeUndefined()
+    })
+
+    it('per-code `docs: false` opts out of docsBase', () => {
+      const errs = defineDiagnostics({
+        docsBase: 'https://example.com/errors',
+        codes: { X: { why: 'no docs', docs: false } },
+      })
+      expect(errs.X.report().docs).toBeUndefined()
+    })
+
+    it('per-code `docs: string` overrides docsBase', () => {
+      const errs = defineDiagnostics({
+        docsBase: 'https://example.com/errors',
+        codes: {
+          X_001: { why: 'overridden', docs: 'https://custom.example/foo' },
+        },
+      })
+      expect(errs.X_001.report().docs).toBe('https://custom.example/foo')
+    })
+
+    it('per-code `docs: string` works without docsBase', () => {
+      const errs = defineDiagnostics({
+        codes: { X: { why: 'msg', docs: 'https://custom.example/foo' } },
+      })
+      expect(errs.X.report().docs).toBe('https://custom.example/foo')
     })
   })
 
