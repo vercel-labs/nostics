@@ -5,13 +5,13 @@ description: 'Structured diagnostic code library for JavaScript/TypeScript. Turn
 
 # nostics
 
-Structured diagnostic code library for JavaScript/TypeScript. Every error condition becomes a typed `Diagnostic` instance (which extends `Error`) with a stable code, docs URL, and actionable fields, serializable via `toJSON()`.
+Structured diagnostic code library for JavaScript/TypeScript. Every error condition becomes a typed `Diagnostic` (extending `Error`) with a stable code, docs URL, and actionable fields. Serializable via `toJSON()`.
 
 ## Core Concepts
 
 ### Diagnostic class
 
-The fundamental unit is a `Diagnostic` instance — it extends `Error`, so it can be thrown, caught with `instanceof`, and inspected like any other error. It's serializable via `.toJSON()` for transport across process boundaries.
+The fundamental unit is a `Diagnostic` instance. It extends `Error`, so you can throw it, catch it with `instanceof`, and inspect it like any other error. Use `.toJSON()` to send it across process boundaries.
 
 ```ts
 class Diagnostic extends Error {
@@ -28,11 +28,11 @@ class Diagnostic extends Error {
 
 ### Handles
 
-`defineDiagnostics()` returns one handle per code. Each handle is a plain callable that returns a `Diagnostic` instance — call it to report, `throw` the returned value to raise. Reporters are wired in at definition time and fire on every call.
+`defineDiagnostics()` returns one handle per code. Each handle is a plain callable that returns a `Diagnostic` instance: call it to report, `throw` the returned value to raise. Reporters are wired in at definition time and fire on every call.
 
 ## API Reference
 
-### `defineDiagnostics(options)` — Define diagnostic codes
+### `defineDiagnostics(options)`: Define diagnostic codes
 
 ```ts
 import { defineDiagnostics, reporterLog } from 'nostics'
@@ -59,11 +59,11 @@ const diagnostics = defineDiagnostics({
 
 **Options:**
 
-| Field       | Type                                         | Description                                                                                                                                                                         |
-| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docsBase`  | `string \| ((code) => string \| undefined)?` | Docs URL source. As a string, auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. As a function, receives the code key and returns the full URL (or `undefined` to omit). |
-| `codes`     | `Record<string, DiagnosticDefinition>`       | Map of code keys to their definitions.                                                                                                                                              |
-| `reporters` | `readonly DiagnosticReporter[]?`             | Reporters fired on every handle call. Their options are inferred and intersected — required reporter options become required at the call site.                                      |
+| Field       | Type                                         | Description                                                                                                                                                            |
+| ----------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docsBase`  | `string \| ((code) => string \| undefined)?` | Docs URL source. String: auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. Function: receives the code key, returns the full URL (or `undefined` to omit). |
+| `codes`     | `Record<string, DiagnosticDefinition>`       | Map of code keys to their definitions.                                                                                                                                 |
+| `reporters` | `readonly DiagnosticReporter[]?`             | Reporters fired on every handle call. Their options are inferred and intersected; required reporter options become required at the call site.                          |
 
 **DiagnosticDefinition fields:**
 
@@ -72,9 +72,9 @@ const diagnostics = defineDiagnostics({
 | `why` | `string \| (params) => string` | Required. Why this failed. Becomes the `Error.message`. |
 | `fix` | `string \| (params) => string` | Optional. How to resolve the issue.                     |
 
-**Type inference:** Parameters are extracted from ALL template fields (`why`, `fix`) and intersected. If `why` needs `{ src }` and `fix` needs `{ date }`, the call site requires `{ src, date }`.
+**Type inference:** Parameters from all template fields (`why`, `fix`) are intersected. If `why` needs `{ src }` and `fix` needs `{ date }`, the call site requires `{ src, date }`.
 
-### Calling handles — Call sites
+### Calling handles: call sites
 
 ```ts
 // No params — call signature omits the params arg.
@@ -94,7 +94,7 @@ diagnostics.NUXT_B2011({
 throw diagnostics.NUXT_B2011({ src: pluginPath })
 ```
 
-The handle returns the `Diagnostic` instance and fires every reporter in order. Use `throw` on the return value to raise.
+The handle returns the `Diagnostic` and fires every reporter in order. `throw` the return value to raise.
 
 ### Catching diagnostics
 
@@ -120,7 +120,7 @@ try {
 | Formatter               | Import                    | Description                                                     |
 | ----------------------- | ------------------------- | --------------------------------------------------------------- |
 | `formatDiagnostic`      | `nostics`                 | Plain unicode-decorated string. Used by the built-in reporters. |
-| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colorized variant — accepts a generic `Colors` interface.       |
+| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colorized variant. Accepts a generic `Colors` interface.        |
 | `jsonFormatter`         | `nostics/formatters/json` | `JSON.stringify(diagnostic)` (calls `Diagnostic.toJSON()`).     |
 
 **`formatDiagnostic` output:**
@@ -149,7 +149,7 @@ interface Colors {
 
 ### Reporters
 
-A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnostics` infers the union of every reporter's `options` and requires it at the call site only if any reporter has required fields.
+A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnostics` unions every reporter's `options`. The call site must pass them only if some reporter has required fields.
 
 | Reporter                       | Import                    | Description                                                                                                                    |
 | ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -180,11 +180,11 @@ const audited: DiagnosticReporter<{ priority: number }> = (d, options) => {
 
 ## Vite Plugins
 
-Two unplugin-based plugins for build-time optimization and dev-time diagnostic collection, imported from `nostics/unplugin`.
+Two unplugin-based plugins from `nostics/unplugin`: one for build-time optimization, one for dev-time diagnostic collection.
 
-### `nostics` — Build-time AST transform
+### `nostics`: Build-time AST transform
 
-Marks `defineDiagnostics()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard so diagnostics tree-shake out of production builds. Supports `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
+Marks `defineDiagnostics()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard, so diagnostics tree-shake out of production builds. Works with `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
 
 ```ts
 import { nostics } from 'nostics/unplugin'
@@ -200,9 +200,9 @@ export default defineConfig({
 | ------------- | --------- | ------------------------------------------------------------- |
 | `packageName` | `string?` | The package name to detect imports from. Default: `'nostics'` |
 
-### `nosticsServer` — Dev server diagnostic collector
+### `nosticsServer`: Dev server diagnostic collector
 
-Listens for diagnostics sent over the Vite WebSocket (from `devReporter` in the browser) and writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
+Listens for diagnostics from `devReporter` in the browser over the Vite WebSocket, then writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
 
 ```ts
 import { nosticsServer } from 'nostics/unplugin'
@@ -251,13 +251,13 @@ export const diagnostics = defineDiagnostics({
 
 - Use fully qualified, stable code identifiers (e.g. `NUXT_B1001`, `I18N_I001`)
 - Group by domain using a letter prefix within the code: `B` for build, `R` for runtime, `C` for config, etc.
-- Never reuse or reassign a code once published — codes are permanent identifiers
+- Never reuse or reassign a code once published. Codes are permanent identifiers.
 
 ### Structuring diagnostic definitions
 
-- Always provide `why` — it is the only required field and becomes `Error.message`
-- Provide `fix` whenever the solution is known — this is the most actionable field for both humans and AI agents
-- Use parameterized templates for messages that include runtime values — avoid string concatenation outside the factory
+- Always provide `why`. It is the only required field and becomes `Error.message`.
+- Provide `fix` whenever the solution is known. It is the most actionable field for both humans and AI agents.
+- Use parameterized templates for messages that include runtime values. Avoid string concatenation outside the factory.
 - Pass `cause` at the call site (not in the definition) when re-raising from an original error
 - Pass `sources` at the call site as `'file:line:column'` strings when the JS stack trace doesn't reflect the user's source
 

@@ -5,7 +5,7 @@ import type { Diagnostic, DiagnosticCallParams } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { defineDiagnostics, reporterLog, reporterRequiredOptions } from './diagnostic'
 
-describe('defineDiagnostics — reporter options inference', () => {
+describe('defineDiagnostics: reporter options inference', () => {
   it('options is optional when there are no reporters', () => {
     const errs = defineDiagnostics({
       codes: {
@@ -72,7 +72,7 @@ describe('defineDiagnostics — reporter options inference', () => {
   })
 })
 
-describe('defineDiagnostics — params inference', () => {
+describe('defineDiagnostics: params inference', () => {
   it('all-static object takes only the call-site params (cause/sources)', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'static', fix: 'static fix' } },
@@ -157,7 +157,7 @@ describe('defineDiagnostics — params inference', () => {
   })
 })
 
-describe('defineDiagnostics — per-code docs', () => {
+describe('defineDiagnostics: per-code docs', () => {
   it('accepts `docs: string` on a code definition', () => {
     defineDiagnostics({
       codes: { X: { why: 'msg', docs: 'https://example.com/x' } },
@@ -189,7 +189,7 @@ describe('defineDiagnostics — per-code docs', () => {
   })
 })
 
-describe('defineDiagnostics — return types', () => {
+describe('defineDiagnostics: return types', () => {
   it('the handle is callable and returns Diagnostic', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expectTypeOf(errs.X()).toEqualTypeOf<Diagnostic>()

@@ -12,13 +12,15 @@ pnpm build                                # build with tsdown
 pnpm typecheck                            # tsc
 ```
 
+Never use em-dashes in your writing.
+
 ## Architecture
 
-Structured diagnostic SDK — typed, serializable `Diagnostic` objects with stable codes.
+Structured diagnostic SDK: typed, serializable `Diagnostic` objects with stable codes.
 
 `defineDiagnostics()` → callable handles per code; call to build/report a `Diagnostic`, `throw` the returned value to raise.
 
-`src/code-transform/` — build-time AST transform: marks diagnostic code as pure, wraps with `NODE_ENV` guard for tree-shaking.
+`src/code-transform/`: build-time AST transform. Marks diagnostic code as pure, wraps with `NODE_ENV` guard for tree-shaking.
 
 Monorepo (pnpm workspaces): `playground/` and `demo-lib/` are subprojects.
 

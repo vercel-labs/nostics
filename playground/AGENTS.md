@@ -1,3 +1,3 @@
 # Calculator project
 
-This is a learning project to use a typescript. It has a few buttons that use a js library. No frontend library
+Learning project for TypeScript. A few buttons backed by a JS library. No frontend framework.

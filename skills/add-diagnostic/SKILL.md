@@ -17,11 +17,11 @@ Use Grep to search for `defineDiagnostics` across the project.
 
 Diagnostic codes follow the pattern `PREFIX_XNNNN`:
 
-- **PREFIX** — project/domain name in uppercase (e.g., `NUXT`, `MATH`, `I18N`)
-- **X** — category letter: `B` (build), `R` (runtime), `C` (config), `E` (error), `W` (warning), `D` (deprecation), `I` (info)
-- **NNNN** — numeric sequence
+- **PREFIX**: project/domain name in uppercase (e.g., `NUXT`, `MATH`, `I18N`)
+- **X**: category letter. `B` (build), `R` (runtime), `C` (config), `E` (error), `W` (warning), `D` (deprecation), `I` (info)
+- **NNNN**: numeric sequence
 
-Look at existing codes in the target file to determine the prefix, category, and next available number. Codes must never be reused once published.
+Check existing codes in the file to pick the prefix, category, and next free number. Never reuse a published code.
 
 ## Step 3: Add the Definition
 
@@ -38,8 +38,8 @@ CODE_NAME: {
 
 Rules:
 
-- `why` is the only required field — it becomes `Error.message` on the resulting `Diagnostic` instance
-- Parameters can appear in any template field (`why`, `fix`) — TypeScript unions them and requires them at the call site
+- `why` is the only required field. It becomes `Error.message` on the resulting `Diagnostic` instance.
+- Parameters can appear in any template field (`why`, `fix`). TypeScript unions them and requires them at the call site.
 - Always provide `fix` when the solution is known
 - Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
 - Runtime fields (`cause`, `sources`) are passed at the call site, not in the definition

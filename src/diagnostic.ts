@@ -8,7 +8,7 @@ import { toValueWithArgs } from './utils'
  * Define-time shape of a diagnostic. Each field can be a static value or a
  * function that resolves it from a shared `params` object passed at call
  * time. Runtime-only fields (`cause`, `sources`) from {@link DiagnosticInit}
- * are intentionally omitted — they're only meaningful at the call site.
+ * are intentionally omitted: they're only meaningful at the call site.
  */
 export interface DiagnosticDefinition<P = any> {
   /**
@@ -63,7 +63,7 @@ export interface DiagnosticCallParams {
 
 /**
  * Structured initializer for a {@link Diagnostic}. `why` is the only required
- * field — it becomes the {@link Diagnostic.message}. The remaining fields are
+ * field: it becomes the {@link Diagnostic.message}. The remaining fields are
  * optional metadata that reporters and consumers can render or forward.
  */
 export interface DiagnosticInit extends DiagnosticCallParams {
@@ -202,8 +202,8 @@ type CallSiteParams<Params> = Params & DiagnosticCallParams
 
 /**
  * Resolves the full argument tuple for a {@link DiagnosticHandle} call.
- * Branches on whether params and reporter options each have required fields
- * — required positions become required tuple elements, all-optional ones
+ * Branches on whether params and reporter options each have required fields.
+ * Required positions become required tuple elements, all-optional ones
  * become `?`, and when no reporter declares any options the parameter is
  * omitted entirely.
  *
@@ -322,7 +322,7 @@ export class Diagnostic extends Error {
     this.docs = init.docs
     this.sources = init.sources
     // V8-only API, but also implemented pretty much everywhere. Worst case
-    // scenario, we fall back to the stack `Error` captures by default — which
+    // scenario, we fall back to the stack `Error` captures by default, which
     // includes a couple of extra internal frames but is still usable.
     captureStackTrace?.(this, captureFrom)
     if (this.stack)
@@ -356,7 +356,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Creates a typed diagnostics object from a set of code definitions. Each
- * code becomes a callable {@link DiagnosticHandle} — invoke to report, or
+ * code becomes a callable {@link DiagnosticHandle}: invoke to report, or
  * `throw` the result to raise. No `new` required, no proxy.
  */
 export function defineDiagnostics<
@@ -418,7 +418,7 @@ type ExtractSingleReporterOptions<Reporter> = Reporter extends (
 
 /**
  * Intersects every reporter's options shape into a single object. If any
- * reporter has a required field, the merged shape has a required field — and
+ * reporter has a required field, the merged shape has a required field, and
  * {@link ActionArgs} flips `reporterOptions` from optional to required via
  * `{} extends Merged`.
  */

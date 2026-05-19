@@ -25,13 +25,13 @@ catch {}
 
 debug(`Hook fired. stop_hook_active=${input.stop_hook_active}`)
 
-// Prevent infinite loops — if already in forced-continuation, let Claude stop
+// Prevent infinite loops: if already in forced-continuation, let Claude stop
 if (input.stop_hook_active) {
   debug('stop_hook_active=true, allowing stop.')
   process.exit(0)
 }
 
-// No log file or empty — nothing to do
+// No log file or empty: nothing to do
 try {
   const stat = statSync(logFile)
   if (stat.size === 0) {

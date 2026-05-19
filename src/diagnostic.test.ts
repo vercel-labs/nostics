@@ -152,7 +152,7 @@ describe('diagnostic', () => {
       expect(r).toHaveBeenCalledTimes(1)
     })
 
-    it('supports `throw errs.X(...)` — report-then-throw', () => {
+    it('supports `throw errs.X(...)` (report-then-throw)', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
       expect(() => {
@@ -416,7 +416,7 @@ describe('defineDiagnostics', () => {
   })
 
   describe('reporterOptions propagation', () => {
-    it('forwards options from the call to reporters — no params', () => {
+    it('forwards options from the call to reporters (no params)', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'static' } },
         reporters: [reporterRequiredOptions],
@@ -425,7 +425,7 @@ describe('defineDiagnostics', () => {
       expect('priority: 1').toHaveBeenWarned()
     })
 
-    it('forwards options from the call to reporters — with params', () => {
+    it('forwards options from the call to reporters (with params)', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
         reporters: [reporterRequiredOptions],

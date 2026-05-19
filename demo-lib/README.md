@@ -1,3 +1,3 @@
 # @posva/lib-demo
 
-A demo library showcasing how to integrate [`nostics`](../README.md) into a library. See the source code in `src/` for a complete example of defining diagnostics and reporting them from library code.
+Demo library showing how to integrate [`nostics`](../README.md). See `src/` for an example of defining and reporting diagnostics.
