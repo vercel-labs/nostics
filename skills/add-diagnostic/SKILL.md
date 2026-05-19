@@ -47,6 +47,6 @@ Rules:
 ## Step 4: Call the Code
 
 ```ts
-diagnostics.CODE_NAME.report({ paramName: 'value' })
-diagnostics.CODE_NAME.throw({ paramName: 'value', cause: originalError })
+diagnostics.CODE_NAME({ paramName: 'value' })
+throw diagnostics.CODE_NAME({ paramName: 'value', cause: originalError })
 ```

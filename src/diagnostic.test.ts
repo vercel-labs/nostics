@@ -16,21 +16,21 @@ describe('diagnostic', () => {
   describe('instance shape (via defineDiagnostics)', () => {
     it('is an instance of Error and Diagnostic', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      const d = errs.X_001.report()
+      const d = errs.X_001()
       expect(d).toBeInstanceOf(Error)
       expect(d).toBeInstanceOf(Diagnostic)
     })
 
     it('exposes message and uses the code as the instance name', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      const d = errs.X_001.report()
+      const d = errs.X_001()
       expect(d.message).toBe('boom')
       expect(d.name).toBe('X_001')
     })
 
     it('toJSON returns a serializable shape', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      const d = errs.X_001.report()
+      const d = errs.X_001()
       expect(d.toJSON()).toEqual({
         name: 'X_001',
         why: 'boom',
@@ -43,7 +43,7 @@ describe('diagnostic', () => {
 
     it('`why` getter mirrors `message`', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      const d = errs.X_001.report()
+      const d = errs.X_001()
       expect(d.why).toBe('boom')
       expect(d.why).toBe(d.message)
     })
@@ -52,19 +52,19 @@ describe('diagnostic', () => {
       const errs = defineDiagnostics({
         codes: { X_001: { why: 'boom', fix: 'restart it' } },
       })
-      expect(errs.X_001.report().fix).toBe('restart it')
+      expect(errs.X_001().fix).toBe('restart it')
     })
 
     it('stores `sources` passed at the call site', () => {
       const sources = ['src/foo.ts:1:5', 'src/bar.ts:42:10']
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      expect(errs.X_001.report({ sources }).sources).toEqual(sources)
+      expect(errs.X_001({ sources }).sources).toEqual(sources)
     })
 
     it('stores `cause` passed at the call site', () => {
       const original = new Error('original')
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
-      expect(errs.X_001.report({ cause: original }).cause).toBe(original)
+      expect(errs.X_001({ cause: original }).cause).toBe(original)
     })
 
     it('toJSON includes optional fields when present', () => {
@@ -72,7 +72,7 @@ describe('diagnostic', () => {
       const errs = defineDiagnostics({
         codes: { X_001: { why: 'boom', fix: 'restart' } },
       })
-      const d = errs.X_001.report({ cause: original, sources: ['a.ts:1:1'] })
+      const d = errs.X_001({ cause: original, sources: ['a.ts:1:1'] })
       expect(d.toJSON()).toEqual({
         name: 'X_001',
         why: 'boom',
@@ -89,7 +89,7 @@ describe('diagnostic', () => {
       const r1 = vi.fn((_diagnostic: Diagnostic) => {})
       const r2 = vi.fn((_diagnostic: Diagnostic) => {})
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
-      errs.X.report()
+      errs.X()
       expect(r1).toHaveBeenCalledTimes(1)
       expect(r2).toHaveBeenCalledTimes(1)
     })
@@ -97,7 +97,7 @@ describe('diagnostic', () => {
     it('passes the diagnostic as the first argument', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
-      const d = errs.X.report()
+      const d = errs.X()
       expect(r.mock.calls[0]?.[0]).toBe(d)
     })
 
@@ -108,14 +108,14 @@ describe('diagnostic', () => {
         codes: { X: { why: 'msg' } },
         reporters: [r1, r2],
       })
-      const d = errs.X.report(undefined, { priority: 5 })
+      const d = errs.X(undefined, { priority: 5 })
       expect(r1).toHaveBeenCalledWith(d, { priority: 5 })
       expect(r2).toHaveBeenCalledWith(d, { priority: 5 })
     })
 
     it('no reporters → no-op', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      expect(() => errs.X.report()).not.toThrow()
+      expect(() => errs.X()).not.toThrow()
     })
 
     it('preserves reporter call order', () => {
@@ -127,33 +127,39 @@ describe('diagnostic', () => {
         calls.push('b')
       })
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
-      errs.X.report()
+      errs.X()
       expect(calls).toEqual(['a', 'b'])
     })
   })
 
-  describe('throw()', () => {
+  describe('throw', () => {
     it('throws the produced diagnostic', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      expect(() => errs.X.throw()).toThrow(Diagnostic)
-      expect(() => errs.X.throw()).toThrow('msg')
+      expect(() => {
+        throw errs.X()
+      }).toThrow(Diagnostic)
+      expect(() => {
+        throw errs.X()
+      }).toThrow('msg')
     })
 
     it('runs reporters before throwing', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
-      expect(() => errs.X.throw()).toThrow()
+      expect(() => {
+        throw errs.X()
+      }).toThrow()
       expect(r).toHaveBeenCalledTimes(1)
     })
 
-    it('supports `throw errs.X.report(...)` — report-then-throw', () => {
+    it('supports `throw errs.X(...)` — report-then-throw', () => {
       const r = vi.fn((_diagnostic: Diagnostic) => {})
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r] })
       expect(() => {
-        throw errs.X.report()
+        throw errs.X()
       }).toThrow(Diagnostic)
       expect(() => {
-        throw errs.X.report()
+        throw errs.X()
       }).toThrow('msg')
       expect(r).toHaveBeenCalledTimes(2)
     })
@@ -166,7 +172,7 @@ describe('built-in reporters', () => {
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [reporterError],
     })
-    errs.NUXT_E001.report()
+    errs.NUXT_E001()
     expect('[NUXT_E001] boom').toHaveBeenErrored()
   })
 
@@ -175,7 +181,7 @@ describe('built-in reporters', () => {
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [reporterLog],
     })
-    errs.NUXT_E001.report()
+    errs.NUXT_E001()
     expect('[NUXT_E001] boom').toHaveBeenWarned()
   })
 
@@ -184,7 +190,7 @@ describe('built-in reporters', () => {
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [(d: Diagnostic) => reporterLog(d, { method: 'warn' })],
     })
-    errs.NUXT_E001.report()
+    errs.NUXT_E001()
     expect('[NUXT_E001] boom').toHaveBeenWarned()
   })
 
@@ -193,7 +199,7 @@ describe('built-in reporters', () => {
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [(d: Diagnostic) => reporterLog(d, { method: 'error' })],
     })
-    errs.NUXT_E001.report()
+    errs.NUXT_E001()
     expect('[NUXT_E001] boom').toHaveBeenErrored()
   })
 
@@ -204,7 +210,7 @@ describe('built-in reporters', () => {
       },
       reporters: [reporterError],
     })
-    errs.NUXT_E033.report({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
+    errs.NUXT_E033({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(
       '[NUXT_E033] boom\n├▶ fix: restart it\n╰▶ sources: a.ts:1:1, b.ts:2:2',
     ).toHaveBeenErrored()
@@ -212,7 +218,7 @@ describe('built-in reporters', () => {
 
   it('omits the `see:` line when docsBase is undefined', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'boom' } } })
-    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom')
+    expect(formatDiagnostic(errs.X())).toBe('[X] boom')
   })
 
   it('omits the `see:` line when a code opts out with `docs: false`', () => {
@@ -220,7 +226,7 @@ describe('built-in reporters', () => {
       docsBase: 'https://example.com/errors',
       codes: { X: { why: 'boom', docs: false } },
     })
-    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom')
+    expect(formatDiagnostic(errs.X())).toBe('[X] boom')
   })
 
   it('includes the `see:` line when docs is set', () => {
@@ -228,7 +234,7 @@ describe('built-in reporters', () => {
       docsBase: 'https://example.com/errors',
       codes: { X: { why: 'boom' } },
     })
-    expect(formatDiagnostic(errs.X.report())).toBe('[X] boom\n╰▶ see: https://example.com/errors/x')
+    expect(formatDiagnostic(errs.X())).toBe('[X] boom\n╰▶ see: https://example.com/errors/x')
   })
 
   it('reporterRequiredOptions includes the code and the priority value', () => {
@@ -236,7 +242,7 @@ describe('built-in reporters', () => {
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [reporterRequiredOptions],
     })
-    errs.NUXT_E001.report(undefined, { priority: 7 })
+    errs.NUXT_E001(undefined, { priority: 7 })
     expect('[NUXT_E001] boom').toHaveBeenWarned()
     expect('priority: 7').toHaveBeenWarned()
   })
@@ -250,8 +256,8 @@ describe('defineDiagnostics', () => {
 
   it('produces fresh Diagnostic instances per call', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-    const a = errs.X.report()
-    const b = errs.X.report()
+    const a = errs.X()
+    const b = errs.X()
     expect(a).not.toBe(b)
     expect(a).toBeInstanceOf(Diagnostic)
     expect(b).toBeInstanceOf(Diagnostic)
@@ -260,7 +266,7 @@ describe('defineDiagnostics', () => {
   describe('per-code name', () => {
     it('sets the diagnostic code as the instance `name`', () => {
       const errs = defineDiagnostics({ codes: { NUXT_E033: { why: 'msg' } } })
-      expect(errs.NUXT_E033.report().name).toBe('NUXT_E033')
+      expect(errs.NUXT_E033().name).toBe('NUXT_E033')
     })
   })
 
@@ -270,7 +276,7 @@ describe('defineDiagnostics', () => {
         docsBase: 'https://example.com/errors',
         codes: { NUXT_E001: { why: 'boom' } },
       })
-      expect(errs.NUXT_E001.report().docs).toBe('https://example.com/errors/nuxt_e001')
+      expect(errs.NUXT_E001().docs).toBe('https://example.com/errors/nuxt_e001')
     })
 
     it('sets Diagnostic.docs from a function docsBase invoked with the code', () => {
@@ -279,13 +285,13 @@ describe('defineDiagnostics', () => {
         docsBase,
         codes: { NUXT_E033: { why: 'boom' } },
       })
-      expect(errs.NUXT_E033.report().docs).toBe('https://example.com/nuxt_e033')
+      expect(errs.NUXT_E033().docs).toBe('https://example.com/nuxt_e033')
       expect(docsBase).toHaveBeenCalledWith('NUXT_E033')
     })
 
     it('leaves Diagnostic.docs undefined when docsBase is omitted', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      expect(errs.X.report().docs).toBeUndefined()
+      expect(errs.X().docs).toBeUndefined()
     })
 
     it('per-code `docs: false` opts out of docsBase', () => {
@@ -293,7 +299,7 @@ describe('defineDiagnostics', () => {
         docsBase: 'https://example.com/errors',
         codes: { X: { why: 'no docs', docs: false } },
       })
-      expect(errs.X.report().docs).toBeUndefined()
+      expect(errs.X().docs).toBeUndefined()
     })
 
     it('per-code `docs: string` overrides docsBase', () => {
@@ -303,14 +309,14 @@ describe('defineDiagnostics', () => {
           X_001: { why: 'overridden', docs: 'https://custom.example/foo' },
         },
       })
-      expect(errs.X_001.report().docs).toBe('https://custom.example/foo')
+      expect(errs.X_001().docs).toBe('https://custom.example/foo')
     })
 
     it('per-code `docs: string` works without docsBase', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'msg', docs: 'https://custom.example/foo' } },
       })
-      expect(errs.X.report().docs).toBe('https://custom.example/foo')
+      expect(errs.X().docs).toBe('https://custom.example/foo')
     })
   })
 
@@ -321,7 +327,7 @@ describe('defineDiagnostics', () => {
           X: { why: 'static why', fix: 'static fix' },
         },
       })
-      const d = errs.X.report()
+      const d = errs.X()
       expect(d.message).toBe('static why')
       expect(d.fix).toBe('static fix')
     })
@@ -331,12 +337,12 @@ describe('defineDiagnostics', () => {
     it('forwards `cause` from the call site to the diagnostic', () => {
       const original = new Error('original')
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      expect(errs.X.report({ cause: original }).cause).toBe(original)
+      expect(errs.X({ cause: original }).cause).toBe(original)
     })
 
     it('forwards `sources` from the call site to the diagnostic', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      expect(errs.X.report({ sources: ['a.ts:1:1'] }).sources).toEqual(['a.ts:1:1'])
+      expect(errs.X({ sources: ['a.ts:1:1'] }).sources).toEqual(['a.ts:1:1'])
     })
 
     it('merges cause and sources with interpolation params', () => {
@@ -344,7 +350,7 @@ describe('defineDiagnostics', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: (p: { name: string }) => `hi ${p.name}` } },
       })
-      const d = errs.X.report({ name: 'world', cause: original, sources: ['a.ts:1:1'] })
+      const d = errs.X({ name: 'world', cause: original, sources: ['a.ts:1:1'] })
       expect(d.message).toBe('hi world')
       expect(d.cause).toBe(original)
       expect(d.sources).toEqual(['a.ts:1:1'])
@@ -358,7 +364,7 @@ describe('defineDiagnostics', () => {
           X: { why: (p: { name: string }) => `hi ${p.name}`, fix: 'static fix' },
         },
       })
-      const d = errs.X.report({ name: 'world' })
+      const d = errs.X({ name: 'world' })
       expect(d.message).toBe('hi world')
       expect(d.fix).toBe('static fix')
     })
@@ -369,7 +375,7 @@ describe('defineDiagnostics', () => {
           X: { why: 'msg', fix: (p: { module: string }) => `update ${p.module}` },
         },
       })
-      const d = errs.X.report({ module: 'foo' })
+      const d = errs.X({ module: 'foo' })
       expect(d.message).toBe('msg')
       expect(d.fix).toBe('update foo')
     })
@@ -383,7 +389,7 @@ describe('defineDiagnostics', () => {
           },
         },
       })
-      const d = errs.X.report({ name: 'world' })
+      const d = errs.X({ name: 'world' })
       expect(d.message).toBe('hi world')
       expect(d.fix).toBe('restart world')
     })
@@ -398,7 +404,7 @@ describe('defineDiagnostics', () => {
         },
       })
       try {
-        errs.X.throw({ name: 'world', sources: ['world.ts:1:1'] })
+        throw errs.X({ name: 'world', sources: ['world.ts:1:1'] })
       }
       catch (e) {
         expect(e).toBeInstanceOf(Diagnostic)
@@ -410,30 +416,32 @@ describe('defineDiagnostics', () => {
   })
 
   describe('reporterOptions propagation', () => {
-    it('forwards options from .report() to reporters — no params', () => {
+    it('forwards options from the call to reporters — no params', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'static' } },
         reporters: [reporterRequiredOptions],
       })
-      errs.X.report(undefined, { priority: 1 })
+      errs.X(undefined, { priority: 1 })
       expect('priority: 1').toHaveBeenWarned()
     })
 
-    it('forwards options from .report() to reporters — with params', () => {
+    it('forwards options from the call to reporters — with params', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
         reporters: [reporterRequiredOptions],
       })
-      errs.X.report({ who: 'me' }, { priority: 2 })
+      errs.X({ who: 'me' }, { priority: 2 })
       expect('priority: 2').toHaveBeenWarned()
     })
 
-    it('forwards options through .throw() too', () => {
+    it('forwards options through `throw` too', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'static' } },
         reporters: [reporterRequiredOptions],
       })
-      expect(() => errs.X.throw(undefined, { priority: 3 })).toThrow()
+      expect(() => {
+        throw errs.X(undefined, { priority: 3 })
+      }).toThrow()
       expect('priority: 3').toHaveBeenWarned()
     })
   })
@@ -441,7 +449,7 @@ describe('defineDiagnostics', () => {
   describe('stack trace cleanup', () => {
     it('points back to the call site', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      const d = errs.X.report()
+      const d = errs.X()
       expect(d.stack).toBeDefined()
       // take the first line of the stack
       expect(d.stack?.split('\n').at(1)).toContain('diagnostic.test.ts')
@@ -449,7 +457,7 @@ describe('defineDiagnostics', () => {
 
     it('does not include internal defineDiagnostics frames at the top', () => {
       const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-      const d = errs.X.report()
+      const d = errs.X()
       const firstFrame = d.stack?.split('\n')[1] ?? ''
       expect(firstFrame).not.toContain('diagnostic.ts')
     })

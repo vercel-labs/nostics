@@ -6,10 +6,9 @@ import { toValueWithArgs } from './utils'
 
 /**
  * Define-time shape of a diagnostic. Each field can be a static value or a
- * function that resolves it from a shared `params` object passed at
- * `.report()` / `.throw()` time. Runtime-only fields (`cause`, `sources`)
- * from {@link DiagnosticInit} are intentionally omitted — they're only
- * meaningful at the call site.
+ * function that resolves it from a shared `params` object passed at call
+ * time. Runtime-only fields (`cause`, `sources`) from {@link DiagnosticInit}
+ * are intentionally omitted — they're only meaningful at the call site.
  */
 export interface DiagnosticDefinition<P = any> {
   /**
@@ -44,8 +43,8 @@ export interface DiagnosticDefinition<P = any> {
 
 /**
  * Runtime-only fields that can be passed alongside the interpolation params
- * at `.report()` / `.throw()` time. Merged into the same object so callers
- * pass everything in one place.
+ * at call time. Merged into the same object so callers pass everything in
+ * one place.
  */
 export interface DiagnosticCallParams {
   /**
@@ -186,25 +185,27 @@ export interface DefineDiagnosticsOptions<
   codes: Codes
 
   /**
-   * Reporters called on `.report()` / `.throw()`. Can be used to integrate
-   * with custom logging.
+   * Reporters called every time a diagnostic is produced. Can be used to
+   * integrate with custom logging.
    */
   reporters?: Reporters
 }
 
 /**
- * The first positional argument of `.report()` / `.throw()`: interpolation
- * params merged with the runtime-only call-site fields (`cause`, `sources`).
+ * The first positional argument of a {@link DiagnosticHandle} call:
+ * interpolation params merged with the runtime-only call-site fields
+ * (`cause`, `sources`).
  *
  * @internal
  */
 type CallSiteParams<Params> = Params & DiagnosticCallParams
 
 /**
- * Resolves the full argument tuple for `.report()` / `.throw()`. Branches on
- * whether params and reporter options each have required fields — required
- * positions become required tuple elements, all-optional ones become `?`, and
- * when no reporter declares any options the parameter is omitted entirely.
+ * Resolves the full argument tuple for a {@link DiagnosticHandle} call.
+ * Branches on whether params and reporter options each have required fields
+ * — required positions become required tuple elements, all-optional ones
+ * become `?`, and when no reporter declares any options the parameter is
+ * omitted entirely.
  *
  * @internal
  */
@@ -221,21 +222,23 @@ type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
           : [params: CallSiteParams<Params>, reporterOptions: ReporterOpts]
 
 /**
- * Per-code handle exposed by {@link defineDiagnostics}. Each code is a plain
- * object with `.report()` and `.throw()`
+ * Per-code handle exposed by {@link defineDiagnostics}. Each code is a
+ * callable: invoke it to build the diagnostic and run every reporter, or
+ * prefix the call with `throw` to raise it.
+ *
+ * @example
+ * ```ts
+ * diagnostics.MATH_E001({ name: 'x' })           // report
+ * throw diagnostics.MATH_E001({ name: 'x' })     // throw
+ * ```
  */
 export interface DiagnosticHandle<Params, ReporterOpts> {
   /**
    * Builds the diagnostic, runs every reporter, and returns the diagnostic
    * instance. The returned diagnostic can be inspected, attached as `cause`,
-   * or ignored.
+   * or thrown with `throw`.
    */
-  report: (...args: ActionArgs<Params, ReporterOpts>) => Diagnostic
-
-  /**
-   * Builds the diagnostic, runs every reporter, then throws the diagnostic.
-   */
-  throw: (...args: ActionArgs<Params, ReporterOpts>) => never
+  (...args: ActionArgs<Params, ReporterOpts>): Diagnostic
 }
 
 /**
@@ -353,8 +356,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Creates a typed diagnostics object from a set of code definitions. Each
- * code becomes a {@link DiagnosticHandle} with `.report()` / `.throw()` — no
- * `new` required, no proxy.
+ * code becomes a callable {@link DiagnosticHandle} — invoke to report, or
+ * `throw` the result to raise. No `new` required, no proxy.
  */
 export function defineDiagnostics<
   const Codes extends Record<string, DiagnosticDefinition>,
@@ -374,31 +377,23 @@ export function defineDiagnostics<
         : def.docs
           || (typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code))
 
-    const handle = {
-      report(
-        params: DiagnosticCallParams & Record<string, unknown> = {},
-        reporterOptions: any = {},
-      ): Diagnostic {
-        const diagnostic = new Diagnostic(
-          {
-            why: toValueWithArgs(def.why, params),
-            fix: toValueWithArgs(def.fix, params),
-            docs,
-            cause: params.cause,
-            sources: params.sources,
-          },
-          handle.report,
-        )
-        diagnostic.name = code
-        for (const reporter of reporters) reporter(diagnostic, reporterOptions)
-        return diagnostic
-      },
-      throw(
-        params: DiagnosticCallParams & Record<string, unknown> = {},
-        reporterOptions: any = {},
-      ): never {
-        throw this.report(params, reporterOptions)
-      },
+    const handle = (
+      params: DiagnosticCallParams & Record<string, unknown> = {},
+      reporterOptions: any = {},
+    ): Diagnostic => {
+      const diagnostic = new Diagnostic(
+        {
+          why: toValueWithArgs(def.why, params),
+          fix: toValueWithArgs(def.fix, params),
+          docs,
+          cause: params.cause,
+          sources: params.sources,
+        },
+        handle,
+      )
+      diagnostic.name = code
+      for (const reporter of reporters) reporter(diagnostic, reporterOptions)
+      return diagnostic
     }
 
     result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]

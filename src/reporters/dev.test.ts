@@ -16,7 +16,7 @@ describe('devReporter', () => {
       reporters: [devReporter],
     })
 
-    diagnostics.E1.report()
+    diagnostics.E1()
 
     expect('import.meta.hot.send() is not available').toHaveBeenWarned()
   })

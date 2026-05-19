@@ -17,8 +17,7 @@ export interface DiagnosticDefinition<P = any> {
   docs?: string | false;
 }
 export interface DiagnosticHandle<Params, ReporterOpts> {
-  report: (..._: ActionArgs<Params, ReporterOpts>) => Diagnostic;
-  throw: (..._: ActionArgs<Params, ReporterOpts>) => never;
+  (..._: ActionArgs<Params, ReporterOpts>): Diagnostic;
 }
 export interface DiagnosticInit extends DiagnosticCallParams {
   why: string;

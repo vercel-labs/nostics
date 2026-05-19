@@ -28,7 +28,7 @@ class Diagnostic extends Error {
 
 ### Handles
 
-`defineDiagnostics()` returns one handle per code. Each handle has `.report()` and `.throw()`. Reporters are wired in at definition time and fire on every call.
+`defineDiagnostics()` returns one handle per code. Each handle is a plain callable that returns a `Diagnostic` instance — call it to report, `throw` the returned value to raise. Reporters are wired in at definition time and fire on every call.
 
 ## API Reference
 
@@ -63,7 +63,7 @@ const diagnostics = defineDiagnostics({
 | ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docsBase`  | `string \| ((code) => string \| undefined)?` | Docs URL source. As a string, auto-generates `docs` as `${docsBase}/${code.toLowerCase()}`. As a function, receives the code key and returns the full URL (or `undefined` to omit). |
 | `codes`     | `Record<string, DiagnosticDefinition>`       | Map of code keys to their definitions.                                                                                                                                              |
-| `reporters` | `readonly DiagnosticReporter[]?`             | Reporters fired on every `.report()` / `.throw()`. Their options are inferred and intersected — required reporter options become required at the call site.                         |
+| `reporters` | `readonly DiagnosticReporter[]?`             | Reporters fired on every handle call. Their options are inferred and intersected — required reporter options become required at the call site.                                      |
 
 **DiagnosticDefinition fields:**
 
@@ -74,27 +74,27 @@ const diagnostics = defineDiagnostics({
 
 **Type inference:** Parameters are extracted from ALL template fields (`why`, `fix`) and intersected. If `why` needs `{ src }` and `fix` needs `{ date }`, the call site requires `{ src, date }`.
 
-### `.report()` and `.throw()` — Call sites
+### Calling handles — Call sites
 
 ```ts
 // No params — call signature omits the params arg.
-diagnostics.NUXT_B1001.report()
+diagnostics.NUXT_B1001()
 
 // With params — first arg is the params object.
-diagnostics.NUXT_B2011.report({ src: '/plugins/bad.ts' })
+diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' })
 
 // Runtime call-site fields (`cause`, `sources`) merge into the same object.
-diagnostics.NUXT_B2011.report({
+diagnostics.NUXT_B2011({
   src: pluginPath,
   cause: originalError,
   sources: ['nuxt.config.ts:42:3'],
 })
 
-// `.throw()` reports then throws the diagnostic.
-diagnostics.NUXT_B2011.throw({ src: pluginPath })
+// To raise instead of just reporting, `throw` the returned diagnostic.
+throw diagnostics.NUXT_B2011({ src: pluginPath })
 ```
 
-`.report()` returns the `Diagnostic` instance; `.throw()` returns `never`. Both fire every reporter in order.
+The handle returns the `Diagnostic` instance and fires every reporter in order. Use `throw` on the return value to raise.
 
 ### Catching diagnostics
 
@@ -104,7 +104,7 @@ diagnostics.NUXT_B2011.throw({ src: pluginPath })
 import { Diagnostic } from 'nostics'
 
 try {
-  diagnostics.NUXT_B2011.throw({ src: pluginPath })
+  throw diagnostics.NUXT_B2011({ src: pluginPath })
 } catch (err) {
   if (err instanceof Diagnostic) {
     console.log(err.name) // 'NUXT_B2011'
@@ -117,8 +117,8 @@ try {
 
 ### Formatters
 
-| Formatter               | Import                     | Description                                                     |
-| ----------------------- | -------------------------- | --------------------------------------------------------------- |
+| Formatter               | Import                    | Description                                                     |
+| ----------------------- | ------------------------- | --------------------------------------------------------------- |
 | `formatDiagnostic`      | `nostics`                 | Plain unicode-decorated string. Used by the built-in reporters. |
 | `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colorized variant — accepts a generic `Colors` interface.       |
 | `jsonFormatter`         | `nostics/formatters/json` | `JSON.stringify(diagnostic)` (calls `Diagnostic.toJSON()`).     |
@@ -151,8 +151,8 @@ interface Colors {
 
 A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnostics` infers the union of every reporter's `options` and requires it at the call site only if any reporter has required fields.
 
-| Reporter                       | Import                     | Description                                                                                                                    |
-| ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Reporter                       | Import                    | Description                                                                                                                    |
+| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `reporterError`                | `nostics`                 | `console.error(formatDiagnostic(d))`.                                                                                          |
 | `reporterLog`                  | `nostics`                 | `console[method](formatDiagnostic(d))`. Method defaults to `'log'`; pass `{ method: 'warn' \| 'error' }` to route differently. |
 | `createFetchReporter(url)`     | `nostics/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                      |
@@ -175,7 +175,7 @@ To require options at the call site, declare a second parameter:
 const audited: DiagnosticReporter<{ priority: number }> = (d, options) => {
   audit.log({ name: d.name, priority: options.priority })
 }
-// → diagnostics.X.report({...}, { priority: 1 }) — the second arg is required and type-checked.
+// → diagnostics.X({...}, { priority: 1 }) — the second arg is required and type-checked.
 ```
 
 ## Vite Plugins
@@ -196,8 +196,8 @@ export default defineConfig({
 
 **Options (`NosticsPluginOptions`):**
 
-| Field         | Type      | Description                                                    |
-| ------------- | --------- | -------------------------------------------------------------- |
+| Field         | Type      | Description                                                   |
+| ------------- | --------- | ------------------------------------------------------------- |
 | `packageName` | `string?` | The package name to detect imports from. Default: `'nostics'` |
 
 ### `nosticsServer` — Dev server diagnostic collector

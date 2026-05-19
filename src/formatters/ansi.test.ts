@@ -21,7 +21,7 @@ describe('ansiFormatter', () => {
 
   it('renders header-only diagnostics on a single line', () => {
     const diagnostics = defineDiagnostics({ codes: { E1: { why: 'broken' } } })
-    const d = diagnostics.E1.report()
+    const d = diagnostics.E1()
     expect(format(d)).toBe('<bold><red>[E1]</red></bold> broken')
   })
 
@@ -30,7 +30,7 @@ describe('ansiFormatter', () => {
       docsBase: 'https://docs.test',
       codes: { E1: { why: 'broken', fix: 'do x' } },
     })
-    const d = diagnostics.E1.report({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
+    const d = diagnostics.E1({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(format(d)).toMatchInlineSnapshot(`
       "<bold><red>[E1]</red></bold> broken
       <dim>├▶</dim> <dim>fix:</dim> do x
@@ -41,7 +41,7 @@ describe('ansiFormatter', () => {
 
   it('uses ╰▶ for the only detail', () => {
     const diagnostics = defineDiagnostics({ codes: { E1: { why: 'broken', fix: 'do x' } } })
-    const d = diagnostics.E1.report()
+    const d = diagnostics.E1()
     expect(format(d)).toMatchInlineSnapshot(`
       "<bold><red>[E1]</red></bold> broken
       <dim>╰▶</dim> <dim>fix:</dim> do x"

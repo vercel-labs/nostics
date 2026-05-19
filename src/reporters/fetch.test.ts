@@ -20,7 +20,7 @@ describe('createFetchReporter', () => {
       reporters: [createFetchReporter('https://example.test/report')],
     })
 
-    diagnostics.E1.report()
+    diagnostics.E1()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0]!
@@ -38,6 +38,6 @@ describe('createFetchReporter', () => {
       reporters: [createFetchReporter('https://example.test/report')],
     })
 
-    expect(() => diagnostics.E1.report()).not.toThrow()
+    expect(() => diagnostics.E1()).not.toThrow()
   })
 })

@@ -16,7 +16,7 @@ pnpm typecheck                            # tsc
 
 Structured diagnostic SDK — typed, serializable `Diagnostic` objects with stable codes.
 
-`defineDiagnostics()` → factories with param interpolation → `createLogger()` binds to formatter + reporters → chainable actions (`.warn/.error/.throw/.log/.format`) → `CodedError` when throwing.
+`defineDiagnostics()` → callable handles per code; call to build/report a `Diagnostic`, `throw` the returned value to raise.
 
 `src/code-transform/` — build-time AST transform: marks diagnostic code as pure, wraps with `NODE_ENV` guard for tree-shaking.
 

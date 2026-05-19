@@ -30,8 +30,8 @@ describe('createFileReporter', () => {
       reporters: [createFileReporter({ logFile })],
     })
 
-    diagnostics.E1.report()
-    diagnostics.E2.report({ name: 'foo' })
+    diagnostics.E1()
+    diagnostics.E2({ name: 'foo' })
 
     const lines = readFileSync(logFile, 'utf8').trim().split('\n')
     expect(lines).toHaveLength(2)
@@ -50,7 +50,7 @@ describe('createFileReporter', () => {
       reporters: [createFileReporter({ logFile: '/this/path/does/not/exist/log.txt' })],
     })
 
-    expect(() => diagnostics.E1.report()).not.toThrow()
+    expect(() => diagnostics.E1()).not.toThrow()
     expect('Failed to write log').toHaveBeenErrored()
   })
 })

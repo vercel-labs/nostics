@@ -35,8 +35,8 @@ const diagnostics = defineDiagnostics({
 })
 
 // Report (continues execution) or throw — both are fully typed.
-diagnostics.NUXT_B2011.report({ src: pluginPath })
-diagnostics.NUXT_B2011.throw({ src: pluginPath })
+diagnostics.NUXT_B2011({ src: pluginPath })
+throw diagnostics.NUXT_B2011({ src: pluginPath })
 ```
 
 That's it. `diagnostics.NUXT_B2011` is cmd+clickable, TypeScript enforces params at the call site, and the result extends `Error` so it works everywhere an `Error` does.
@@ -72,7 +72,7 @@ export default defineConfig({
 })
 ```
 
-Now every `.report()` / `.throw()` call in the browser is appended to `.nostics.log` as it happens. `reporterLog` still prints to the browser console — `devReporter` runs alongside it, no replacement.
+Now every diagnostic call in the browser is appended to `.nostics.log` as it happens. `reporterLog` still prints to the browser console — `devReporter` runs alongside it, no replacement.
 
 ## Features
 

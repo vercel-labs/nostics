@@ -6,17 +6,17 @@ export function add(a: number, b: number): number {
 
 export function divide(a: number, b: number): number {
   if (b === 0) {
-    diagnostics.MATH_E001.report()
+    diagnostics.MATH_E001()
   }
   return a / b
 }
 
 export function factorial(n: number): number {
   if (n < 0) {
-    diagnostics.MATH_W001.report({ n })
+    diagnostics.MATH_W001({ n })
   }
   if (n > 170) {
-    diagnostics.MATH_W002.report({ n })
+    diagnostics.MATH_W002({ n })
   }
   if (n <= 1)
     return 1
@@ -24,6 +24,6 @@ export function factorial(n: number): number {
 }
 
 export function sum(a: number, b: number): number {
-  diagnostics.MATH_D001.report()
+  diagnostics.MATH_D001()
   return add(a, b)
 }
