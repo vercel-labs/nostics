@@ -85,6 +85,8 @@ const FILES_TO_COMMIT = [
   'CHANGELOG.md',
   'demo-lib/package.json',
   'demo-lib/CHANGELOG.md',
+  '.claude-plugin/plugin.json',
+  '.claude-plugin/marketplace.json',
 ]
 
 interface RunOptions {
@@ -318,6 +320,12 @@ async function main() {
   step('\nUpdating versions in package.json files...')
   updateVersions(pkgWithVersions)
 
+  const mainPkg = pkgWithVersions.find(p => p.name === MAIN_PKG_NAME)
+  if (mainPkg) {
+    step('\nUpdating Claude plugin manifests...')
+    updatePluginManifests(mainPkg.version)
+  }
+
   if (!noLockUpdate) {
     step('\nUpdating lock...')
     await runIfNotDry(`pnpm`, ['install'])
@@ -409,6 +417,36 @@ async function main() {
     await runIfNotDry('git', ['push', 'origin', tag])
   }
   await runIfNotDry('git', ['push'])
+}
+
+function updatePluginManifests(newVersion: string) {
+  const pluginPath = join(__dirname, '..', '.claude-plugin', 'plugin.json')
+  const marketplacePath = join(__dirname, '..', '.claude-plugin', 'marketplace.json')
+
+  const plugin = JSON.parse(fs.readFileSync(pluginPath, 'utf-8'))
+  plugin.version = newVersion
+  const pluginContent = `${JSON.stringify(plugin, null, 2)}\n`
+  if (isDryRun) {
+    dryRun('write', ['.claude-plugin/plugin.json'], { version: plugin.version })
+  }
+  else {
+    fs.writeFileSync(pluginPath, pluginContent)
+  }
+
+  const marketplace = JSON.parse(fs.readFileSync(marketplacePath, 'utf-8'))
+  const entry = marketplace.plugins?.find((p: { name: string }) => p.name === MAIN_PKG_NAME)
+  if (!entry) {
+    console.log(c.yellow(`No "${MAIN_PKG_NAME}" entry in marketplace.json; skipping`))
+    return
+  }
+  entry.version = newVersion
+  const marketplaceContent = `${JSON.stringify(marketplace, null, 2)}\n`
+  if (isDryRun) {
+    dryRun('write', ['.claude-plugin/marketplace.json'], { version: entry.version })
+  }
+  else {
+    fs.writeFileSync(marketplacePath, marketplaceContent)
+  }
 }
 
 function updateVersions(packageList: PackageInfo[]) {
