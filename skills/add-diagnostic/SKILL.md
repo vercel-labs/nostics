@@ -33,6 +33,7 @@ CODE_NAME: {
   // OR with parameters:
   why: (p: { paramName: string }) => `Template with ${p.paramName}.`,
   fix: 'How to resolve the issue.', // optional but recommended
+  docs: 'https://example.com/custom-page', // optional — overrides docsBase, or `false` to opt out
 },
 ```
 
@@ -43,6 +44,7 @@ Rules:
 - Always provide `fix` when the solution is known
 - Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
 - Runtime fields (`cause`, `sources`) are passed at the call site, not in the definition
+- `docs?: string | false` overrides `docsBase` for this code, or opts out entirely with `false`
 
 ## Step 4: Call the Code
 

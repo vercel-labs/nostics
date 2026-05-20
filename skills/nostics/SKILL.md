@@ -67,10 +67,26 @@ const diagnostics = defineDiagnostics({
 
 **DiagnosticDefinition fields:**
 
-| Field | Type                           | Description                                             |
-| ----- | ------------------------------ | ------------------------------------------------------- |
-| `why` | `string \| (params) => string` | Required. Why this failed. Becomes the `Error.message`. |
-| `fix` | `string \| (params) => string` | Optional. How to resolve the issue.                     |
+| Field  | Type                           | Description                                                                                                  |
+| ------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `why`  | `string \| (params) => string` | Required. Why this failed. Becomes the `Error.message`.                                                      |
+| `fix`  | `string \| (params) => string` | Optional. How to resolve the issue.                                                                          |
+| `docs` | `string \| false`              | Optional. Per-code docs URL override. `string` replaces `docsBase` for this code; `false` opts out entirely. |
+
+**Per-code docs override:**
+
+```ts
+codes: {
+  NUXT_B2011: {
+    why: 'message',
+    docs: 'https://nuxt.com/custom/b2011', // overrides docsBase for this code
+  },
+  NUXT_W9001: {
+    why: 'message',
+    docs: false, // opts out — no `see:` line rendered
+  },
+}
+```
 
 **Type inference:** Parameters from all template fields (`why`, `fix`) are intersected. If `why` needs `{ src }` and `fix` needs `{ date }`, the call site requires `{ src, date }`.
 
