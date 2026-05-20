@@ -7,16 +7,11 @@ description: 'Structured diagnostic code library for JavaScript/TypeScript. Turn
 
 Structured diagnostic code library for JavaScript/TypeScript. Every error condition becomes a typed `Diagnostic` (extending `Error`) with a stable code, docs URL, and actionable fields. Serializable via `toJSON()`.
 
-## Core Concepts
-
-### Diagnostic class
-
-The fundamental unit is a `Diagnostic` instance. It extends `Error`, so you can throw it, catch it with `instanceof`, and inspect it like any other error. Use `.toJSON()` to send it across process boundaries.
+## Diagnostic class
 
 ```ts
 class Diagnostic extends Error {
   name: string // the code, e.g. 'NUXT_B2011'
-  message: string // human-readable, already interpolated
   get why(): string // alias for `message`
   fix?: string // how to resolve it
   docs?: string // URL to documentation page for this code
@@ -26,20 +21,15 @@ class Diagnostic extends Error {
 }
 ```
 
-### Handles
-
-`defineDiagnostics()` returns one handle per code. Each handle is a plain callable that returns a `Diagnostic` instance: call it to report, `throw` the returned value to raise. Reporters are wired in at definition time and fire on every call.
-
-## API Reference
-
-### `defineDiagnostics(options)`: Define diagnostic codes
+## Usage
 
 ```ts
 import { defineDiagnostics, reporterLog } from 'nostics'
+import { devReporter } from 'nostics/reporters/dev'
 
 const diagnostics = defineDiagnostics({
   docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
-  reporters: [reporterLog],
+  reporters: [reporterLog, devReporter],
   codes: {
     NUXT_B1001: {
       why: 'Could not compile template.',
@@ -55,6 +45,16 @@ const diagnostics = defineDiagnostics({
     },
   },
 })
+
+// in other files
+if (!nuxtConfig.compatibilityDate) {
+  // logs without throwing
+  diagnostics.NUXT_B5001({ date: new Date().toISOString().slice(0, 10) })
+}
+if (errorCompiling) {
+  // logs and throws
+  throw diagnostics.NUXT_B1001({ cause: originalError })
+}
 ```
 
 **Options:**
