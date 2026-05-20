@@ -1,4 +1,5 @@
 import type { UnpluginInstance } from 'unplugin'
+import type { FileReporterOptions } from '../reporters/node'
 import { existsSync, writeFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { createUnplugin } from 'unplugin'
@@ -16,6 +17,13 @@ export interface NosticsServerOptions {
    * @default !!process.env.DEBUG
    */
   debug?: boolean
+
+  /**
+   * Stack frames matching ANY of these patterns are removed from each
+   * diagnostic's stack trace before it is written to the log file.
+   * Forwarded to {@link createFileReporter}.
+   */
+  excludeStackFrames?: readonly RegExp[]
 }
 
 export const nosticsServer: UnpluginInstance<NosticsServerOptions | undefined> = createUnplugin(
@@ -24,7 +32,11 @@ export const nosticsServer: UnpluginInstance<NosticsServerOptions | undefined> =
     const debug = options?.debug ?? !!process.env.DEBUG
     // eslint-disable-next-line no-console -- debug logging opt-in
     const log = debug ? (...args: unknown[]) => console.log('[nostics]', ...args) : () => {}
-    const reporter = createFileReporter({ logFile })
+    const reporterOptions: FileReporterOptions = {
+      logFile,
+      excludeStackFrames: options?.excludeStackFrames,
+    }
+    const reporter = createFileReporter(reporterOptions)
 
     return {
       name: 'nostics-server',
