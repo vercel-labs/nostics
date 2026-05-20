@@ -27,7 +27,7 @@ The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs
 const diagnostics = defineDiagnostics({
   docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   codes: {
-    NUXT_B2011: { message: '...' },
+    NUXT_B2011: { why: '...' },
   },
 })
 // diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/b2011'
@@ -38,7 +38,7 @@ const diagnostics = defineDiagnostics({
 const diagnostics = defineDiagnostics({
   docsBase: 'https://example.com/errors',
   codes: {
-    MY_E001: { message: '...' },
+    MY_E001: { why: '...' },
   },
 })
 // diagnostics.MY_E001().docs → 'https://example.com/errors/my_e001'
