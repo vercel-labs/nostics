@@ -258,30 +258,6 @@ const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: Function) => void }
 ).captureStackTrace
 
-/**
- * Strips `node_modules` and Node internal frames from a raw stack string. The
- * header line (`Error: ...`) and any non-frame lines are preserved as-is.
- */
-function cleanStack(raw: string): string {
-  const lines = raw.split('\n')
-  return (
-    lines
-      /**
-       * NOTE: shorter version of the code below
-       * if (!line.trimStart().startsWith('at ')) {
-       *   return true
-       * }
-       * return !line.includes('/node_modules/') && !line.includes('(node:')
-       */
-      .filter(
-        line =>
-          !line.trimStart().startsWith('at ')
-          || (!line.includes('/node_modules/') && !line.includes('(node:')),
-      )
-      .join('\n')
-  )
-}
-
 export class Diagnostic extends Error {
   name: string = 'Diagnostic'
 
@@ -325,8 +301,6 @@ export class Diagnostic extends Error {
     // scenario, we fall back to the stack `Error` captures by default, which
     // includes a couple of extra internal frames but is still usable.
     captureStackTrace?.(this, captureFrom)
-    if (this.stack)
-      this.stack = cleanStack(this.stack)
   }
 
   /**

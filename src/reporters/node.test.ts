@@ -53,4 +53,30 @@ describe('createFileReporter', () => {
     expect(() => diagnostics.E1()).not.toThrow()
     expect('Failed to write log').toHaveBeenErrored()
   })
+
+  it('includes the stack in the NDJSON payload', () => {
+    const diagnostics = defineDiagnostics({
+      codes: { E1: { why: 'msg' } },
+      reporters: [createFileReporter({ logFile })],
+    })
+    diagnostics.E1()
+    const entry = JSON.parse(readFileSync(logFile, 'utf8').trim())
+    expect(typeof entry.stack).toBe('string')
+    expect(entry.stack).toContain('node.test.ts')
+  })
+
+  it('excludeStackFrames drops frames matching any pattern', () => {
+    const diagnostics = defineDiagnostics({
+      codes: { E1: { why: 'msg' } },
+      reporters: [
+        createFileReporter({
+          logFile,
+          excludeStackFrames: [/node.test\.ts/],
+        }),
+      ],
+    })
+    diagnostics.E1()
+    const entry = JSON.parse(readFileSync(logFile, 'utf8').trim())
+    expect(entry.stack).not.toContain('node.test.ts')
+  })
 })
