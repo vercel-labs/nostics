@@ -1,3 +1,37 @@
+# [0.2.0](https://github.com/vercel-labs/nostics/compare/v0.1.0...v0.2.0) (2026-05-20)
+
+
+* refactor!: callable diagnostic handles instead of .report()/.throw() ([1f3899e](https://github.com/vercel-labs/nostics/commit/1f3899ec5604068726ab406942b294920cd9ac05))
+
+
+### Features
+
+* per-code `docs` to override or opt out of `docsBase` ([#10](https://github.com/vercel-labs/nostics/issues/10)) ([b9fad30](https://github.com/vercel-labs/nostics/commit/b9fad30a67114823c320acf6ab36fa4e87ea5dc4))
+
+
+### BREAKING CHANGES
+
+* Each code returned by `defineDiagnostics()` is now a plain
+callable function. The `.report()` and `.throw()` methods have been removed.
+
+Migrate by replacing:
+
+  ```ts
+  diagnostics.MY_CODE.report({ name: 'x' })
+  diagnostics.MY_CODE.throw({ name: 'x' })
+  ```
+
+With:
+
+  ```ts
+  diagnostics.MY_CODE({ name: 'x' })
+  throw diagnostics.MY_CODE({ name: 'x' })
+  ```
+
+The call signature, return type (`Diagnostic`), and parameter inference are
+unchanged. Prefixing the call with `throw` is now required to let TS
+properly type the execution flow.
+
 # [0.1.0](https://github.com/vercel-labs/nostics/compare/v0.0.6...v0.1.0) (2026-05-13)
 
 This release includes major breaking changes and simplification. Check the README.md for updated docs
