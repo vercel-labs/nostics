@@ -37,6 +37,3 @@ const unpluginFactory: UnpluginFactory<NosticsPluginOptions | undefined> = (opti
 export const nostics: UnpluginInstance<NosticsPluginOptions | undefined>
   /* #__PURE__ */ = createUnplugin<NosticsPluginOptions | undefined>(unpluginFactory)
 export default nostics
-
-export { nosticsServer } from './server-plugin'
-export type { NosticsServerOptions } from './server-plugin'

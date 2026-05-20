@@ -19,12 +19,13 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
+    "./dev": "./dist/dev.mjs",
     "./formatters/ansi": "./dist/formatters/ansi.mjs",
     "./formatters/json": "./dist/formatters/json.mjs",
+    "./lib": "./dist/lib.mjs",
     "./reporters/dev": "./dist/reporters/dev.mjs",
     "./reporters/fetch": "./dist/reporters/fetch.mjs",
     "./reporters/node": "./dist/reporters/node.mjs",
-    "./unplugin": "./dist/unplugin.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",

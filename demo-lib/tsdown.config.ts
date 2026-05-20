@@ -1,4 +1,4 @@
-import nostics from 'nostics/unplugin'
+import nostics from 'nostics/lib'
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({

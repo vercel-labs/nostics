@@ -59,7 +59,7 @@ export const diagnostics = defineDiagnostics({
 ```
 
 ```ts
-import { nosticsServer } from 'nostics/unplugin'
+import { nosticsServer } from 'nostics/dev'
 // vite.config.ts
 import { defineConfig } from 'vite'
 
