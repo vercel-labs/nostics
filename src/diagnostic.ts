@@ -340,6 +340,7 @@ export class Diagnostic extends Error {
       docs: this.docs,
       sources: this.sources,
       cause: this.cause,
+      stack: this.stack,
     }
   }
 
