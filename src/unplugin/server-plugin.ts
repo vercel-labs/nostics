@@ -5,7 +5,7 @@ import { relative, resolve } from 'node:path'
 import { createUnplugin } from 'unplugin'
 import { createFileReporter } from '../reporters/node'
 
-export interface NosticsServerOptions {
+export interface NosticsCollectorOptions {
   /**
    * Path to the log file.
    * @default '.nostics.log'
@@ -26,8 +26,23 @@ export interface NosticsServerOptions {
   excludeStackFrames?: readonly RegExp[]
 }
 
-export const nosticsServer: UnpluginInstance<NosticsServerOptions | undefined> = createUnplugin(
-  (options) => {
+/**
+ * Dev-server collector that forwards browser diagnostics to a log file.
+ *
+ * Listens on the Vite dev-server WebSocket for diagnostics emitted by
+ * `devReporter` in the browser and appends them as NDJSON to a local log
+ * file via `createFileReporter`.
+ *
+ * ```ts
+ * // vite.config.ts
+ * import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
+ * export default defineConfig({ plugins: [nosticsCollector.vite()] })
+ * ```
+ *
+ * Note: Vite only. Other unplugin adapters are no-ops.
+ */
+export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefined>
+  = createUnplugin((options) => {
     const logFile = options?.logFile ?? '.nostics.log'
     const debug = options?.debug ?? !!process.env.DEBUG
     // eslint-disable-next-line no-console -- debug logging opt-in
@@ -39,7 +54,7 @@ export const nosticsServer: UnpluginInstance<NosticsServerOptions | undefined> =
     const reporter = createFileReporter(reporterOptions)
 
     return {
-      name: 'nostics-server',
+      name: 'nostics-collector',
       enforce: 'pre',
 
       vite: {
@@ -62,5 +77,4 @@ export const nosticsServer: UnpluginInstance<NosticsServerOptions | undefined> =
         },
       },
     }
-  },
-)
+  })
