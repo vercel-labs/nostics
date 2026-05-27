@@ -5,6 +5,7 @@
 export interface NosticsCollectorOptions {
   logFile?: string;
   debug?: boolean;
+  excludeStackFrames?: readonly RegExp[];
 }
 // #endregion
 
