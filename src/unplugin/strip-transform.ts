@@ -12,7 +12,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined> = (optio
   const trackedExportsMap: TrackedExportsMap = new Map()
 
   return {
-    name: 'nostics',
+    name: 'nostics-strip-transform',
 
     transform: {
       filter: {
@@ -27,7 +27,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined> = (optio
           return
         return {
           code: result.code,
-          map: result.map as any,
+          map: result.map,
         }
       },
     },
