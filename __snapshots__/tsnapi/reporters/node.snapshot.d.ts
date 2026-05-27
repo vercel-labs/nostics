@@ -4,6 +4,7 @@
 // #region Interfaces
 export interface FileReporterOptions {
   logFile?: string;
+  excludeStackFrames?: readonly RegExp[];
 }
 // #endregion
 

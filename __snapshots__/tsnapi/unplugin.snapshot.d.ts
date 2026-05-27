@@ -5,6 +5,7 @@
 export interface NosticsServerOptions {
   logFile?: string;
   debug?: boolean;
+  excludeStackFrames?: readonly RegExp[];
 }
 // #endregion
 

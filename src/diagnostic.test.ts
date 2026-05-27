@@ -38,6 +38,7 @@ describe('diagnostic', () => {
         docs: undefined,
         sources: undefined,
         cause: undefined,
+        stack: d.stack, // stack is included but we don't assert on the exact value
       })
     })
 
@@ -80,6 +81,7 @@ describe('diagnostic', () => {
         docs: undefined,
         cause: original,
         sources: ['a.ts:1:1'],
+        stack: d.stack, // stack is included but we don't assert on the exact value
       })
     })
   })
