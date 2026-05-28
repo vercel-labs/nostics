@@ -40,7 +40,6 @@ export declare class Diagnostic extends Error {
   get why(): string;
   constructor(_: DiagnosticInit, _?: Function);
   toJSON(): object;
-  devOnly?: () => void;
 }
 // #endregion
 

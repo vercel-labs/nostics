@@ -5,9 +5,12 @@ import {
   formatDiagnostic,
   reporterError,
   reporterLog,
-  reporterRequiredOptions,
 } from './diagnostic'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
+
+function reporterWithPriority(diagnostic: Diagnostic, options: { priority: number }): void {
+  console.warn(`${formatDiagnostic(diagnostic)}\n(priority: ${options.priority})`)
+}
 
 mockConsoleWarn()
 mockConsoleError()
@@ -239,10 +242,10 @@ describe('built-in reporters', () => {
     expect(formatDiagnostic(errs.X())).toBe('[X] boom\n╰▶ see: https://example.com/errors/x')
   })
 
-  it('reporterRequiredOptions includes the code and the priority value', () => {
+  it('reporterWithPriority includes the code and the priority value', () => {
     const errs = defineDiagnostics({
       codes: { NUXT_E001: { why: 'boom' } },
-      reporters: [reporterRequiredOptions],
+      reporters: [reporterWithPriority],
     })
     errs.NUXT_E001(undefined, { priority: 7 })
     expect('[NUXT_E001] boom').toHaveBeenWarned()
@@ -421,7 +424,7 @@ describe('defineDiagnostics', () => {
     it('forwards options from the call to reporters (no params)', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'static' } },
-        reporters: [reporterRequiredOptions],
+        reporters: [reporterWithPriority],
       })
       errs.X(undefined, { priority: 1 })
       expect('priority: 1').toHaveBeenWarned()
@@ -430,7 +433,7 @@ describe('defineDiagnostics', () => {
     it('forwards options from the call to reporters (with params)', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
-        reporters: [reporterRequiredOptions],
+        reporters: [reporterWithPriority],
       })
       errs.X({ who: 'me' }, { priority: 2 })
       expect('priority: 2').toHaveBeenWarned()
@@ -439,7 +442,7 @@ describe('defineDiagnostics', () => {
     it('forwards options through `throw` too', () => {
       const errs = defineDiagnostics({
         codes: { X: { why: 'static' } },
-        reporters: [reporterRequiredOptions],
+        reporters: [reporterWithPriority],
       })
       expect(() => {
         throw errs.X(undefined, { priority: 3 })

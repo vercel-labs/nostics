@@ -10,7 +10,6 @@ export class Diagnostic extends Error {
   get why() {}
   constructor(_, _) {}
   toJSON() {}
-  devOnly
 }
 // #endregion
 

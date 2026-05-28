@@ -146,13 +146,6 @@ export function reporterLog(
   console[method](formatDiagnostic(diagnostic))
 }
 
-export function reporterRequiredOptions(
-  diagnostic: Diagnostic,
-  options: { priority: number },
-): void {
-  console.warn(`${formatDiagnostic(diagnostic)}\n(priority: ${options.priority})`)
-}
-
 /**
  * Resolves the `params` type a code expects from the intersection of params
  * across all function-typed fields, falling back to `{}` when every field is
@@ -316,16 +309,6 @@ export class Diagnostic extends Error {
       cause: this.cause,
       stack: this.stack,
     }
-  }
-
-  devOnly?: () => void
-}
-
-// NOTE: we could override properties at runtime for dev only stuff
-if (process.env.NODE_ENV !== 'production') {
-  Diagnostic.prototype.devOnly = function devOnly(this): void {
-    // eslint-disable-next-line no-console
-    console.log('This is a dev-only diagnostic')
   }
 }
 
