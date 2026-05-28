@@ -1,26 +1,29 @@
 ---
 seo:
-  title: Write beautiful docs with Markdown
-  description: Ship fast, flexible, and SEO-optimized documentation with beautiful
-    design out of the box. Docus brings together the best of the Nuxt ecosystem.
-    Powered by Nuxt UI.
+  title: nostics
+  description: Structured, typed, machine-readable diagnostics for JavaScript libraries. Stable codes, actionable fixes, docs URLs, dev-time collection.
 ---
 
 ::u-page-hero
 # title
-Write beautiful docs with Markdown
+Errors and warnings your users (and their agents) can actually act on.
 
 # description
-Ship fast, flexible, and SEO-optimized documentation with beautiful design out of the box.
+nostics turns library errors and warnings into typed, structured `Diagnostic` objects with stable codes, actionable fix instructions, and a per-code docs URL. Humans get a fix in the same glance as the message. Agents get machine-readable fields instead of regexing message text.
 
-Docus brings the best of the Nuxt ecosystem into one CLI.
+```bash [Sample output]
+[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
+├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
+├▶ sources: /Users/me/projects/my-nuxt-app/nuxt.config.ts:14:3
+╰▶ see: https://nuxt.com/e/b2011
+```
 
 #links
   :::u-button
   ---
   color: neutral
   size: xl
-  to: /getting-started/installation
+  to: /getting-started/introduction
   trailing-icon: i-lucide-arrow-right
   ---
   Get started
@@ -31,7 +34,7 @@ Docus brings the best of the Nuxt ecosystem into one CLI.
   color: neutral
   icon: simple-icons-github
   size: xl
-  to: https://github.com/nuxt-content/docus
+  to: https://github.com/vercel-labs/nostics
   variant: outline
   ---
   Star on GitHub
@@ -40,84 +43,72 @@ Docus brings the best of the Nuxt ecosystem into one CLI.
 
 ::u-page-section
 # title
-Shipped with many features
+What you get
 
 #features
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://nuxt.com
+  icon: i-lucide-hash
   ---
   # title
-  Built with [Nuxt 4]{.text-primary}
-  
+  Stable, [organized codes]{.text-primary}
+
   # description
-  Optimized by the most famous Vue framework. Docus gives you everything you need to build fast, performant, and SEO-friendly websites.
+  Every diagnostic carries a permanent code (`MATH_E001`, `NUXT_B2011`). `cmd+click` jumps to the definition. Search engines index the code. Agents dispatch on it.
   :::
 
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://ui.nuxt.com/
+  icon: i-lucide-box
   ---
   # title
-  Powered by [Nuxt UI]{.text-primary}
-  
+  Structured [`Diagnostic` instances]{.text-primary}
+
   # description
-  Beautiful out of the box, minimal by design but highly customizable. Docus leverages Nuxt UI to give you the best docs writing experience with zero boilerplate, just focus on your content.
+  Extends `Error`. Carries `why`, `fix`, `docs`, `sources`, `cause`. Serializable via `toJSON()`. Survives process boundaries.
   :::
 
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://content.nuxt.com
+  icon: i-lucide-cable
   ---
   # title
-  Enhanced Markdown syntax by [Nuxt Content]{.text-primary}
-  
+  Pluggable [reporters and formatters]{.text-primary}
+
   # description
-  The only thing you need to take care about is writing your content. Write your pages in Markdown and extend with MDC syntax to embed Nuxt UI or custom Vue components. Structure, routing, and rendering are handled for you.
+  Console, file, HTTP, Vite dev-channel, or your own. ANSI, JSON, or plain. Wire several at once; their options are type-checked at the call site.
   :::
 
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://nuxt.com/docs/guide/directory-structure/app-config
+  icon: i-lucide-terminal
   ---
   # title
-  Customize with [Nuxt App Config]{.text-primary}
-  
+  Browser diagnostics, [piped to your terminal]{.text-primary}
+
   # description
-  Update colors, social links, header logos and component styles globally using the `app.config.ts`, no direct code modifications required.
+  The Vite dev collector forwards every browser diagnostic to a local log file. Agents tail it. No more "agents can't see the browser".
   :::
 
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://content.nuxt.com/studio
+  icon: i-lucide-scissors
   ---
   # title
-  Edit in production with [Nuxt Studio]{.text-primary}
-  
+  [Tree-shaken]{.text-primary} from production
+
   # description
-  Edit your content in production with zero Markdown knowledge required. Let your non technical colleagues collaborate on the documentation and integrate Vue components without code skills.
+  The build-time plugin marks definitions as pure and guards call sites with `NODE_ENV`. Diagnostics disappear from your production bundle.
   :::
 
   :::u-page-feature
   ---
-  icon: i-simple-icons-nuxt
-  target: _blank
-  to: https://ui.nuxt.com/components/content-search
+  icon: i-lucide-feather
   ---
   # title
-  Built-in navigation and [full-text search]{.text-primary}
-  
+  [Zero runtime deps]{.text-primary}
+
   # description
-  Only focus on ordering your content, Docus handles the search modal and auto-generates the side navigation for you.
+  Nothing imported into your app's runtime. The build-time and dev-server bits live in their own subpath exports.
   :::
 ::
