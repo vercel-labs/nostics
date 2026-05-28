@@ -59,18 +59,21 @@ export const diagnostics = defineDiagnostics({
 ```
 
 ```ts
-import { nosticsServer } from 'nostics/unplugin'
+import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
 // vite.config.ts
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
-    nosticsServer.vite({
+    nosticsCollector.vite({
       logFile: '.nostics.log', // default: .nostics.log
     }),
   ],
 })
 ```
+
+> [!WARNING]
+> `nosticsCollector` is Vite only. It relies on `configureServer` + `server.ws`, which have no equivalent in other bundlers, so the `.rolldown()`, `.rollup()`, `.webpack()`, `.rspack()`, `.esbuild()`, and `.farm()` adapters are exposed by unplugin but are no-ops here.
 
 Now every diagnostic call in the browser is appended to `.nostics.log` as it happens. `reporterLog` still prints to the browser console. `devReporter` runs alongside it, not as a replacement.
 

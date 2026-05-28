@@ -20,7 +20,7 @@ Structured diagnostic SDK: typed, serializable `Diagnostic` objects with stable 
 
 `defineDiagnostics()` → callable handles per code; call to build/report a `Diagnostic`, `throw` the returned value to raise.
 
-`src/code-transform/`: build-time AST transform. Marks diagnostic code as pure, wraps with `NODE_ENV` guard for tree-shaking.
+`src/unplugin/`: unplugin entries. `strip-transform.ts` is the build-time AST transform that marks diagnostic code as pure and wraps with `NODE_ENV` guard for tree-shaking; `dev-server-collector.ts` is the Vite dev-server WS listener that forwards browser diagnostics to a log file.
 
 Monorepo (pnpm workspaces): `playground/` and `demo-lib/` are subprojects.
 

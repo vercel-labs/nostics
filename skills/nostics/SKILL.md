@@ -1,6 +1,6 @@
 ---
 name: nostics
-description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`reporterLog`, `reporterError`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `devReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nostics`, `nosticsServer` from nostics/unplugin).'
+description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`reporterLog`, `reporterError`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `devReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nosticsStrip` from nostics/unplugin/strip-transform, `nosticsCollector` from nostics/unplugin/dev-server-collector).'
 ---
 
 # nostics
@@ -196,39 +196,39 @@ const audited: DiagnosticReporter<{ priority: number }> = (d, options) => {
 
 ## Vite Plugins
 
-Two unplugin-based plugins from `nostics/unplugin`: one for build-time optimization, one for dev-time diagnostic collection.
+Two unplugin-based plugins: `nostics/unplugin/strip-transform` (for library authors, build-time optimization) and `nostics/unplugin/dev-server-collector` (for app developers consuming a nostics-using library, dev-time diagnostic collection).
 
-### `nostics`: Build-time AST transform
+### `nosticsStrip`: Build-time AST transform
 
 Marks `defineDiagnostics()` calls as `/*#__PURE__*/` and wraps diagnostic usage with a `NODE_ENV` guard, so diagnostics tree-shake out of production builds. Works with `.vite()`, `.webpack()`, `.rollup()`, etc. via unplugin.
 
 ```ts
-import { nostics } from 'nostics/unplugin'
+import { nosticsStrip } from 'nostics/unplugin/strip-transform'
 
 export default defineConfig({
-  plugins: [nostics.vite()],
+  plugins: [nosticsStrip.vite()],
 })
 ```
 
-**Options (`NosticsPluginOptions`):**
+**Options (`NosticsStripOptions`):**
 
 | Field         | Type      | Description                                                   |
 | ------------- | --------- | ------------------------------------------------------------- |
 | `packageName` | `string?` | The package name to detect imports from. Default: `'nostics'` |
 
-### `nosticsServer`: Dev server diagnostic collector
+### `nosticsCollector`: Dev server diagnostic collector
 
 Listens for diagnostics from `devReporter` in the browser over the Vite WebSocket, then writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
 
 ```ts
-import { nosticsServer } from 'nostics/unplugin'
+import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
 
 export default defineConfig({
-  plugins: [nosticsServer.vite()],
+  plugins: [nosticsCollector.vite()],
 })
 ```
 
-**Options (`NosticsServerOptions`):**
+**Options (`NosticsCollectorOptions`):**
 
 | Field     | Type       | Description                                                         |
 | --------- | ---------- | ------------------------------------------------------------------- |
@@ -241,10 +241,11 @@ Use both plugins together with `devReporter` for full dev-time diagnostic captur
 
 ```ts
 // vite.config.ts
-import { nostics, nosticsServer } from 'nostics/unplugin'
+import { nosticsStrip } from 'nostics/unplugin/strip-transform'
+import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
 
 export default defineConfig({
-  plugins: [nostics.vite(), nosticsServer.vite()],
+  plugins: [nosticsStrip.vite(), nosticsCollector.vite()],
 })
 ```
 

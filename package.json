@@ -24,7 +24,8 @@
     "./reporters/dev": "./dist/reporters/dev.mjs",
     "./reporters/fetch": "./dist/reporters/fetch.mjs",
     "./reporters/node": "./dist/reporters/node.mjs",
-    "./unplugin": "./dist/unplugin.mjs",
+    "./unplugin/dev-server-collector": "./dist/unplugin/dev-server-collector.mjs",
+    "./unplugin/strip-transform": "./dist/unplugin/strip-transform.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",
