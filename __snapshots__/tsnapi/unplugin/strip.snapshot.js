@@ -4,8 +4,3 @@
 // #region Variables
 export var nosticsStrip /* const */
 // #endregion
-
-// #region Default Export
-var _default /* const */
-export default _default
-// #endregion

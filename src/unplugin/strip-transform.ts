@@ -53,4 +53,3 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined> = (optio
  */
 export const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined>
   /* #__PURE__ */ = createUnplugin<NosticsStripOptions | undefined>(unpluginFactory)
-export default nosticsStrip
