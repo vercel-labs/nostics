@@ -3,6 +3,8 @@ ignoreWorkspaceRootCheck: true
 shellEmulator: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - tinyclip@0.1.13
 packages:
   - playground
   - demo-lib
@@ -32,6 +34,10 @@ catalogs:
     magic-string: ^0.30.21
     oxc-parser: ^0.132.0
     unplugin: ^3.0.0
+  docs:
+    better-sqlite3: ^12.10.0
+    docus: ^5.11.0
+    nuxt: ^4.4.6
   inlined:
     '@antfu/utils': ^9.3.0
   playground:
@@ -46,5 +52,9 @@ catalogs:
     '@types/node': ^25.7.0
     '@types/semver': ^7.7.1
 allowBuilds:
+  '@parcel/watcher': false
+  better-sqlite3: true
   esbuild: false
+  sharp: true
   simple-git-hooks: true
+  vue-demi: false

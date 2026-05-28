@@ -36,6 +36,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "vitest",
+    "docs": "pnpm -C docs run dev",
+    "docs:build": "pnpm -C docs run build",
     "play": "pnpm -C playground run dev",
     "lint": "eslint",
     "prepublishOnly": "nr build",
