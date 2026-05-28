@@ -1,18 +1,63 @@
-# [0.2.0](https://github.com/vercel-labs/nostics/compare/v0.1.0...v0.2.0) (2026-05-20)
+# [0.3.0](https://github.com/vercel-labs/nostics/compare/v0.2.0...v0.3.0) (2026-05-28)
 
+- refactor!: split nostics/unplugin into two nested exports (#13) ([08c2374](https://github.com/vercel-labs/nostics/commit/08c237458d60cbe277d1d9a979aca2b35f337964)), closes [#13](https://github.com/vercel-labs/nostics/issues/13)
 
-* refactor!: callable diagnostic handles instead of .report()/.throw() ([1f3899e](https://github.com/vercel-labs/nostics/commit/1f3899ec5604068726ab406942b294920cd9ac05))
+### Bug Fixes
 
+- add back the stack to toJSON ([dcb86d5](https://github.com/vercel-labs/nostics/commit/dcb86d565094dacda258e9ca2abb07ea31b2cd30))
 
 ### Features
 
-* per-code `docs` to override or opt out of `docsBase` ([#10](https://github.com/vercel-labs/nostics/issues/10)) ([b9fad30](https://github.com/vercel-labs/nostics/commit/b9fad30a67114823c320acf6ab36fa4e87ea5dc4))
-
+- filter stack frames in file reporter ([#15](https://github.com/vercel-labs/nostics/issues/15)) ([9222bd2](https://github.com/vercel-labs/nostics/commit/9222bd21d56ed001a0e042b42296e832d80c0a64))
 
 ### BREAKING CHANGES
 
-* Each code returned by `defineDiagnostics()` is now a plain
-callable function. The `.report()` and `.throw()` methods have been removed.
+- unplugin subpaths and the symbols they export have been
+  renamed to describe what each plugin does.
+
+  Strip transform (build-time PURE/NODE_ENV wrap):
+
+  ```diff
+  - import { nostics } from 'nostics/lib'
+  + import { nosticsStrip } from 'nostics/unplugin/strip-transform'
+
+    export default defineConfig({
+  -   plugins: [nostics.vite()],
+  +   plugins: [nosticsStrip.vite()],
+    })
+  ```
+
+  Dev-server collector (Vite-only WS forwarder to log file):
+
+  ```diff
+  - import { nosticsServer } from 'nostics/dev'
+  + import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
+
+    export default defineConfig({
+  -   plugins: [nosticsServer.vite()],
+  +   plugins: [nosticsCollector.vite()],
+    })
+  ```
+
+  Type renames:
+  - \`NosticsPluginOptions\` -> \`NosticsStripOptions\`
+  - \`NosticsServerOptions\` -> \`NosticsCollectorOptions\`
+
+  \`nosticsCollector\` is now explicitly documented as Vite only; other
+  unplugin adapters exist but are no-ops.
+
+# [0.2.0](https://github.com/vercel-labs/nostics/compare/v0.1.0...v0.2.0) (2026-05-20)
+
+- refactor!: callable diagnostic handles instead of .report()/.throw() ([1f3899e](https://github.com/vercel-labs/nostics/commit/1f3899ec5604068726ab406942b294920cd9ac05))
+
+### Features
+
+- per-code `docs` to override or opt out of `docsBase` ([#10](https://github.com/vercel-labs/nostics/issues/10)) ([b9fad30](https://github.com/vercel-labs/nostics/commit/b9fad30a67114823c320acf6ab36fa4e87ea5dc4))
+
+### BREAKING CHANGES
+
+- Each code returned by `defineDiagnostics()` is now a plain
+  callable function. The `.report()` and `.throw()` methods have been removed.
 
 Migrate by replacing:
 
