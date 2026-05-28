@@ -5,7 +5,14 @@ export default antfu(
   {
     type: 'lib',
     pnpm: true,
-    ignores: ['PLAN.md', '.context/**', 'skills/**/*.md'],
+    ignores: [
+      'PLAN.md',
+      '.context/**',
+      'skills/**/*.md',
+      // Docs snippets are illustrative (incomplete TS, pseudo-types, etc).
+      // Lint the markdown structure, not the embedded code blocks.
+      'docs/content/**/*.md/**',
+    ],
     rules: {
       'node/prefer-global/process': ['error', 'always'],
     },
