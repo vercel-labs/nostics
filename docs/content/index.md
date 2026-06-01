@@ -5,23 +5,31 @@ seo:
 ---
 
 ::u-page-hero
+#headline
+[Diagnostics SDK]{.section-eyebrow}
+
 #title
 Errors and warnings your users (and their <span class="font-mono">agents</span>) can actually act on.
 
 #description
 <span class="font-mono">nostics</span> turns library errors and warnings into typed, structured `Diagnostic` objects with stable codes, actionable fix instructions, and a per-code docs URL. Humans get a fix in the same glance as the message. Agents get machine-readable fields instead of regexing message text.
 
-```bash [Sample output]
-[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-├▶ sources: /Users/me/projects/my-nuxt-app/nuxt.config.ts:14:3
-╰▶ see: https://nuxt.com/e/b2011
-```
+:::div{.diag-hero}
+::diagnostic
+---
+log: |
+  [NUXT_B2011] Invalid plugin `/plugins/bad.ts`.
+  ├▶ fix: Pass a `src` path to `addPlugin()`.
+  ├▶ sources: nuxt.config.ts:14:3
+  ╰▶ see: nuxt.com/e/b2011
+---
+::
+:::
 
 #links
   :::u-button
   ---
-  color: neutral
+  color: primary
   size: xl
   to: /getting-started/introduction
   trailing-icon: i-lucide-arrow-right
@@ -42,12 +50,16 @@ Errors and warnings your users (and their <span class="font-mono">agents</span>)
 ::
 
 ::u-page-section
+#headline
+[Capabilities]{.section-eyebrow}
+
 #title
 What you get
 
 #features
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-hash
   ---
   #title
@@ -59,6 +71,7 @@ What you get
 
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-box
   ---
   #title
@@ -70,6 +83,7 @@ What you get
 
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-cable
   ---
   #title
@@ -81,6 +95,7 @@ What you get
 
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-terminal
   ---
   #title
@@ -92,6 +107,7 @@ What you get
 
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-scissors
   ---
   #title
@@ -103,6 +119,7 @@ What you get
 
   :::u-page-feature
   ---
+  class: dev-card
   icon: i-lucide-feather
   ---
   #title
@@ -111,4 +128,27 @@ What you get
   #description
   Nothing imported into your app's runtime. The build-time and dev-server bits live in their own subpath exports.
   :::
+::
+
+::u-page-c-t-a
+---
+variant: subtle
+links:
+  - label: Get started
+    to: /getting-started/introduction
+    color: primary
+    trailingIcon: i-lucide-arrow-right
+    size: xl
+  - label: Star on GitHub
+    to: https://github.com/vercel-labs/nostics
+    color: neutral
+    variant: outline
+    icon: i-simple-icons-github
+    size: xl
+---
+#title
+Ship errors agents can act on
+
+#description
+Stable codes, a fix in the message, machine-readable fields. Add <span class="font-mono">nostics</span> to your library and stop making people regex your error strings.
 ::

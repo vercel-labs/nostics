@@ -43,16 +43,12 @@ export default defineNuxtConfig({
     preference: 'dark',
   },
 
+  css: ['~/assets/css/main.css'],
+
   fonts: {
     families: [
       { name: 'Geist', weights: [400, 500, 600, 700], global: true },
       { name: 'Geist Mono', weights: [400, 500, 600, 700], global: true },
-      {
-        name: 'Geist Pixel Line',
-        src: '/fonts/GeistPixel-Line.woff2',
-        weights: [400],
-        global: true,
-      },
     ],
   },
 
