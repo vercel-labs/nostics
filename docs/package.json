@@ -1,0 +1,21 @@
+{
+  "name": "docs",
+  "scripts": {
+    "dev": "nuxt dev",
+    "dev:prepare": "nuxt prepare",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "nuxt build"
+  },
+  "dependencies": {
+    "@nuxt/fonts": "catalog:docs",
+    "@nuxt/ui": "catalog:docs",
+    "@vercel/analytics": "catalog:docs",
+    "@vercel/speed-insights": "catalog:docs",
+    "better-sqlite3": "catalog:docs",
+    "docus": "catalog:docs",
+    "nuxt": "catalog:docs"
+  },
+  "devDependencies": {
+    "vue-tsc": "catalog:cli"
+  }
+}
