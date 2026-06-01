@@ -20,3 +20,5 @@ temp
 tsconfig.tsbuildinfo
 .claude/settings.local.json
 .claude/worktrees
+.agents/skills
+.claude/skills
