@@ -6,9 +6,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/fonts',
     // '@comark/nuxt',
-    // TODO:
-    // '@vercel/analytics',
-    // '@vercel/speed-insights',
+    '@vercel/analytics',
+    '@vercel/speed-insights',
   ],
 
   app: {
