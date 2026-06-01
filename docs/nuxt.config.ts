@@ -2,11 +2,13 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 export default defineNuxtConfig({
   extends: ['docus'],
+
   modules: [
+    '@nuxt/fonts',
     // '@comark/nuxt',
     // TODO:
-    // '@vercel/speed-insights',
     // '@vercel/analytics',
+    // '@vercel/speed-insights',
   ],
 
   app: {
@@ -37,10 +39,20 @@ export default defineNuxtConfig({
     },
   },
 
+  colorMode: {
+    preference: 'dark',
+  },
+
   fonts: {
     families: [
       { name: 'Geist', weights: [400, 500, 600, 700], global: true },
-      { name: 'Geist Mono', weights: [400, 500, 600], global: true },
+      { name: 'Geist Mono', weights: [400, 500, 600, 700], global: true },
+      {
+        name: 'Geist Pixel Line',
+        src: '/fonts/GeistPixel-Line.woff2',
+        weights: [400],
+        global: true,
+      },
     ],
   },
 
@@ -49,6 +61,7 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    '/': { prerender: true },
     // '/plugins/built-in/highlight': { redirect: '/plugins/built-in/syntax-highlight' },
   },
 })

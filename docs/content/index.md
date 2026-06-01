@@ -6,10 +6,10 @@ seo:
 
 ::u-page-hero
 # title
-Errors and warnings your users (and their agents) can actually act on.
+Errors and warnings your users (and their <span class="font-mono">agents</span>) can actually act on.
 
 # description
-nostics turns library errors and warnings into typed, structured `Diagnostic` objects with stable codes, actionable fix instructions, and a per-code docs URL. Humans get a fix in the same glance as the message. Agents get machine-readable fields instead of regexing message text.
+<span class="font-mono">nostics</span> turns library errors and warnings into typed, structured `Diagnostic` objects with stable codes, actionable fix instructions, and a per-code docs URL. Humans get a fix in the same glance as the message. Agents get machine-readable fields instead of regexing message text.
 
 ```bash [Sample output]
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
