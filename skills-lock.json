@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "create-docs": {
+      "source": "docus.dev",
+      "sourceType": "well-known",
+      "computedHash": "3c6d7d6f6084ff5ebbd59fe8b348f99bced0d303da45cd61069a0f6dac8199f6"
+    },
+    "review-docs": {
+      "source": "docus.dev",
+      "sourceType": "well-known",
+      "computedHash": "016eca30a60e4d1ec38cf162753d47e52dbb543a931f77f8050d4bc4f6bc5e6b"
+    },
     "skill-creator": {
       "source": "anthropics/skills",
       "sourceType": "github",
