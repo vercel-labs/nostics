@@ -27,4 +27,6 @@ jobs:
       # docs and playgrounds should also work
       - run: pnpm -C demo-lib run build
       - run: pnpm -C playground run build
-      - run: pnpm -C docs run build
+      # docs often run out of memory and is very slow, we will catch the error
+      # on Vercel deployments
+      # - run: pnpm -C docs run build
