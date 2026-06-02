@@ -26,7 +26,7 @@ export function ansiFormatter(colors: Colors): (d: Diagnostic) => string {
       return header
 
     const lines = details.map((detail, i) => {
-      const connector = colors.dim(i < details.length - 1 ? '├▶' : '╰▶')
+      const connector = colors.dim(i < details.length - 1 ? '├▶\uFE0E' : '╰▶\uFE0E')
       return `${connector} ${detail}`
     })
     return [header, ...lines].join('\n')
