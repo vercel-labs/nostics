@@ -91,7 +91,7 @@ export function run() {
 
       const expected = `import { diagnostics } from './diagnostics'
 export function run() {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -113,7 +113,7 @@ export const diagnostics = defineDiagnostics({ codes: {} })`,
 diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       const result = transform(input, CALLSITE_ID, undefined, trackedExportsMap)
       expect(result).toBeDefined()
@@ -125,7 +125,7 @@ process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 diag.E1()`
 
       const expected = `import { diagnostics as diag } from './diagnostics'
-process.env.NODE_ENV !== 'production' && diag.E1()`
+process.env.NODE_ENV !== "production" && diag.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -144,7 +144,7 @@ diagnostics.E1()`
 diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -154,7 +154,7 @@ process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 diagnostics.B2011({ src: '/bad.ts' })`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && diagnostics.B2011({ src: '/bad.ts' })`
+process.env.NODE_ENV !== "production" && diagnostics.B2011({ src: '/bad.ts' })`
 
       expectCallSiteTransform(input, expected)
     })
@@ -166,9 +166,9 @@ diagnostics.E2()
 diagnostics.E3()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && diagnostics.E1()
-process.env.NODE_ENV !== 'production' && diagnostics.E2()
-process.env.NODE_ENV !== 'production' && diagnostics.E3()`
+process.env.NODE_ENV !== "production" && diagnostics.E1()
+process.env.NODE_ENV !== "production" && diagnostics.E2()
+process.env.NODE_ENV !== "production" && diagnostics.E3()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -183,7 +183,7 @@ function handler() {
 
       const expected = `import { diagnostics } from './diagnostics'
 function handler() {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -197,7 +197,7 @@ if (condition) {
 
       const expected = `import { diagnostics } from './diagnostics'
 if (condition) {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -214,7 +214,7 @@ diagnostics.E2()`
 function setup(diagnostics) {
   diagnostics.E1()
 }
-process.env.NODE_ENV !== 'production' && diagnostics.E2()`
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -232,7 +232,7 @@ if (condition) {
   const diagnostics = getDiagnostics()
   diagnostics.E1()
 }
-process.env.NODE_ENV !== 'production' && diagnostics.E2()`
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -244,7 +244,7 @@ process.env.NODE_ENV !== 'production' && diagnostics.E2()`
 someCondition && diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && someCondition && diagnostics.E1()`
+process.env.NODE_ENV !== "production" && someCondition && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -254,7 +254,7 @@ process.env.NODE_ENV !== 'production' && someCondition && diagnostics.E1()`
 condition || diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && (condition || diagnostics.E1())`
+process.env.NODE_ENV !== "production" && (condition || diagnostics.E1())`
 
       expectCallSiteTransform(input, expected)
     })
@@ -264,7 +264,7 @@ process.env.NODE_ENV !== 'production' && (condition || diagnostics.E1())`
 condition ? diagnostics.E1() : diagnostics.E2()`
 
       const expected = `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== 'production' && (condition ? diagnostics.E1() : diagnostics.E2())`
+process.env.NODE_ENV !== "production" && (condition ? diagnostics.E1() : diagnostics.E2())`
 
       expectCallSiteTransform(input, expected)
     })
@@ -368,7 +368,7 @@ if (bad) {
 if (cond) diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-if (cond) process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+if (cond) process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -378,7 +378,7 @@ if (cond) process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 if (cond) {} else diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
-if (cond) {} else process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+if (cond) {} else process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -391,7 +391,7 @@ for (const x of arr) {
 
       const expected = `import { diagnostics } from './diagnostics'
 for (const x of arr) {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -405,7 +405,7 @@ for (const k in obj) {
 
       const expected = `import { diagnostics } from './diagnostics'
 for (const k in obj) {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -423,11 +423,11 @@ try {
 
       const expected = `import { diagnostics } from './diagnostics'
 try {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 } catch (e) {
-  process.env.NODE_ENV !== 'production' && diagnostics.E2()
+  process.env.NODE_ENV !== "production" && diagnostics.E2()
 } finally {
-  process.env.NODE_ENV !== 'production' && diagnostics.E3()
+  process.env.NODE_ENV !== "production" && diagnostics.E3()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -444,7 +444,7 @@ switch (x) {
       const expected = `import { diagnostics } from './diagnostics'
 switch (x) {
   case 1:
-    process.env.NODE_ENV !== 'production' && diagnostics.E1()
+    process.env.NODE_ENV !== "production" && diagnostics.E1()
     break
 }`
 
@@ -459,7 +459,7 @@ const f = () => {
 
       const expected = `import { diagnostics } from './diagnostics'
 const f = () => {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -473,7 +473,7 @@ const f = function () {
 
       const expected = `import { diagnostics } from './diagnostics'
 const f = function () {
-  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  process.env.NODE_ENV !== "production" && diagnostics.E1()
 }`
 
       expectCallSiteTransform(input, expected)
@@ -490,7 +490,7 @@ class A {
       const expected = `import { diagnostics } from './diagnostics'
 class A {
   m() {
-    process.env.NODE_ENV !== 'production' && diagnostics.E1()
+    process.env.NODE_ENV !== "production" && diagnostics.E1()
   }
 }`
 
@@ -513,7 +513,7 @@ diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
 console.log('hello')
-process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
@@ -525,7 +525,7 @@ diagnostics.E1()`
 
       const expected = `import { diagnostics } from './diagnostics'
 const other = someOtherFunction()
-process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectCallSiteTransform(input, expected)
     })
