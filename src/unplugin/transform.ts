@@ -22,6 +22,8 @@ export interface TransformOptions {
  */
 export type TrackedExportsMap = Map<string, Set<string>>
 
+const CONDITION = 'process.env.NODE_ENV !== "production"'
+
 /**
  * Transforms code that imports from `nostics`:
  * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` call expressions
@@ -37,7 +39,6 @@ export function transform(
   options?: TransformOptions,
   trackedExportsMap?: TrackedExportsMap,
 ): TransformResult | undefined {
-  const CONDITION = 'process.env.NODE_ENV !== \'production\''
   const packageName = options?.packageName ?? 'nostics'
 
   const result = parseSync(id, code)
@@ -329,13 +330,7 @@ function wrapTrackedExpressionStatements(
       for (const param of node.params ?? []) {
         collectPatternNames(param, functionShadowedVars)
       }
-      wrapTrackedExpressionStatements(
-        node.body,
-        s,
-        trackedVars,
-        functionShadowedVars,
-        condition,
-      )
+      wrapTrackedExpressionStatements(node.body, s, trackedVars, functionShadowedVars, condition)
     }
     return
   }
@@ -462,7 +457,8 @@ function expressionUsesTrackedVar(
   // Sequence expression: check any element
   if (node.type === 'SequenceExpression') {
     return node.expressions.some((expr: any) =>
-      expressionUsesTrackedVar(expr, trackedVars, shadowedVars))
+      expressionUsesTrackedVar(expr, trackedVars, shadowedVars),
+    )
   }
 
   // Parenthesized expression: unwrap
