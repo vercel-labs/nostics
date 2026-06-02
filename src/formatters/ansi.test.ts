@@ -33,9 +33,9 @@ describe('ansiFormatter', () => {
     const d = diagnostics.E1({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(format(d)).toMatchInlineSnapshot(`
       "<bold><red>[E1]</red></bold> broken
-      <dim>├▶</dim> <dim>fix:</dim> do x
-      <dim>├▶</dim> <dim>sources:</dim> a.ts:1:1, b.ts:2:2
-      <dim>╰▶</dim> <dim>see:</dim> <cyan>https://docs.test/e1</cyan>"
+      <dim>├▶︎</dim> <dim>fix:</dim> do x
+      <dim>├▶︎</dim> <dim>sources:</dim> a.ts:1:1, b.ts:2:2
+      <dim>╰▶︎</dim> <dim>see:</dim> <cyan>https://docs.test/e1</cyan>"
     `)
   })
 
@@ -44,7 +44,7 @@ describe('ansiFormatter', () => {
     const d = diagnostics.E1()
     expect(format(d)).toMatchInlineSnapshot(`
       "<bold><red>[E1]</red></bold> broken
-      <dim>╰▶</dim> <dim>fix:</dim> do x"
+      <dim>╰▶︎</dim> <dim>fix:</dim> do x"
     `)
   })
 })

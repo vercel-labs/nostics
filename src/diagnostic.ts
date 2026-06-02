@@ -127,7 +127,7 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
   }
 
   const lines = details.map((detail, i) => {
-    const connector = i < details.length - 1 ? '├▶' : '╰▶'
+    const connector = i < details.length - 1 ? '├▶\uFE0E' : '╰▶\uFE0E'
     return `${connector} ${detail}`
   })
 

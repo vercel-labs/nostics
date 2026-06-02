@@ -217,7 +217,7 @@ describe('built-in reporters', () => {
     })
     errs.NUXT_E033({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(
-      '[NUXT_E033] boom\n├▶ fix: restart it\n╰▶ sources: a.ts:1:1, b.ts:2:2',
+      '[NUXT_E033] boom\n├▶︎ fix: restart it\n╰▶︎ sources: a.ts:1:1, b.ts:2:2',
     ).toHaveBeenErrored()
   })
 
@@ -239,7 +239,7 @@ describe('built-in reporters', () => {
       docsBase: 'https://example.com/errors',
       codes: { X: { why: 'boom' } },
     })
-    expect(formatDiagnostic(errs.X())).toBe('[X] boom\n╰▶ see: https://example.com/errors/x')
+    expect(formatDiagnostic(errs.X())).toBe('[X] boom\n╰▶︎ see: https://example.com/errors/x')
   })
 
   it('reporterWithPriority includes the code and the priority value', () => {
