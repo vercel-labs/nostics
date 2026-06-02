@@ -1,10 +1,24 @@
+import type { TrackedExportsMap, TransformOptions } from './transform'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { transform } from './transform'
 
-function expectTransform(input: string, expected: string) {
-  const result = transform(input, 'test.ts')
+const CALLSITE_ID = join(import.meta.dirname, '../../demo-lib/src/math.ts')
+
+function expectDefinitionTransform(input: string, expected: string, options?: TransformOptions) {
+  const result = transform(input, 'test.ts', options)
   expect(result).toBeDefined()
   expect(result!.code).toBe(expected)
+}
+
+function expectCallSiteTransform(input: string, expected: string) {
+  const result = transform(input, CALLSITE_ID, undefined, new Map())
+  expect(result).toBeDefined()
+  expect(result!.code).toBe(expected)
+}
+
+function expectCallSiteUnchanged(input: string) {
+  expect(transform(input, CALLSITE_ID, undefined, new Map())).toBeUndefined()
 }
 
 describe('transform', () => {
@@ -17,405 +31,522 @@ describe('transform', () => {
       expect(transform('const x = "nostics"', 'test.ts')).toBeUndefined()
     })
 
-    it('detects named imports from nostics', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.E1().warn()`
+    it('does not track unrelated nostics imports', () => {
+      const input = `import { formatDiagnostic } from 'nostics'
+const formatted = formatDiagnostic(diagnostic)
+formatted.trim()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
-
-      expectTransform(input, expected)
-    })
-
-    it('handles renamed imports', () => {
-      const input = `import { createLogger as myLog } from 'nostics'
-const log = myLog({})
-log.E1().warn()`
-
-      const expected = `import { createLogger as myLog } from 'nostics'
-const log = /*#__PURE__*/ myLog({})
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
-
-      expectTransform(input, expected)
+      expect(transform(input, 'test.ts')).toBeUndefined()
     })
   })
 
-  describe('pURE annotations', () => {
+  describe('pure annotations', () => {
     it('adds /*#__PURE__*/ to defineDiagnostics calls', () => {
       const input = `import { defineDiagnostics } from 'nostics'
-const diags = defineDiagnostics({ codes: {} })`
+const diagnostics = defineDiagnostics({ codes: {} })`
 
       const expected = `import { defineDiagnostics } from 'nostics'
-const diags = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
+const diagnostics = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
 
-      expectTransform(input, expected)
+      expectDefinitionTransform(input, expected)
     })
 
-    it('adds /*#__PURE__*/ to createLogger calls', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({ diagnostics: [] })`
+    it('adds /*#__PURE__*/ to exported defineDiagnostics calls', () => {
+      const input = `import { defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ codes: {} })`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({ diagnostics: [] })`
+      const expected = `import { defineDiagnostics } from 'nostics'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
 
-      expectTransform(input, expected)
+      expectDefinitionTransform(input, expected)
     })
 
-    it('adds /*#__PURE__*/ to both defineDiagnostics and createLogger', () => {
-      const input = `import { defineDiagnostics, createLogger } from 'nostics'
-const diags = defineDiagnostics({ codes: { E1: { message: 'x' } } })
-const log = createLogger({ diagnostics: [diags] })`
+    it('handles renamed defineDiagnostics imports', () => {
+      const input = `import { defineDiagnostics as define } from 'nostics'
+export const diagnostics = define({ codes: {} })`
 
-      const expected = `import { defineDiagnostics, createLogger } from 'nostics'
-const diags = /*#__PURE__*/ defineDiagnostics({ codes: { E1: { message: 'x' } } })
-const log = /*#__PURE__*/ createLogger({ diagnostics: [diags] })`
+      const expected = `import { defineDiagnostics as define } from 'nostics'
+export const diagnostics = /*#__PURE__*/ define({ codes: {} })`
 
-      expectTransform(input, expected)
+      expectDefinitionTransform(input, expected)
+    })
+
+    it('supports custom package name', () => {
+      const input = `import { defineDiagnostics } from 'my-custom-sdk'
+export const diagnostics = defineDiagnostics({ codes: {} })`
+
+      const expected = `import { defineDiagnostics } from 'my-custom-sdk'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
+
+      expectDefinitionTransform(input, expected, { packageName: 'my-custom-sdk' })
+    })
+  })
+
+  describe('cross-file tracking', () => {
+    it('wraps diagnostics imported from a relative module', () => {
+      const input = `import { diagnostics } from './diagnostics'
+export function run() {
+  diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+export function run() {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('uses the shared tracked exports cache when present', () => {
+      const trackedExportsMap: TrackedExportsMap = new Map()
+      const diagnosticsId = join(import.meta.dirname, '../../demo-lib/src/diagnostics.ts')
+
+      transform(
+        `import { defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ codes: {} })`,
+        diagnosticsId,
+        undefined,
+        trackedExportsMap,
+      )
+
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+
+      const result = transform(input, CALLSITE_ID, undefined, trackedExportsMap)
+      expect(result).toBeDefined()
+      expect(result!.code).toBe(expected)
+    })
+
+    it('tracks renamed relative imports', () => {
+      const input = `import { diagnostics as diag } from './diagnostics'
+diag.E1()`
+
+      const expected = `import { diagnostics as diag } from './diagnostics'
+process.env.NODE_ENV !== 'production' && diag.E1()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not wrap imports from non-relative modules', () => {
+      const input = `import { diagnostics } from 'demo-lib/diagnostics'
+diagnostics.E1()`
+
+      expect(transform(input, CALLSITE_ID, undefined, new Map())).toBeUndefined()
     })
   })
 
   describe('expression statement wrapping', () => {
-    it('wraps log.CODE().method() calls', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.E1().warn()`
+    it('wraps diagnostic handle calls', () => {
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
-    it('wraps chained calls with arguments', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.B2011({ src: '/bad.ts' }).warn()`
+    it('wraps diagnostic handle calls with arguments', () => {
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.B2011({ src: '/bad.ts' })`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.B2011({ src: '/bad.ts' }).warn()`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && diagnostics.B2011({ src: '/bad.ts' })`
 
-      expectTransform(input, expected)
-    })
-
-    it('wraps raw logger methods', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.warn(someDiagnostic)`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.warn(someDiagnostic)`
-
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
     it('wraps multiple expression statements', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.E1().warn()
-log.E2().error()
-log.E3().log()`
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()
+diagnostics.E2()
+diagnostics.E3()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.E1().warn()
-process.env.NODE_ENV !== 'production' && log.E2().error()
-process.env.NODE_ENV !== 'production' && log.E3().log()`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && diagnostics.E1()
+process.env.NODE_ENV !== 'production' && diagnostics.E2()
+process.env.NODE_ENV !== 'production' && diagnostics.E3()`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
   })
 
-  describe('nested scopes', () => {
+  describe('nested usages', () => {
     it('transforms inside function bodies', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+      const input = `import { diagnostics } from './diagnostics'
 function handler() {
-  log.E1().warn()
+  diagnostics.E1()
 }`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
+      const expected = `import { diagnostics } from './diagnostics'
 function handler() {
-  process.env.NODE_ENV !== 'production' && log.E1().warn()
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
 }`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
     it('transforms inside if blocks', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+      const input = `import { diagnostics } from './diagnostics'
 if (condition) {
-  log.E1().warn()
+  diagnostics.E1()
 }`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
+      const expected = `import { diagnostics } from './diagnostics'
 if (condition) {
-  process.env.NODE_ENV !== 'production' && log.E1().warn()
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
 }`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
-    it('transforms function-scoped logger creation', () => {
-      const input = `import { defineDiagnostics, createLogger } from 'nostics'
-function setup() {
-  const diags = defineDiagnostics({ codes: {} })
-  const log = createLogger({ diagnostics: [diags] })
-  log.E1().warn()
-}`
+    it('does not transform a function parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup(diagnostics) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
 
-      const expected = `import { defineDiagnostics, createLogger } from 'nostics'
-function setup() {
-  const diags = /*#__PURE__*/ defineDiagnostics({ codes: {} })
-  const log = /*#__PURE__*/ createLogger({ diagnostics: [diags] })
-  process.env.NODE_ENV !== 'production' && log.E1().warn()
-}`
+      const expected = `import { diagnostics } from './diagnostics'
+function setup(diagnostics) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== 'production' && diagnostics.E2()`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform a block binding that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+if (condition) {
+  const diagnostics = getDiagnostics()
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+if (condition) {
+  const diagnostics = getDiagnostics()
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== 'production' && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
     })
   })
 
-  describe('compound expression wrapping', () => {
-    it('wraps logical AND with logger on right', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-someCondition && log.E1().warn()`
+  describe('bare conditional expression wrapping', () => {
+    it('wraps bare logical AND with diagnostics on right', () => {
+      const input = `import { diagnostics } from './diagnostics'
+someCondition && diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && someCondition && log.E1().warn()`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && someCondition && diagnostics.E1()`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
-    it('wraps logical OR with logger on left', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-log.E1().warn() || fallback()`
+    it('wraps bare logical OR with diagnostics on right', () => {
+      const input = `import { diagnostics } from './diagnostics'
+condition || diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && (log.E1().warn() || fallback())`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && (condition || diagnostics.E1())`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
-    it('wraps ternary with logger in consequent', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-condition ? log.E1().warn() : null`
+    it('wraps bare ternary that reports one of two diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+condition ? diagnostics.E1() : diagnostics.E2()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && (condition ? log.E1().warn() : null)`
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== 'production' && (condition ? diagnostics.E1() : diagnostics.E2())`
 
-      expectTransform(input, expected)
-    })
-
-    it('wraps ternary with logger in alternate', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-condition ? null : log.E1().warn()`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && (condition ? null : log.E1().warn())`
-
-      expectTransform(input, expected)
-    })
-
-    it('wraps void expression', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-void log.E1().warn()`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && void log.E1().warn()`
-
-      expectTransform(input, expected)
-    })
-
-    it('wraps await expression', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-async function handler() {
-  await log.E1().warn()
-}`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-async function handler() {
-  process.env.NODE_ENV !== 'production' && await log.E1().warn()
-}`
-
-      expectTransform(input, expected)
-    })
-
-    it('wraps negation expression', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-!log.E1().warn()`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && !log.E1().warn()`
-
-      expectTransform(input, expected)
-    })
-
-    it('wraps sequence expression with logger last', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-;(a(), log.E1().warn())`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-;process.env.NODE_ENV !== 'production' && (a(), log.E1().warn())`
-
-      expectTransform(input, expected)
-    })
-
-    it('wraps sequence expression with logger first', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-;(log.E1().warn(), a())`
-
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-;process.env.NODE_ENV !== 'production' && (log.E1().warn(), a())`
-
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
   })
 
   describe('value-passing patterns', () => {
     it('does not wrap variable declaration', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-const x = log.E1().warn()`
+      const input = `import { diagnostics } from './diagnostics'
+const x = diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-const x = log.E1().warn()`
-
-      expectTransform(input, expected)
+      expectCallSiteUnchanged(input)
     })
 
     it('does not wrap return statement', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+      const input = `import { diagnostics } from './diagnostics'
 function handler() {
-  return log.E1().warn()
+  return diagnostics.E1()
 }`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-function handler() {
-  return log.E1().warn()
+      expectCallSiteUnchanged(input)
+    })
+
+    it('does not wrap ternary returned from a function', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function handler(condition) {
+  return condition ? diagnostics.E1() : null
 }`
 
-      expectTransform(input, expected)
+      expectCallSiteUnchanged(input)
     })
 
-    it('does not wrap logger passed as function argument', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-fn(log.E1().warn())`
+    it('does not wrap diagnostics passed as function argument', () => {
+      const input = `import { diagnostics } from './diagnostics'
+fn(diagnostics.E1())`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-fn(log.E1().warn())`
-
-      expectTransform(input, expected)
+      expectCallSiteUnchanged(input)
     })
 
-    it('does not wrap logger passed as method argument', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
-arr.push(log.E1().warn())`
+    it('does not wrap ternary passed as function argument', () => {
+      const input = `import { diagnostics } from './diagnostics'
+fn(condition ? diagnostics.E1() : null)`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-arr.push(log.E1().warn())`
+      expectCallSiteUnchanged(input)
+    })
 
-      expectTransform(input, expected)
+    it('does not wrap diagnostics passed as method argument', () => {
+      const input = `import { diagnostics } from './diagnostics'
+arr.push(diagnostics.E1())`
+
+      expectCallSiteUnchanged(input)
     })
 
     it('does not wrap assignment expression', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+      const input = `import { diagnostics } from './diagnostics'
 let x
-x = log.E1().warn()`
+x = diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
-let x
-x = log.E1().warn()`
-
-      expectTransform(input, expected)
+      expectCallSiteUnchanged(input)
     })
   })
 
-  describe('does not transform non-logging code', () => {
+  describe('throw statements', () => {
+    it('does not wrap a top-level throw statement', () => {
+      const input = `import { diagnostics } from './diagnostics'
+throw diagnostics.E1()`
+
+      expectCallSiteUnchanged(input)
+    })
+
+    it('does not wrap a throw with arguments', () => {
+      const input = `import { diagnostics } from './diagnostics'
+throw diagnostics.E1({ src: '/bad.ts' })`
+
+      expectCallSiteUnchanged(input)
+    })
+
+    it('does not wrap a throw inside a function body', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function validate(x) {
+  if (!x) {
+    throw diagnostics.E1()
+  }
+}`
+
+      expectCallSiteUnchanged(input)
+    })
+
+    it('does not wrap a throw inside an if block', () => {
+      const input = `import { diagnostics } from './diagnostics'
+if (bad) {
+  throw diagnostics.E1()
+}`
+
+      expectCallSiteUnchanged(input)
+    })
+  })
+
+  describe('statement contexts', () => {
+    it('wraps inside a brace-less if', () => {
+      const input = `import { diagnostics } from './diagnostics'
+if (cond) diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+if (cond) process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a brace-less else', () => {
+      const input = `import { diagnostics } from './diagnostics'
+if (cond) {} else diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+if (cond) {} else process.env.NODE_ENV !== 'production' && diagnostics.E1()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a for...of loop', () => {
+      const input = `import { diagnostics } from './diagnostics'
+for (const x of arr) {
+  diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+for (const x of arr) {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a for...in loop', () => {
+      const input = `import { diagnostics } from './diagnostics'
+for (const k in obj) {
+  diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+for (const k in obj) {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside try/catch/finally blocks', () => {
+      const input = `import { diagnostics } from './diagnostics'
+try {
+  diagnostics.E1()
+} catch (e) {
+  diagnostics.E2()
+} finally {
+  diagnostics.E3()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+try {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+} catch (e) {
+  process.env.NODE_ENV !== 'production' && diagnostics.E2()
+} finally {
+  process.env.NODE_ENV !== 'production' && diagnostics.E3()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a switch case', () => {
+      const input = `import { diagnostics } from './diagnostics'
+switch (x) {
+  case 1:
+    diagnostics.E1()
+    break
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+switch (x) {
+  case 1:
+    process.env.NODE_ENV !== 'production' && diagnostics.E1()
+    break
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside an arrow function block body', () => {
+      const input = `import { diagnostics } from './diagnostics'
+const f = () => {
+  diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+const f = () => {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a function expression assigned to a variable', () => {
+      const input = `import { diagnostics } from './diagnostics'
+const f = function () {
+  diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+const f = function () {
+  process.env.NODE_ENV !== 'production' && diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps inside a class method', () => {
+      const input = `import { diagnostics } from './diagnostics'
+class A {
+  m() {
+    diagnostics.E1()
+  }
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+class A {
+  m() {
+    process.env.NODE_ENV !== 'production' && diagnostics.E1()
+  }
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not wrap an arrow with an expression body', () => {
+      const input = `import { diagnostics } from './diagnostics'
+const f = () => diagnostics.E1()`
+
+      expectCallSiteUnchanged(input)
+    })
+  })
+
+  describe('does not transform non-diagnostic code', () => {
     it('does not wrap unrelated expression statements', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+      const input = `import { diagnostics } from './diagnostics'
 console.log('hello')
-log.E1().warn()`
+diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
+      const expected = `import { diagnostics } from './diagnostics'
 console.log('hello')
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
+process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 
-      expectTransform(input, expected)
+      expectCallSiteTransform(input, expected)
     })
 
-    it('does not add PURE to non-imported function calls', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})
+    it('does not add PURE to non-imported function calls in call-site files', () => {
+      const input = `import { diagnostics } from './diagnostics'
 const other = someOtherFunction()
-log.E1().warn()`
+diagnostics.E1()`
 
-      const expected = `import { createLogger } from 'nostics'
-const log = /*#__PURE__*/ createLogger({})
+      const expected = `import { diagnostics } from './diagnostics'
 const other = someOtherFunction()
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
+process.env.NODE_ENV !== 'production' && diagnostics.E1()`
 
-      expectTransform(input, expected)
-    })
-  })
-
-  describe('custom package name', () => {
-    it('supports custom package name', () => {
-      const input = `import { createLogger } from 'my-custom-sdk'
-const log = createLogger({})
-log.E1().warn()`
-
-      const expected = `import { createLogger } from 'my-custom-sdk'
-const log = /*#__PURE__*/ createLogger({})
-process.env.NODE_ENV !== 'production' && log.E1().warn()`
-
-      const result = transform(input, 'test.ts', { packageName: 'my-custom-sdk' })
-      expect(result).toBeDefined()
-      expect(result!.code).toBe(expected)
+      expectCallSiteTransform(input, expected)
     })
   })
 
   describe('source maps', () => {
-    it('produces a source map', () => {
-      const input = `import { createLogger } from 'nostics'
-const log = createLogger({})`
+    it('produces a source map for definition files', () => {
+      const input = `import { defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ codes: {} })`
 
       const result = transform(input, 'test.ts')
+      expect(result).toBeDefined()
+      expect(result!.map).toBeDefined()
+      expect(result!.map.mappings).toBeTruthy()
+    })
+
+    it('produces a source map for call-site files', () => {
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
+
+      const result = transform(input, CALLSITE_ID, undefined, new Map())
       expect(result).toBeDefined()
       expect(result!.map).toBeDefined()
       expect(result!.map.mappings).toBeTruthy()
