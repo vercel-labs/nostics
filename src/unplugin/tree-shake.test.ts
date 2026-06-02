@@ -1,16 +1,21 @@
+import type { TrackedExportsMap } from './transform'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { build } from 'esbuild'
 import { describe, expect, it } from 'vitest'
 import { transform } from './transform'
 
 async function bundleProduction(input: string): Promise<string> {
+  const id = join(import.meta.dirname, '../../demo-lib/src/entry.ts')
+  const trackedExportsMap: TrackedExportsMap = new Map()
   // First, apply the plugin transform
-  const transformed = transform(input, 'entry.ts')
+  const transformed = transform(input, id, undefined, trackedExportsMap)
   const code = transformed ? transformed.code : input
 
   const result = await build({
     stdin: {
       contents: code,
-      resolveDir: import.meta.dirname,
+      resolveDir: dirname(id),
       loader: 'ts',
     },
     bundle: true,
@@ -32,11 +37,25 @@ async function bundleProduction(input: string): Promise<string> {
           build.onLoad({ filter: /.*/, namespace: 'nostics-stub' }, () => ({
             contents: `
             export function defineDiagnostics(opts) { return opts }
-            export function createLogger(opts) { return opts }
+            export function reporterLog() {}
+            export function devReporter() {}
             export const consoleReporter = { report() {} }
           `,
             loader: 'js',
           }))
+        },
+      },
+      {
+        name: 'nostics-transform',
+        setup(build) {
+          build.onLoad({ filter: /demo-lib\/src\/.*\.ts$/ }, (args) => {
+            const source = readFileSync(args.path, 'utf-8')
+            const transformed = transform(source, args.path, undefined, trackedExportsMap)
+            return {
+              contents: transformed?.code ?? source,
+              loader: 'ts',
+            }
+          })
         },
       },
     ],
@@ -46,45 +65,31 @@ async function bundleProduction(input: string): Promise<string> {
 }
 
 describe('tree-shake integration', () => {
-  it('eliminates all logging code in production', async () => {
+  it('eliminates all diagnostic call code in production', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'nostics'
+import { diagnostics } from './diagnostics'
 
-const diags = defineDiagnostics({
-  prefix: 'TEST',
-  codes: {
-    E001: { message: 'Test error' },
-    E002: { message: (p: { file: string }) => \`Bad file \${p.file}\` },
-  },
-})
-
-const log = createLogger({ diagnostics: [diags] })
-
-log.E001().warn()
-log.E002({ file: '/bad.ts' }).error()
+diagnostics.MATH_E001()
+diagnostics.MATH_W001({ n: -1 })
 `
     const output = await bundleProduction(input)
     // After tree-shaking and minification, the output should be nothing
     expect(output.trim()).toBe('')
   })
 
-  it('eliminates logging inside functions', async () => {
+  it('eliminates diagnostic calls inside functions', async () => {
     const input = `
-import { defineDiagnostics, createLogger } from 'nostics'
-
-const diags = defineDiagnostics({ prefix: 'T', codes: { E1: { message: 'x' } } })
-const log = createLogger({ diagnostics: [diags] })
+import { diagnostics } from './diagnostics'
 
 export function handler() {
-  log.E1().warn()
+  diagnostics.MATH_E001()
   return 'ok'
 }
 `
     const output = await bundleProduction(input)
-    // The handler function should remain but logging should be gone
-    expect(output).toMatchInlineSnapshot(`
-      "function t(){return"ok"}export{t as handler};
-      "
-    `)
+    // The handler function should remain but the diagnostic call should be gone.
+    expect(output.trim()).toMatch(/^function \w\(\)\{return"ok"\}export\{\w as handler\};$/)
+    expect(output).not.toContain('E1')
+    expect(output).not.toContain('defineDiagnostics')
   })
 })
