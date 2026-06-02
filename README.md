@@ -95,4 +95,4 @@ gh api repos/vercel-labs/nostics/contents/install.sh --jq '.content' | base64 -d
 
 ## License
 
-[Apache 2.0](./LICENSE)
+[MIT](./LICENSE)
