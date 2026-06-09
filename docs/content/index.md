@@ -1,6 +1,6 @@
 ---
 seo:
-  title: nostics
+  title: Errors woth reading
   description: Errors worth reading. Stable codes, fixes, docs URLs, reporters, and production stripping.
 ---
 
@@ -9,7 +9,7 @@ seo:
 [Diagnostics SDK]{.section-eyebrow}
 
 #title
-Errors worth reading.
+Errors worth reading
 
 #description
 <span class="font-mono">nostics</span> helps library authors replace ad hoc error strings with stable codes, actionable fixes, docs links, and structured `Diagnostic` objects.
