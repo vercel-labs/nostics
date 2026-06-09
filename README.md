@@ -8,9 +8,9 @@ Errors worth reading.
 `nostics` helps you replace ad hoc error strings with stable diagnostic codes, actionable fixes, source locations, and docs links.
 
 ```txt
-[NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-├▶ sources: nuxt.config.ts:14:3
+[NUXT_B2011] Plugin `./runtime/analytics.server.ts` is server-only but was registered with mode `client`.
+├▶ fix: Rename the file or register it with mode `server`.
+├▶ sources: modules/analytics.ts:18:5
 ╰▶ see: https://nuxt.com/e/b2011
 ```
 
@@ -30,12 +30,15 @@ export const diagnostics = defineDiagnostics({
   reporters: [reporterLog],
   codes: {
     NUXT_B2011: {
-      why: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
-      fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
+      why: (p: { src: string, mode: 'client' | 'server', suffix: 'client' | 'server' }) =>
+        `Plugin \`${p.src}\` is ${p.suffix}-only but was registered with mode \`${p.mode}\`.`,
+      fix: (p: { suffix: 'client' | 'server' }) =>
+        `Rename the file or register it with mode \`${p.suffix}\`.`,
     },
     NUXT_B5001: {
-      why: (p: { configPath: string }) => `Missing compatibilityDate in ${p.configPath}.`,
-      fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your config.`,
+      why: (p: { value: string, configPath: string }) =>
+        `Invalid compatibilityDate \`${p.value}\` in ${p.configPath}.`,
+      fix: (p: { example: string }) => `Use an ISO date like \`${p.example}\`, or \`latest\`.`,
     },
   },
 })
@@ -45,13 +48,16 @@ Use the generated handles where the problem happens:
 
 ```ts
 diagnostics.NUXT_B2011({
-  src: '/plugins/bad.ts',
-  sources: ['nuxt.config.ts:14:3'],
+  src: './runtime/analytics.server.ts',
+  mode: 'client',
+  suffix: 'server',
+  sources: ['modules/analytics.ts:18:5'],
 })
 
 throw diagnostics.NUXT_B5001({
   configPath: 'nuxt.config.ts',
-  date: '2024-04-03',
+  value: '04/03/2024',
+  example: '2024-04-03',
 })
 ```
 

@@ -18,9 +18,9 @@ Errors worth reading.
 ::diagnostic
 ---
 log: |
-  [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
-  ├▶ fix: Pass a string path or an object with a `src` property to `addPlugin()`.
-  ├▶ sources: nuxt.config.ts:14:3
+  [NUXT_B2011] Plugin `./runtime/analytics.server.ts` is server-only but was registered with mode `client`.
+  ├▶ fix: Rename the file or register it with mode `server`.
+  ├▶ sources: modules/analytics.ts:18:5
   ╰▶ see: nuxt.com/e/b2011
 ---
 ::
