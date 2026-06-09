@@ -1,6 +1,6 @@
 ---
 seo:
-  title: Errors woth reading
+  title: Errors worth reading
   description: Errors worth reading. Stable codes, fixes, docs URLs, reporters, and production stripping.
 ---
 
