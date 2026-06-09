@@ -100,6 +100,27 @@ pre.diag {
   margin-block: 1.25rem;
   margin-inline: 0;
   line-height: 1.25;
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--ui-border-accented) var(--ui-bg-muted);
+}
+
+pre.diag::-webkit-scrollbar {
+  height: 10px;
+}
+
+pre.diag::-webkit-scrollbar-track {
+  background: var(--ui-bg-muted);
+  border-top: 1px solid var(--ui-border);
+}
+
+pre.diag::-webkit-scrollbar-thumb {
+  background: var(--ui-border-accented);
+  border: 2px solid var(--ui-bg-muted);
+  border-radius: 999px;
+}
+
+pre.diag::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-text-dimmed);
 }
 
 /* Hero wrapper: constrain + center the otherwise full-width block. Defined via
