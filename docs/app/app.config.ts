@@ -3,7 +3,7 @@ export default defineAppConfig({
     titleTemplate: '%s - nostics',
     title: 'nostics',
     description:
-      'Structured, typed, machine-readable diagnostics for JavaScript libraries. Stable codes, actionable fixes, docs URLs, dev-time collection.',
+      'Errors worth reading. Stable codes, fixes, docs URLs, reporters, and production stripping.',
   },
   ui: {
     colors: {
