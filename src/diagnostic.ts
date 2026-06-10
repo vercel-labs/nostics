@@ -110,9 +110,9 @@ type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
 export type ConsoleMethod = 'log' | 'error' | 'warn'
 
 /**
- * Options for {@link createReporterLog}.
+ * Options for {@link createConsoleReporter}.
  */
-export interface ReporterLogOptions {
+export interface ConsoleReporterOptions {
   /**
    * `console` method used to print the diagnostic. Defaults to `'warn'`. The
    * returned reporter still accepts a per-call `{ method }` override through
@@ -128,16 +128,16 @@ export interface ReporterLogOptions {
 }
 
 /**
- * Creates a log reporter that renders each diagnostic with `formatter` and
+ * Creates a console reporter that renders each diagnostic with `formatter` and
  * prints the result via `console[method]`. Both default sensibly (`'warn'` and
  * {@link formatDiagnostic}); `method` can also be overridden per call through
  * the reporter options.
  */
 /* @__NO_SIDE_EFFECTS__ */
-export function createReporterLog({
+export function createConsoleReporter({
   method: defaultMethod = 'warn',
   formatter = formatDiagnostic,
-}: ReporterLogOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
+}: ConsoleReporterOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
   return (diagnostic, { method = defaultMethod } = {}) => {
     // eslint-disable-next-line no-console
     console[method](formatter(diagnostic))
@@ -145,13 +145,11 @@ export function createReporterLog({
 }
 
 /**
- * Ready-made log reporter, equivalent to `createReporterLog()`: prints
- * `console.warn(formatDiagnostic(diagnostic))`, with a per-call `{ method }`
- * override.
+ * Ready-made console reporter, equivalent to `createConsoleReporter()`.
  *
- * @deprecated Use `createReporterLog()` instead.
+ * @deprecated Use `createConsoleReporter()` instead.
  */
-export const reporterLog: DiagnosticReporter<{ method?: ConsoleMethod }> = createReporterLog()
+export const reporterLog: DiagnosticReporter<{ method?: ConsoleMethod }> = createConsoleReporter()
 
 /**
  * Resolves the `params` type a code expects from the intersection of params

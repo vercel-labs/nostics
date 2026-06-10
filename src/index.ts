@@ -1,14 +1,14 @@
-export { createReporterLog, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
+export { createConsoleReporter, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
 
 export type {
   ConsoleMethod,
+  ConsoleReporterOptions,
   DefineDiagnosticsOptions,
   DiagnosticCallParams,
   DiagnosticDefinition,
   DiagnosticHandle,
   DiagnosticInit,
   DiagnosticReporter,
-  ReporterLogOptions,
 } from './diagnostic'
 
 export { formatDiagnostic } from './formatters/plain'

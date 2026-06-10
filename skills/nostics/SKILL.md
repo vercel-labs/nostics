@@ -1,6 +1,6 @@
 ---
 name: nostics
-description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`createReporterLog`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `devReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nosticsStrip` from nostics/unplugin/strip-transform, `nosticsCollector` from nostics/unplugin/dev-server-collector).'
+description: 'Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`createConsoleReporter`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `createDevReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nosticsStrip` from nostics/unplugin/strip-transform, `nosticsCollector` from nostics/unplugin/dev-server-collector).'
 ---
 
 # nostics
@@ -35,11 +35,11 @@ class Diagnostic extends Error {
 ### `defineDiagnostics(options)`: Define diagnostic codes
 
 ```ts
-import { createReporterLog, defineDiagnostics } from 'nostics'
+import { createConsoleReporter, defineDiagnostics } from 'nostics'
 
 const diagnostics = defineDiagnostics({
   docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
-  reporters: [createReporterLog()],
+  reporters: [createConsoleReporter()],
   codes: {
     NUXT_B1001: {
       why: 'Could not compile template.',
@@ -167,12 +167,12 @@ interface Colors {
 
 A reporter is `(diagnostic: Diagnostic, options?: Opts) => void`. `defineDiagnostics` unions every reporter's `options`. The call site must pass them only if some reporter has required fields.
 
-| Reporter                       | Import                    | Description                                                                                                                    |
-| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `createReporterLog(options?)`  | `nostics`                 | Returns a reporter that prints `console[method](formatter(d))`. `method` defaults to `'warn'` (`'log' \| 'warn' \| 'error'`) and `formatter` to `formatDiagnostic`; both are set via `options`, and `method` can also be overridden per call via `{ method }`. |
-| `createFetchReporter(url)`     | `nostics/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                      |
-| `createFileReporter(options?)` | `nostics/reporters/node`  | Appends diagnostics as NDJSON to a local file (default `.nostics.log`).                                                        |
-| `devReporter`                  | `nostics/reporters/dev`   | Sends `diagnostic.toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                               |
+| Reporter                          | Import                    | Description                                                                                                                                                                                                                                                    |
+| --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createConsoleReporter(options?)` | `nostics`                 | Returns a reporter that prints `console[method](formatter(d))`. `method` defaults to `'warn'` (`'log' \| 'warn' \| 'error'`) and `formatter` to `formatDiagnostic`; both are set via `options`, and `method` can also be overridden per call via `{ method }`. |
+| `createFetchReporter(url)`        | `nostics/reporters/fetch` | POSTs the diagnostic JSON to the given URL. Fetch failures are swallowed.                                                                                                                                                                                      |
+| `createFileReporter(options?)`    | `nostics/reporters/node`  | Appends diagnostics as NDJSON to a local file (default `.nostics.log`).                                                                                                                                                                                        |
+| `createDevReporter()`             | `nostics/reporters/dev`   | Returns a reporter that sends `diagnostic.toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                                                                                                                                       |
 
 **Writing a custom reporter:**
 
@@ -217,7 +217,7 @@ export default defineConfig({
 
 ### `nosticsCollector`: Dev server diagnostic collector
 
-Listens for diagnostics from `devReporter` in the browser over the Vite WebSocket, then writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
+Listens for diagnostics from `createDevReporter()` in the browser over the Vite WebSocket, then writes them as NDJSON to a local log file via `createFileReporter`. Vite-only.
 
 ```ts
 import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
@@ -236,7 +236,7 @@ export default defineConfig({
 
 ### Typical dev setup
 
-Use both plugins together with `devReporter` for full dev-time diagnostic capture:
+Use both plugins together with `createDevReporter()` for full dev-time diagnostic capture:
 
 ```ts
 // vite.config.ts
@@ -250,11 +250,11 @@ export default defineConfig({
 
 ```ts
 // src/diagnostics.ts
-import { createReporterLog, defineDiagnostics } from 'nostics'
-import { devReporter } from 'nostics/reporters/dev'
+import { createConsoleReporter, defineDiagnostics } from 'nostics'
+import { createDevReporter } from 'nostics/reporters/dev'
 
 export const diagnostics = defineDiagnostics({
-  reporters: [createReporterLog(), devReporter],
+  reporters: [createConsoleReporter(), createDevReporter()],
   codes: {
     /* ... */
   },

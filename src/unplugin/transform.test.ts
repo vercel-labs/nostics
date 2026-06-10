@@ -81,22 +81,34 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
       expectDefinitionTransform(input, expected, { packageName: 'my-custom-sdk' })
     })
 
-    it('adds /*#__PURE__*/ to createReporterLog calls nested in the options', () => {
-      const input = `import { createReporterLog, defineDiagnostics } from 'nostics'
-export const diagnostics = defineDiagnostics({ reporters: [createReporterLog()], codes: {} })`
+    it('adds /*#__PURE__*/ to createConsoleReporter calls nested in the options', () => {
+      const input = `import { createConsoleReporter, defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ reporters: [createConsoleReporter()], codes: {} })`
 
-      const expected = `import { createReporterLog, defineDiagnostics } from 'nostics'
-export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ createReporterLog()], codes: {} })`
+      const expected = `import { createConsoleReporter, defineDiagnostics } from 'nostics'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ createConsoleReporter()], codes: {} })`
 
       expectDefinitionTransform(input, expected)
     })
 
-    it('handles renamed createReporterLog imports', () => {
-      const input = `import { createReporterLog as log, defineDiagnostics } from 'nostics'
+    it('handles renamed createConsoleReporter imports', () => {
+      const input = `import { createConsoleReporter as log, defineDiagnostics } from 'nostics'
 export const diagnostics = defineDiagnostics({ reporters: [log({ method: 'error' })], codes: {} })`
 
-      const expected = `import { createReporterLog as log, defineDiagnostics } from 'nostics'
+      const expected = `import { createConsoleReporter as log, defineDiagnostics } from 'nostics'
 export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ log({ method: 'error' })], codes: {} })`
+
+      expectDefinitionTransform(input, expected)
+    })
+
+    it('marks pure factories imported from a subpath (e.g. createDevReporter)', () => {
+      const input = `import { defineDiagnostics } from 'nostics'
+import { createDevReporter } from 'nostics/reporters/dev'
+export const diagnostics = defineDiagnostics({ reporters: [createDevReporter()], codes: {} })`
+
+      const expected = `import { defineDiagnostics } from 'nostics'
+import { createDevReporter } from 'nostics/reporters/dev'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ createDevReporter()], codes: {} })`
 
       expectDefinitionTransform(input, expected)
     })

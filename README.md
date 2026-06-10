@@ -27,11 +27,11 @@ pnpm add nostics
 ## Quick start
 
 ```ts
-import { defineDiagnostics, reporterLog } from 'nostics'
+import { createConsoleReporter, defineDiagnostics } from 'nostics'
 
 export const diagnostics = defineDiagnostics({
   docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
-  reporters: [reporterLog],
+  reporters: [createConsoleReporter()],
   codes: {
     NUXT_B2011: {
       why: (p: { src: string, mode: 'client' | 'server' }) => {
@@ -97,7 +97,7 @@ export default defineConfig({
 })
 ```
 
-For browser diagnostics during Vite dev, use `devReporter` in the browser and `nosticsCollector` in the consuming app:
+For browser diagnostics during Vite dev, use `createDevReporter()` in the browser and `nosticsCollector` in the consuming app:
 
 ```ts
 import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'

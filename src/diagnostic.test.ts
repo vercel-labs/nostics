@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createReporterLog, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
+import { createConsoleReporter, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
 import { formatDiagnostic } from './formatters/plain'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
@@ -199,7 +199,7 @@ describe('built-in reporters', () => {
       codes: {
         NUXT_E033: { why: 'boom', fix: 'restart it' },
       },
-      reporters: [createReporterLog({ method: 'error' })],
+      reporters: [createConsoleReporter({ method: 'error' })],
     })
     errs.NUXT_E033({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(
@@ -239,11 +239,11 @@ describe('built-in reporters', () => {
   })
 })
 
-describe('createReporterLog', () => {
+describe('createConsoleReporter', () => {
   it('defaults to console.warn and the plain formatter', () => {
     const errs = defineDiagnostics({
       codes: { X_1: { why: 'boom' } },
-      reporters: [createReporterLog()],
+      reporters: [createConsoleReporter()],
     })
     errs.X_1()
     expect('[X_1] boom').toHaveBeenWarned()
@@ -252,7 +252,7 @@ describe('createReporterLog', () => {
   it('uses the configured default method', () => {
     const errs = defineDiagnostics({
       codes: { X_1: { why: 'boom' } },
-      reporters: [createReporterLog({ method: 'error' })],
+      reporters: [createConsoleReporter({ method: 'error' })],
     })
     errs.X_1()
     expect('[X_1] boom').toHaveBeenErrored()
@@ -261,7 +261,7 @@ describe('createReporterLog', () => {
   it('lets the call site override the default method', () => {
     const errs = defineDiagnostics({
       codes: { X_1: { why: 'boom' } },
-      reporters: [createReporterLog({ method: 'warn' })],
+      reporters: [createConsoleReporter({ method: 'warn' })],
     })
     errs.X_1(undefined, { method: 'error' })
     expect('[X_1] boom').toHaveBeenErrored()
@@ -270,7 +270,7 @@ describe('createReporterLog', () => {
   it('renders with the provided formatter', () => {
     const errs = defineDiagnostics({
       codes: { X_1: { why: 'boom' } },
-      reporters: [createReporterLog({ formatter: d => `formatted:${d.name}` })],
+      reporters: [createConsoleReporter({ formatter: d => `formatted:${d.name}` })],
     })
     errs.X_1()
     expect('formatted:X_1').toHaveBeenWarned()

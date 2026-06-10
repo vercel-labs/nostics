@@ -14,7 +14,7 @@ export class Diagnostic extends Error {
 // #endregion
 
 // #region Functions
-export function createReporterLog(_) {}
+export function createConsoleReporter(_) {}
 export function defineDiagnostics(_) {}
 export function formatDiagnostic(_) {}
 // #endregion

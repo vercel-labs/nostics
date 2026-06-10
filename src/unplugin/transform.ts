@@ -25,17 +25,23 @@ export type TrackedExportsMap = Map<string, Set<string>>
 const CONDITION = 'process.env.NODE_ENV !== "production"'
 
 /**
- * Named exports from `nostics` that are side-effect-free factories: calling
+ * Side-effect-free factory exports (from `nostics` or its subpaths): calling
  * them only builds and returns a value. Marking their call sites pure lets the
  * bundler drop them along with the `defineDiagnostics()` definition that holds
- * them (e.g. `reporters: [createReporterLog()]`).
+ * them (e.g. `reporters: [createConsoleReporter(), createDevReporter()]`).
  */
-const PURE_FACTORIES = new Set(['createReporterLog'])
+const PURE_FACTORIES = new Set([
+  'createConsoleReporter',
+  'createDevReporter',
+  'createFileReporter',
+  'createFetchReporter',
+])
 
 /**
  * Transforms code that imports from `nostics`:
  * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` call expressions
- * - Adds `\/*#__PURE__*\/` to calls of known pure factories (e.g. `createReporterLog()`)
+ * - Adds `\/*#__PURE__*\/` to calls of known pure factories (e.g. `createConsoleReporter()`),
+ *   whether imported from `nostics` or one of its subpaths
  * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using diagnostics variables
  *
  * Also handles cross-file patterns: if a file imports a variable that was
@@ -53,21 +59,28 @@ export function transform(
   const result = parseSync(id, code)
   const ast = result.program
 
-  // Step 1: Find direct defineDiagnostics and pure-factory imports from the package
+  // Step 1: Find direct defineDiagnostics and pure-factory imports from the
+  // package. `defineDiagnostics` lives at the root; pure factories may be
+  // imported from the root or a subpath (e.g. `nostics/reporters/dev`).
   const defineDiagnosticsImports = new Set<string>()
   const pureFactoryImports = new Set<string>()
   for (const node of ast.body) {
-    if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
-      for (const spec of node.specifiers) {
-        if (spec.type === 'ImportSpecifier') {
-          const importedName
-            = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
-          if (importedName === 'defineDiagnostics') {
-            defineDiagnosticsImports.add(spec.local.name)
-          }
-          else if (PURE_FACTORIES.has(importedName)) {
-            pureFactoryImports.add(spec.local.name)
-          }
+    if (node.type !== 'ImportDeclaration')
+      continue
+    const source = node.source.value
+    const isRoot = source === packageName
+    const isSubpath = typeof source === 'string' && source.startsWith(`${packageName}/`)
+    if (!isRoot && !isSubpath)
+      continue
+    for (const spec of node.specifiers) {
+      if (spec.type === 'ImportSpecifier') {
+        const importedName
+          = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+        if (isRoot && importedName === 'defineDiagnostics') {
+          defineDiagnosticsImports.add(spec.local.name)
+        }
+        else if (PURE_FACTORIES.has(importedName)) {
+          pureFactoryImports.add(spec.local.name)
         }
       }
     }
@@ -123,7 +136,7 @@ export function transform(
   // mark the calls as pure.
   trackTopLevelDefinitions(ast.body, s, defineDiagnosticsImports, trackedVars)
 
-  // Step 3b: mark calls to known pure factories (e.g. `createReporterLog()`) as
+  // Step 3b: mark calls to known pure factories (e.g. `createConsoleReporter()`) as
   // pure so they can be dropped with the definition that holds them.
   annotatePureFactoryCalls(ast, s, pureFactoryImports)
 
