@@ -40,10 +40,10 @@
   ```
 
   Type renames:
-  - \`NosticsPluginOptions\` -> \`NosticsStripOptions\`
-  - \`NosticsServerOptions\` -> \`NosticsCollectorOptions\`
+  - `NosticsPluginOptions` -> `NosticsStripOptions`
+  - `NosticsServerOptions` -> `NosticsCollectorOptions`
 
-  \`nosticsCollector\` is now explicitly documented as Vite only; other
+  `nosticsCollector` is now explicitly documented as Vite only; other
   unplugin adapters exist but are no-ops.
 
 # [0.2.0](https://github.com/vercel-labs/nostics/compare/v0.1.0...v0.2.0) (2026-05-20)

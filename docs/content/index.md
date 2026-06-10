@@ -21,7 +21,7 @@ log: |
   [NUXT_B2011] Plugin `./runtime/analytics.server.ts` is server-only but was registered with mode `client`.
   ├▶ fix: Rename the file or register it with mode `server`.
   ├▶ sources: modules/analytics.ts:18:5
-  ╰▶ see: nuxt.com/e/b2011
+  ╰▶ see: https://nuxt.com/e/b2011
 ---
 ::
 :::

@@ -31,14 +31,14 @@ export const diagnostics = defineDiagnostics({
   codes: {
     NUXT_B2011: {
       why: (p: { src: string, mode: 'client' | 'server', suffix: 'client' | 'server' }) =>
-        `Plugin \`${p.src}\` is ${p.suffix}-only but was registered with mode \`${p.mode}\`.`,
+        `Plugin "${p.src}" is ${p.suffix}-only but was registered with mode "${p.mode}".`,
       fix: (p: { suffix: 'client' | 'server' }) =>
-        `Rename the file or register it with mode \`${p.suffix}\`.`,
+        `Rename the file or register it with mode "${p.suffix}".`,
     },
     NUXT_B5001: {
       why: (p: { value: string, configPath: string }) =>
-        `Invalid compatibilityDate \`${p.value}\` in ${p.configPath}.`,
-      fix: (p: { example: string }) => `Use an ISO date like \`${p.example}\`, or \`latest\`.`,
+        `Invalid compatibilityDate "${p.value}" in ${p.configPath}.`,
+      fix: (p: { example: string }) => `Use an ISO date like "${p.example}", or "latest".`,
     },
   },
 })

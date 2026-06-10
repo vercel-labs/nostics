@@ -10,7 +10,7 @@
  * ---
  * log: |
  *   [NUXT_B2011] Invalid plugin `/plugins/bad.ts`.
- *   ╰▶ see: nuxt.com/e/b2011
+ *   ╰▶ see: https://nuxt.com/e/b2011
  * ---
  * ::
  */
