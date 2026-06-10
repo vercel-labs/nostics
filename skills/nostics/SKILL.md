@@ -46,12 +46,12 @@ const diagnostics = defineDiagnostics({
       fix: 'Check the template for syntax errors.',
     },
     NUXT_B2011: {
-      why: (p: { src: string }) => `Invalid plugin \`${p.src}\`. src option is required.`,
+      why: (p: { src: string }) => `Invalid plugin "${p.src}". src option is required.`,
       fix: 'Pass a string path or an object with a `src` property to `addPlugin()`.',
     },
     NUXT_B5001: {
       why: 'Missing compatibilityDate in nuxt.config.',
-      fix: (p: { date: string }) => `Add \`compatibilityDate: '${p.date}'\` to your nuxt.config.`,
+      fix: (p: { date: string }) => `Add "compatibilityDate: '${p.date}'" to your nuxt.config.`,
     },
   },
 })

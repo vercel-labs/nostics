@@ -27,7 +27,7 @@ export interface DiagnosticDefinition<P = any> {
    *
    * @example
    * ```ts
-   * fix: (p: { name: string }) => `run \`npm install ${p.name}\``
+   * fix: (p: { name: string }) => `run "npm install ${p.name}"`
    * ```
    */
   fix?: ValueOrFn<string, P>
