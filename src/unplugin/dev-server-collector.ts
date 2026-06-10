@@ -30,8 +30,8 @@ export interface NosticsCollectorOptions {
  * Dev-server collector that forwards browser diagnostics to a log file.
  *
  * Listens on the Vite dev-server WebSocket for diagnostics emitted by
- * `devReporter` in the browser and appends them as NDJSON to a local log
- * file via `createFileReporter`.
+ * `createDevReporter()` in the browser and appends them as NDJSON to a local
+ * log file via `createFileReporter`.
  *
  * ```ts
  * // vite.config.ts

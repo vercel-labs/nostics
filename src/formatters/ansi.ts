@@ -9,6 +9,7 @@ export interface Colors {
   dim: (s: string) => string
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function ansiFormatter(colors: Colors): (d: Diagnostic) => string {
   return (d) => {
     const tag = colors.bold(colors.red(`[${d.name}]`))

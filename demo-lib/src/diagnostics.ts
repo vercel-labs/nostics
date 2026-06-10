@@ -1,9 +1,9 @@
-import { defineDiagnostics, reporterLog } from 'nostics'
-import { devReporter } from 'nostics/reporters/dev'
+import { createConsoleReporter, defineDiagnostics } from 'nostics'
+import { createDevReporter } from 'nostics/reporters/dev'
 
 export const diagnostics = defineDiagnostics({
   docsBase: code => `https://example.com/docs/diagnostics/${code.toLowerCase()}`,
-  reporters: [reporterLog, devReporter],
+  reporters: [createConsoleReporter(), createDevReporter()],
   codes: {
     MATH_E001: {
       why: 'Division by zero',
