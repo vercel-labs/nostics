@@ -1,16 +1,21 @@
-@import 'tailwindcss';
-@import '@nuxt/ui';
+@import "tailwindcss";
+@import "@nuxt/ui";
 
 @theme {
-  --font-sans: 'Geist', sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-sans: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
 }
 
 :root {
   /* squared corners everywhere: the dev-native look */
   --ui-radius: 0;
-  --ui-bg: var(--color-zinc-950);
-  --ui-text-dimmed: var(--color-zinc-400);
+  /* --ui-bg: var(--color-zinc-950); */
+  /* --ui-text-dimmed: var(--color-zinc-400); */
+  --ui-primary: var(--color-zinc-950);
+}
+
+.dark {
+  --ui-primary: var(--color-zinc-100);
 }
 
 @layer base {
@@ -35,7 +40,7 @@
 }
 
 .section-eyebrow::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 4px;
   height: 4px;
@@ -52,7 +57,7 @@
 
 .dev-card::before,
 .dev-card::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 10px;
   height: 10px;

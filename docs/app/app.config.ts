@@ -6,10 +6,6 @@ export default defineAppConfig({
       'Errors worth reading. Stable codes, fixes, docs URLs, reporters, and production stripping.',
   },
   ui: {
-    colors: {
-      primary: 'white',
-      neutral: 'zinc',
-    },
     button: {
       slots: {
         base: 'active:translate-y-px transition-transform duration-200',
