@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { defineDiagnostics } from '../diagnostic'
 import { mockConsoleWarn } from '../mock-warn'
-import { createDevReporter, devReporter } from './dev'
+import { createDevReporter } from './dev'
 
 mockConsoleWarn()
 
@@ -19,9 +19,5 @@ describe('createDevReporter', () => {
     diagnostics.E1()
 
     expect('import.meta.hot.send() is not available').toHaveBeenWarned()
-  })
-
-  it('devReporter is the deprecated ready-made alias', () => {
-    expect(typeof devReporter).toBe('function')
   })
 })

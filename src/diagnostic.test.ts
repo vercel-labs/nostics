@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createConsoleReporter, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
+import { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
 import { formatDiagnostic } from './formatters/plain'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
@@ -167,33 +167,6 @@ describe('diagnostic', () => {
 })
 
 describe('built-in reporters', () => {
-  it('reporterLog defaults to console.warn and includes the code', () => {
-    const errs = defineDiagnostics({
-      codes: { NUXT_E001: { why: 'boom' } },
-      reporters: [reporterLog],
-    })
-    errs.NUXT_E001()
-    expect('[NUXT_E001] boom').toHaveBeenWarned()
-  })
-
-  it('reporterLog routes to console.warn when method is "warn"', () => {
-    const errs = defineDiagnostics({
-      codes: { NUXT_E001: { why: 'boom' } },
-      reporters: [(d: Diagnostic) => reporterLog(d, { method: 'warn' })],
-    })
-    errs.NUXT_E001()
-    expect('[NUXT_E001] boom').toHaveBeenWarned()
-  })
-
-  it('reporterLog routes to console.error when method is "error"', () => {
-    const errs = defineDiagnostics({
-      codes: { NUXT_E001: { why: 'boom' } },
-      reporters: [(d: Diagnostic) => reporterLog(d, { method: 'error' })],
-    })
-    errs.NUXT_E001()
-    expect('[NUXT_E001] boom').toHaveBeenErrored()
-  })
-
   it('renders the code, fix, and sources with unicode connectors', () => {
     const errs = defineDiagnostics({
       codes: {

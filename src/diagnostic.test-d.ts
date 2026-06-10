@@ -3,7 +3,7 @@
 
 import type { Diagnostic, DiagnosticCallParams } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
-import { defineDiagnostics, reporterLog } from './diagnostic'
+import { createConsoleReporter, defineDiagnostics } from './diagnostic'
 
 function reporterWithPriority(_diagnostic: Diagnostic, _options: { priority: number }): void {}
 
@@ -30,7 +30,7 @@ describe('defineDiagnostics: reporter options inference', () => {
   it('options is optional when every reporter has only optional fields', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'msg' } },
-      reporters: [reporterLog],
+      reporters: [createConsoleReporter()],
     })
     errs.X()
     errs.X(undefined, { method: 'warn' })
@@ -65,7 +65,7 @@ describe('defineDiagnostics: reporter options inference', () => {
   it('merges optional + required reporters → required, fields intersected', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'msg' } },
-      reporters: [reporterLog, reporterWithPriority],
+      reporters: [createConsoleReporter(), reporterWithPriority],
     })
     errs.X(undefined, { priority: 1 })
     errs.X(undefined, { priority: 1, method: 'warn' })
@@ -152,7 +152,7 @@ describe('defineDiagnostics: params inference', () => {
   it('params + optional-options reporter → params required, options optional', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: (p: { who: string }) => `hi ${p.who}` } },
-      reporters: [reporterLog],
+      reporters: [createConsoleReporter()],
     })
     errs.X({ who: 'me' })
     errs.X({ who: 'me' }, { method: 'warn' })
