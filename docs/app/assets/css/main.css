@@ -20,7 +20,7 @@
 
 @layer base {
   :root {
-    @apply selection:bg-primary selection:text-black;
+    @apply selection:bg-primary selection:text-inverted;
   }
 
   html,
@@ -99,7 +99,7 @@
    padding/margins win and stay consistent. Full content width, left-aligned;
    the hero constrains/centers it with a wrapper. */
 pre.diag {
-  @apply block font-mono text-[13px] bg-muted text-default border border-default text-left overflow-x-auto whitespace-pre;
+  @apply block font-mono text-[13px] bg-muted text-highlighted border border-default text-left overflow-x-auto whitespace-pre;
   /* equal padding inside, equal margin outside; tight line-height */
   padding: 1rem;
   margin-block: 1.25rem;
@@ -137,19 +137,19 @@ pre.diag::-webkit-scrollbar-thumb:hover {
 /* Terminal palette: error code red, code tokens amber, fix green,
    file paths cyan, docs link blue, punctuation/labels dimmed. */
 .diag-code {
-  @apply text-red-400 font-semibold;
+  @apply text-red-600 dark:text-red-400 font-semibold;
 }
 .diag-path {
-  @apply text-amber-300;
+  @apply text-amber-700 dark:text-amber-300;
 }
 .diag-fix {
-  @apply text-green-400 font-medium;
+  @apply text-green-700 dark:text-green-400 font-medium;
 }
 .diag-file {
-  @apply text-cyan-400;
+  @apply text-cyan-700 dark:text-cyan-400;
 }
 .diag-link {
-  @apply text-blue-400 underline underline-offset-2;
+  @apply text-blue-700 dark:text-blue-400 underline underline-offset-2;
 }
 .diag-tree {
   @apply text-dimmed;
