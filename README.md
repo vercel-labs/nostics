@@ -30,10 +30,14 @@ export const diagnostics = defineDiagnostics({
   reporters: [reporterLog],
   codes: {
     NUXT_B2011: {
-      why: (p: { src: string, mode: 'client' | 'server', suffix: 'client' | 'server' }) =>
-        `Plugin "${p.src}" is ${p.suffix}-only but was registered with mode "${p.mode}".`,
-      fix: (p: { suffix: 'client' | 'server' }) =>
-        `Rename the file or register it with mode "${p.suffix}".`,
+      why: (p: { src: string, mode: 'client' | 'server' }) => {
+        const expected = p.mode === 'client' ? 'server' : 'client'
+        return `Plugin "${p.src}" is ${expected}-only but was registered with mode "${p.mode}".`
+      },
+      fix: (p: { mode: 'client' | 'server' }) => {
+        const expected = p.mode === 'client' ? 'server' : 'client'
+        return `Rename the file or register it with mode "${expected}".`
+      },
     },
     NUXT_B5001: {
       why: (p: { value: string, configPath: string }) =>
@@ -47,16 +51,19 @@ export const diagnostics = defineDiagnostics({
 Use the generated handles where the problem happens:
 
 ```ts
+const plugin = resolvePlugin()
+const source = locatePluginCall(plugin)
+const config = loadNuxtConfig()
+
 diagnostics.NUXT_B2011({
-  src: './runtime/analytics.server.ts',
-  mode: 'client',
-  suffix: 'server',
-  sources: ['modules/analytics.ts:18:5'],
+  src: plugin.src,
+  mode: plugin.mode,
+  sources: [source],
 })
 
 throw diagnostics.NUXT_B5001({
-  configPath: 'nuxt.config.ts',
-  value: '04/03/2024',
+  configPath: config.filepath,
+  value: config.compatibilityDate,
   example: '2024-04-03',
 })
 ```

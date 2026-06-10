@@ -9,7 +9,7 @@
  * ::diagnostic
  * ---
  * log: |
- *   [NUXT_B2011] Invalid plugin `/plugins/bad.ts`.
+ *   [NUXT_B2011] Plugin `./runtime/analytics.server.ts` is server-only but was registered with mode `client`.
  *   ╰▶ see: https://nuxt.com/e/b2011
  * ---
  * ::
