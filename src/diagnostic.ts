@@ -2,6 +2,7 @@
 /* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace */
 
 import type { ExtractFnParam, IsUnknown, Prettify, UnionToIntersection, ValueOrFn } from './utils'
+import { formatDiagnostic } from './formatters/plain'
 import { toValueWithArgs } from './utils'
 
 /**
@@ -104,47 +105,53 @@ export type DiagnosticReporter<ReporterOpts extends object = {}> = (
 type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
 
 /**
- * Renders a diagnostic into a multi-line, unicode-decorated string suitable
- * for terminal output. The first line is `[<name>] <message>`; optional
- * details (`fix`, `sources`, `docs`) follow with `├▶`/`╰▶` connectors.
+ * The `console` methods a log reporter can route to.
  */
-export function formatDiagnostic(diagnostic: Diagnostic): string {
-  const header = `[${diagnostic.name}] ${diagnostic.message}`
+export type ConsoleMethod = 'log' | 'error' | 'warn'
 
-  const details: string[] = []
-  if (diagnostic.fix) {
-    details.push(`fix: ${diagnostic.fix}`)
-  }
-  if (diagnostic.sources?.length) {
-    details.push(`sources: ${diagnostic.sources.join(', ')}`)
-  }
-  if (diagnostic.docs) {
-    details.push(`see: ${diagnostic.docs}`)
-  }
+/**
+ * Options for {@link createReporterLog}.
+ */
+export interface ReporterLogOptions {
+  /**
+   * `console` method used to print the diagnostic. Defaults to `'warn'`. The
+   * returned reporter still accepts a per-call `{ method }` override through
+   * the call-site reporter options.
+   */
+  method?: ConsoleMethod
 
-  if (details.length === 0) {
-    return header
-  }
-
-  const lines = details.map((detail, i) => {
-    const connector = i < details.length - 1 ? '├▶' : '╰▶'
-    return `${connector} ${detail}`
-  })
-
-  return [header, ...lines].join('\n')
+  /**
+   * Renders the diagnostic into the string handed to `console`. Defaults to
+   * {@link formatDiagnostic}, the plain unicode-decorated formatter.
+   */
+  formatter?: (diagnostic: Diagnostic) => string
 }
 
-export function reporterError(diagnostic: Diagnostic): void {
-  console.error(formatDiagnostic(diagnostic))
+/**
+ * Creates a log reporter that renders each diagnostic with `formatter` and
+ * prints the result via `console[method]`. Both default sensibly (`'warn'` and
+ * {@link formatDiagnostic}); `method` can also be overridden per call through
+ * the reporter options.
+ */
+/* @__NO_SIDE_EFFECTS__ */
+export function createReporterLog({
+  method: defaultMethod = 'warn',
+  formatter = formatDiagnostic,
+}: ReporterLogOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
+  return (diagnostic, { method = defaultMethod } = {}) => {
+    // eslint-disable-next-line no-console
+    console[method](formatter(diagnostic))
+  }
 }
 
-export function reporterLog(
-  diagnostic: Diagnostic,
-  { method = 'warn' }: { method?: 'log' | 'error' | 'warn' } = {},
-): void {
-  // eslint-disable-next-line no-console
-  console[method](formatDiagnostic(diagnostic))
-}
+/**
+ * Ready-made log reporter, equivalent to `createReporterLog()`: prints
+ * `console.warn(formatDiagnostic(diagnostic))`, with a per-call `{ method }`
+ * override.
+ *
+ * @deprecated Use `createReporterLog()` instead.
+ */
+export const reporterLog: DiagnosticReporter<{ method?: ConsoleMethod }> = createReporterLog()
 
 /**
  * Resolves the `params` type a code expects from the intersection of params
@@ -317,6 +324,7 @@ export class Diagnostic extends Error {
  * code becomes a callable {@link DiagnosticHandle}: invoke to report, or
  * `throw` the result to raise. No `new` required, no proxy.
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
   const Codes extends Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[],

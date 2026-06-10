@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  defineDiagnostics,
-  Diagnostic,
-  formatDiagnostic,
-  reporterError,
-  reporterLog,
-} from './diagnostic'
+import { createReporterLog, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
+import { formatDiagnostic } from './formatters/plain'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
 function reporterWithPriority(diagnostic: Diagnostic, options: { priority: number }): void {
@@ -172,16 +167,7 @@ describe('diagnostic', () => {
 })
 
 describe('built-in reporters', () => {
-  it('reporterError logs `[<code>] <msg>` to console.error', () => {
-    const errs = defineDiagnostics({
-      codes: { NUXT_E001: { why: 'boom' } },
-      reporters: [reporterError],
-    })
-    errs.NUXT_E001()
-    expect('[NUXT_E001] boom').toHaveBeenErrored()
-  })
-
-  it('reporterLog defaults to console.log and includes the code', () => {
+  it('reporterLog defaults to console.warn and includes the code', () => {
     const errs = defineDiagnostics({
       codes: { NUXT_E001: { why: 'boom' } },
       reporters: [reporterLog],
@@ -213,7 +199,7 @@ describe('built-in reporters', () => {
       codes: {
         NUXT_E033: { why: 'boom', fix: 'restart it' },
       },
-      reporters: [reporterError],
+      reporters: [createReporterLog({ method: 'error' })],
     })
     errs.NUXT_E033({ sources: ['a.ts:1:1', 'b.ts:2:2'] })
     expect(
@@ -250,6 +236,44 @@ describe('built-in reporters', () => {
     errs.NUXT_E001(undefined, { priority: 7 })
     expect('[NUXT_E001] boom').toHaveBeenWarned()
     expect('priority: 7').toHaveBeenWarned()
+  })
+})
+
+describe('createReporterLog', () => {
+  it('defaults to console.warn and the plain formatter', () => {
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createReporterLog()],
+    })
+    errs.X_1()
+    expect('[X_1] boom').toHaveBeenWarned()
+  })
+
+  it('uses the configured default method', () => {
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createReporterLog({ method: 'error' })],
+    })
+    errs.X_1()
+    expect('[X_1] boom').toHaveBeenErrored()
+  })
+
+  it('lets the call site override the default method', () => {
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createReporterLog({ method: 'warn' })],
+    })
+    errs.X_1(undefined, { method: 'error' })
+    expect('[X_1] boom').toHaveBeenErrored()
+  })
+
+  it('renders with the provided formatter', () => {
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createReporterLog({ formatter: d => `formatted:${d.name}` })],
+    })
+    errs.X_1()
+    expect('formatted:X_1').toHaveBeenWarned()
   })
 })
 

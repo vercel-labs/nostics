@@ -24,10 +24,15 @@ export interface DiagnosticInit extends DiagnosticCallParams {
   fix?: string;
   docs?: string;
 }
+export interface ReporterLogOptions {
+  method?: ConsoleMethod;
+  formatter?: (_: Diagnostic) => string;
+}
 // #endregion
 
 // #region Types
 export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
+export type ConsoleMethod = "log" | "error" | "warn";
 export type DiagnosticReporter<ReporterOpts extends object = {}> = (_: Diagnostic, _: ReporterOpts) => void;
 // #endregion
 
@@ -44,12 +49,18 @@ export declare class Diagnostic extends Error {
 // #endregion
 
 // #region Functions
+export declare function createReporterLog({
+  method: defaultMethod,
+  formatter
+}?: ReporterLogOptions): DiagnosticReporter<{
+  method?: ConsoleMethod;
+}>;
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
 export declare function formatDiagnostic(_: Diagnostic): string;
-export declare function reporterError(_: Diagnostic): void;
-export declare function reporterLog(_: Diagnostic, {
-  method
-}?: {
-  method?: "log" | "error" | "warn";
-}): void;
+// #endregion
+
+// #region Variables
+export declare const reporterLog: DiagnosticReporter<{
+  method?: ConsoleMethod;
+}>;
 // #endregion

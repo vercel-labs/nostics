@@ -25,8 +25,17 @@ export type TrackedExportsMap = Map<string, Set<string>>
 const CONDITION = 'process.env.NODE_ENV !== "production"'
 
 /**
+ * Named exports from `nostics` that are side-effect-free factories: calling
+ * them only builds and returns a value. Marking their call sites pure lets the
+ * bundler drop them along with the `defineDiagnostics()` definition that holds
+ * them (e.g. `reporters: [createReporterLog()]`).
+ */
+const PURE_FACTORIES = new Set(['createReporterLog'])
+
+/**
  * Transforms code that imports from `nostics`:
  * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` call expressions
+ * - Adds `\/*#__PURE__*\/` to calls of known pure factories (e.g. `createReporterLog()`)
  * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using diagnostics variables
  *
  * Also handles cross-file patterns: if a file imports a variable that was
@@ -44,8 +53,9 @@ export function transform(
   const result = parseSync(id, code)
   const ast = result.program
 
-  // Step 1: Find direct defineDiagnostics imports from the package
+  // Step 1: Find direct defineDiagnostics and pure-factory imports from the package
   const defineDiagnosticsImports = new Set<string>()
+  const pureFactoryImports = new Set<string>()
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
       for (const spec of node.specifiers) {
@@ -54,6 +64,9 @@ export function transform(
             = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
           if (importedName === 'defineDiagnostics') {
             defineDiagnosticsImports.add(spec.local.name)
+          }
+          else if (PURE_FACTORIES.has(importedName)) {
+            pureFactoryImports.add(spec.local.name)
           }
         }
       }
@@ -95,8 +108,13 @@ export function transform(
     }
   }
 
-  if (defineDiagnosticsImports.size === 0 && crossFileTracked.size === 0)
+  if (
+    defineDiagnosticsImports.size === 0
+    && crossFileTracked.size === 0
+    && pureFactoryImports.size === 0
+  ) {
     return undefined
+  }
 
   const s = new MagicString(code)
   const trackedVars = new Set<string>(crossFileTracked)
@@ -105,7 +123,11 @@ export function transform(
   // mark the calls as pure.
   trackTopLevelDefinitions(ast.body, s, defineDiagnosticsImports, trackedVars)
 
-  // Step 3b: wrap expression statements that use a tracked variable while
+  // Step 3b: mark calls to known pure factories (e.g. `createReporterLog()`) as
+  // pure so they can be dropped with the definition that holds them.
+  annotatePureFactoryCalls(ast, s, pureFactoryImports)
+
+  // Step 3c: wrap expression statements that use a tracked variable while
   // respecting lexical shadowing in nested scopes.
   wrapTrackedExpressionStatements(ast, s, trackedVars, new Set(), CONDITION)
 
@@ -286,6 +308,42 @@ function trackVariableDeclaration(
       trackedVars.add(decl.id.name)
       s.appendLeft(decl.init.start, '/*#__PURE__*/ ')
     }
+  }
+}
+
+/**
+ * Walks the AST and prepends `\/*#__PURE__*\/` to every call of an imported
+ * pure factory (its callee is an identifier in `pureFactoryImports`). The
+ * annotation only matters when the call's result is unused, so it is always
+ * safe: used results are kept by the bundler regardless.
+ */
+function annotatePureFactoryCalls(
+  node: any,
+  s: MagicString,
+  pureFactoryImports: Set<string>,
+): void {
+  if (!node || typeof node !== 'object')
+    return
+
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      annotatePureFactoryCalls(child, s, pureFactoryImports)
+    }
+    return
+  }
+
+  if (
+    node.type === 'CallExpression'
+    && node.callee?.type === 'Identifier'
+    && pureFactoryImports.has(node.callee.name)
+  ) {
+    s.appendLeft(node.start, '/*#__PURE__*/ ')
+  }
+
+  for (const key in node) {
+    if (key === 'type' || key === 'start' || key === 'end')
+      continue
+    annotatePureFactoryCalls(node[key], s, pureFactoryImports)
   }
 }
 

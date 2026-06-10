@@ -80,6 +80,26 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({ codes: {} })`
 
       expectDefinitionTransform(input, expected, { packageName: 'my-custom-sdk' })
     })
+
+    it('adds /*#__PURE__*/ to createReporterLog calls nested in the options', () => {
+      const input = `import { createReporterLog, defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ reporters: [createReporterLog()], codes: {} })`
+
+      const expected = `import { createReporterLog, defineDiagnostics } from 'nostics'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ createReporterLog()], codes: {} })`
+
+      expectDefinitionTransform(input, expected)
+    })
+
+    it('handles renamed createReporterLog imports', () => {
+      const input = `import { createReporterLog as log, defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ reporters: [log({ method: 'error' })], codes: {} })`
+
+      const expected = `import { createReporterLog as log, defineDiagnostics } from 'nostics'
+export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PURE__*/ log({ method: 'error' })], codes: {} })`
+
+      expectDefinitionTransform(input, expected)
+    })
   })
 
   describe('cross-file tracking', () => {

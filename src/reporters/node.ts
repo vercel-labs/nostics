@@ -41,6 +41,7 @@ function applyExcludeStackFrames(raw: string, exclude: readonly RegExp[]): strin
  * })
  * ```
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function createFileReporter(options?: FileReporterOptions): DiagnosticReporter {
   const logFile = options?.logFile ?? '.nostics.log'
   const excludeStackFrames = options?.excludeStackFrames
