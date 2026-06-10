@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/public/nostics.svg" alt="nostics" width="320">
+</p>
+
 # nostics
 
 [![npm version](https://img.shields.io/npm/v/nostics?color=blue)](https://npmx.dev/nostics)

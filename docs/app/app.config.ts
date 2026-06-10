@@ -1,4 +1,11 @@
 export default defineAppConfig({
+  header: {
+    logo: {
+      light: '/nostics.svg',
+      dark: '/nostics.svg',
+      alt: 'Nostics',
+    },
+  },
   seo: {
     titleTemplate: '%s - nostics',
     title: 'nostics',
