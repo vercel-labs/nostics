@@ -8,8 +8,6 @@ seo:
 #headline
 :logo{.mx-auto.h-20.mb-6}
 
-[Diagnostics SDK]{.section-eyebrow}
-
 #title
 Errors worth reading
 
