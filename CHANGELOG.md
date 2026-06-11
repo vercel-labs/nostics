@@ -1,3 +1,15 @@
+# [0.4.0](https://github.com/vercel-labs/nostics/compare/v0.3.0...v0.4.0) (2026-06-11)
+
+### Bug Fixes
+
+- handle more cases when transforming code ([2c17cac](https://github.com/vercel-labs/nostics/commit/2c17cac6a0e439b0794f90d3e5dd6d0b770debdb))
+
+### BREAKING CHANGES
+
+- reporter factories (createConsoleReporter, createDevReporter) (#20) ([66d3cef](https://github.com/vercel-labs/nostics/commit/66d3cef6cca601df607d1ff09afdd040c74ffe54))
+  - `reporterError` is removed in favor of `createConsoleReporter({ method: 'error' })`
+  - `reporterLog` is deprecated in favor of `createConsoleReporter()`.
+
 # [0.3.0](https://github.com/vercel-labs/nostics/compare/v0.2.0...v0.3.0) (2026-05-28)
 
 - refactor!: split nostics/unplugin into two nested exports (#13) ([08c2374](https://github.com/vercel-labs/nostics/commit/08c237458d60cbe277d1d9a979aca2b35f337964)), closes [#13](https://github.com/vercel-labs/nostics/issues/13)
@@ -61,17 +73,17 @@
 
 Migrate by replacing:
 
-  ```ts
-  diagnostics.MY_CODE.report({ name: 'x' })
-  diagnostics.MY_CODE.throw({ name: 'x' })
-  ```
+```ts
+diagnostics.MY_CODE.report({ name: 'x' })
+diagnostics.MY_CODE.throw({ name: 'x' })
+```
 
 With:
 
-  ```ts
-  diagnostics.MY_CODE({ name: 'x' })
-  throw diagnostics.MY_CODE({ name: 'x' })
-  ```
+```ts
+diagnostics.MY_CODE({ name: 'x' })
+throw diagnostics.MY_CODE({ name: 'x' })
+```
 
 The call signature, return type (`Diagnostic`), and parameter inference are
 unchanged. Prefixing the call with `throw` is now required to let TS
