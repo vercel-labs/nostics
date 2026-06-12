@@ -13,6 +13,7 @@
     "vue": "catalog:playground"
   },
   "devDependencies": {
+    "@nostics/unplugin": "workspace:*",
     "@vitejs/devtools": "catalog:cli",
     "@vitejs/plugin-vue": "catalog:playground",
     "nostics": "workspace:*",

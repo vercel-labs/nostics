@@ -75,6 +75,7 @@ const IS_MAIN_PKG_AT_ROOT = true
 const PKG_FOLDERS = [
   // comment for multiline format
   join(__dirname, '..'),
+  join(__dirname, '..', 'packages', 'unplugin'),
   // join(__dirname, '..', 'demo-lib'),
 ]
 
@@ -85,6 +86,8 @@ const FILES_TO_COMMIT = [
   'CHANGELOG.md',
   'demo-lib/package.json',
   'demo-lib/CHANGELOG.md',
+  'packages/unplugin/package.json',
+  'packages/unplugin/CHANGELOG.md',
   '.claude-plugin/plugin.json',
   '.claude-plugin/marketplace.json',
 ]
@@ -390,7 +393,11 @@ async function main() {
   const { stdout } = await run('git', ['diff', 'HEAD'], { stdio: 'pipe' })
   if (stdout) {
     step('\nCommitting changes...')
-    await runIfNotDry('git', ['add', ...FILES_TO_COMMIT])
+    // some files (e.g. a package's first CHANGELOG.md) may not exist yet
+    const filesToCommit = FILES_TO_COMMIT.filter(file =>
+      fs.existsSync(join(__dirname, '..', file)),
+    )
+    await runIfNotDry('git', ['add', ...filesToCommit])
     await runIfNotDry('git', [
       'commit',
       '-m',

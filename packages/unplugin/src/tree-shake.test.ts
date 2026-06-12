@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { transform } from './transform'
 
 async function bundleProduction(input: string): Promise<string> {
-  const id = join(import.meta.dirname, '../../demo-lib/src/entry.ts')
+  const id = join(import.meta.dirname, '../../../demo-lib/src/entry.ts')
   const trackedExportsMap: TrackedExportsMap = new Map()
   // First, apply the plugin transform
   const transformed = transform(input, id, undefined, trackedExportsMap)

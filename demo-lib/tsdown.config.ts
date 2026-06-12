@@ -1,4 +1,4 @@
-import { nosticsStrip } from 'nostics/unplugin/strip-transform'
+import { nosticsStrip } from '@nostics/unplugin/strip-transform'
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({

@@ -24,8 +24,6 @@
     "./reporters/dev": "./dist/reporters/dev.mjs",
     "./reporters/fetch": "./dist/reporters/fetch.mjs",
     "./reporters/node": "./dist/reporters/node.mjs",
-    "./unplugin/dev-server-collector": "./dist/unplugin/dev-server-collector.mjs",
-    "./unplugin/strip-transform": "./dist/unplugin/strip-transform.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",
@@ -34,22 +32,17 @@
     "skills"
   ],
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && pnpm --filter \"./packages/*\" run build",
     "dev": "vitest",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
     "play": "pnpm -C playground run dev",
     "lint": "eslint",
-    "prepublishOnly": "nr build",
+    "prepublishOnly": "tsdown",
     "release": "node scripts/release.ts",
     "test": "pnpm run build && vitest run --coverage && pnpm -C demo-lib run build && pnpm -C playground run build && pnpm run typecheck && pnpm run lint",
-    "typecheck": "tsc",
+    "typecheck": "tsc && pnpm --filter \"./packages/*\" run typecheck",
     "prepare": "simple-git-hooks"
-  },
-  "dependencies": {
-    "magic-string": "catalog:deps",
-    "oxc-parser": "catalog:deps",
-    "unplugin": "catalog:deps"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
@@ -62,7 +55,6 @@
     "@vitest/ui": "catalog:testing",
     "conventional-changelog": "catalog:cli",
     "conventional-changelog-angular": "catalog:cli",
-    "esbuild": "catalog:cli",
     "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
     "nostics": "workspace:*",

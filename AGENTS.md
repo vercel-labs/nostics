@@ -20,16 +20,16 @@ Structured diagnostic SDK: typed, serializable `Diagnostic` objects with stable 
 
 `defineDiagnostics()` → callable handles per code; call to build/report a `Diagnostic`, `throw` the returned value to raise.
 
-`src/unplugin/`: unplugin entries. `strip-transform.ts` is the build-time AST transform that marks diagnostic code as pure and wraps with `NODE_ENV` guard for tree-shaking; `dev-server-collector.ts` is the Vite dev-server WS listener that forwards browser diagnostics to a log file.
+`packages/unplugin/` (`@nostics/unplugin`): build-time plugins, published separately. `strip-transform.ts` is the build-time AST transform that marks diagnostic code as pure and wraps with `NODE_ENV` guard for tree-shaking; `dev-server-collector.ts` is the Vite dev-server WS listener that forwards browser diagnostics to a log file. It has `nostics` as a peer dependency (`workspace:^`), so building it requires the root `nostics` dist first (root `pnpm build` handles the order).
 
-Monorepo (pnpm workspaces): `playground/` and `demo-lib/` are subprojects.
+Monorepo (pnpm workspaces): root is the `nostics` package, publishable packages live in `packages/*`, and `playground/` and `demo-lib/` are subprojects. Vitest runs as projects from the root config (`nostics` + `packages/*`). Releases: add new publishable packages to `PKG_FOLDERS`/`FILES_TO_COMMIT` in `scripts/release.ts` and to the folder `MAP` in `.github/workflows/release.yml`.
 
 ### Public API: keep in sync
 
 When adding, removing, renaming, or moving an export, update together:
 
 - `src/index.ts` (root `nostics` exports) plus the `src/**` file that owns it.
-- A subpath export needs matching entries in `package.json` `exports` and `tsdown.config.ts` `entry` (e.g. `nostics/formatters/ansi`).
+- A subpath export needs matching entries in `package.json` `exports` and `tsdown.config.ts` `entry` (e.g. `nostics/formatters/ansi`). Same rule inside `packages/unplugin/`.
 - `docs/content/**`: import paths and the API/installation tables.
 - `demo-lib/` and the `src/unplugin/tree-shake.test.ts` nostics stub when they use the symbol.
 - New side-effect-free factory: add `/* @__NO_SIDE_EFFECTS__ */` to its definition (so bundlers tree-shake calls), and if it's a root export used in `defineDiagnostics()`, add it to `PURE_FACTORIES` in `src/unplugin/transform.ts`.

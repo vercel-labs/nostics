@@ -1,6 +1,6 @@
+import { nosticsCollector } from '@nostics/unplugin/dev-server-collector'
 import { DevTools } from '@vitejs/devtools'
 import vue from '@vitejs/plugin-vue'
-import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
 import { defineConfig } from 'vite'
 import inspect from 'vite-plugin-inspect'
 

@@ -47,7 +47,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined> = (optio
  *
  * ```ts
  * // vite.config.ts
- * import { nosticsStrip } from 'nostics/unplugin/strip-transform'
+ * import { nosticsStrip } from '@nostics/unplugin/strip-transform'
  * export default defineConfig({ plugins: [nosticsStrip.vite()] })
  * ```
  */
