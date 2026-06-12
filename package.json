@@ -38,7 +38,7 @@
     "docs:build": "pnpm -C docs run build",
     "play": "pnpm -C playground run dev",
     "lint": "eslint",
-    "prepublishOnly": "build",
+    "prepublishOnly": "pnpm run build",
     "release": "node scripts/release.ts",
     "test": "pnpm run build && vitest run --coverage && pnpm -C demo-lib run build && pnpm -C playground run build && pnpm run typecheck && pnpm run lint",
     "typecheck": "tsc && pnpm --filter \"./packages/*\" run typecheck",
