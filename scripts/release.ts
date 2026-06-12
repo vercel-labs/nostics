@@ -393,11 +393,7 @@ async function main() {
   const { stdout } = await run('git', ['diff', 'HEAD'], { stdio: 'pipe' })
   if (stdout) {
     step('\nCommitting changes...')
-    // some files (e.g. a package's first CHANGELOG.md) may not exist yet
-    const filesToCommit = FILES_TO_COMMIT.filter(file =>
-      fs.existsSync(join(__dirname, '..', file)),
-    )
-    await runIfNotDry('git', ['add', ...filesToCommit])
+    await runIfNotDry('git', ['add', ...FILES_TO_COMMIT])
     await runIfNotDry('git', [
       'commit',
       '-m',
