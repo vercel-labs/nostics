@@ -75,6 +75,7 @@ const IS_MAIN_PKG_AT_ROOT = true
 const PKG_FOLDERS = [
   // comment for multiline format
   join(__dirname, '..'),
+  join(__dirname, '..', 'packages', 'unplugin'),
   // join(__dirname, '..', 'demo-lib'),
 ]
 
@@ -85,6 +86,8 @@ const FILES_TO_COMMIT = [
   'CHANGELOG.md',
   'demo-lib/package.json',
   'demo-lib/CHANGELOG.md',
+  'packages/unplugin/package.json',
+  'packages/unplugin/CHANGELOG.md',
   '.claude-plugin/plugin.json',
   '.claude-plugin/marketplace.json',
 ]

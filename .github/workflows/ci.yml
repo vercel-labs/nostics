@@ -20,6 +20,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      # build, typecheck, and vitest (projects) also cover packages/*
       - run: pnpm run build
       - run: pnpm run lint
       - run: pnpm run typecheck

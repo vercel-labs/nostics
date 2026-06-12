@@ -127,16 +127,6 @@ catalogs:
 importers:
 
   .:
-    dependencies:
-      magic-string:
-        specifier: catalog:deps
-        version: 0.30.21
-      oxc-parser:
-        specifier: catalog:deps
-        version: 0.132.0
-      unplugin:
-        specifier: catalog:deps
-        version: 3.0.0
     devDependencies:
       '@antfu/eslint-config':
         specifier: catalog:cli
@@ -168,9 +158,6 @@ importers:
       conventional-changelog-angular:
         specifier: catalog:cli
         version: 8.3.1
-      esbuild:
-        specifier: catalog:cli
-        version: 0.28.0
       eslint:
         specifier: catalog:cli
         version: 10.3.0(jiti@2.7.0)
@@ -214,6 +201,9 @@ importers:
         specifier: workspace:*
         version: link:..
     devDependencies:
+      '@nostics/unplugin':
+        specifier: workspace:*
+        version: link:../packages/unplugin
       tsdown:
         specifier: catalog:cli
         version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.21)(typescript@6.0.3)
@@ -246,6 +236,46 @@ importers:
         specifier: catalog:cli
         version: 3.3.3(typescript@6.0.3)
 
+  packages/unplugin:
+    dependencies:
+      magic-string:
+        specifier: catalog:deps
+        version: 0.30.21
+      oxc-parser:
+        specifier: catalog:deps
+        version: 0.132.0
+      unplugin:
+        specifier: catalog:deps
+        version: 3.0.0
+    devDependencies:
+      '@types/node':
+        specifier: catalog:types
+        version: 25.7.0
+      esbuild:
+        specifier: catalog:cli
+        version: 0.28.0
+      nostics:
+        specifier: workspace:*
+        version: link:../..
+      publint:
+        specifier: catalog:cli
+        version: 0.3.21
+      tsdown:
+        specifier: catalog:cli
+        version: 0.22.0(@vitejs/devtools@0.1.22)(publint@0.3.21)(typescript@6.0.3)
+      tsnapi:
+        specifier: catalog:testing
+        version: 0.3.3(vitest@4.1.6)
+      typescript:
+        specifier: catalog:cli
+        version: 6.0.3
+      vite:
+        specifier: catalog:cli
+        version: 8.0.12(@types/node@25.7.0)(@vitejs/devtools@0.1.22)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)
+      vitest:
+        specifier: catalog:testing
+        version: 4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(@vitest/coverage-v8@4.1.6)(@vitest/ui@4.1.6)(vite@8.0.12)
+
   playground:
     dependencies:
       '@posva/lib-demo':
@@ -255,6 +285,9 @@ importers:
         specifier: catalog:playground
         version: 3.5.34(typescript@6.0.3)
     devDependencies:
+      '@nostics/unplugin':
+        specifier: workspace:*
+        version: link:../packages/unplugin
       '@vitejs/devtools':
         specifier: catalog:cli
         version: 0.1.22(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@pnpm/logger@1001.0.1)(db0@0.3.4(better-sqlite3@12.10.0))(ioredis@5.11.0)(typescript@6.0.3)(vite@8.0.12)

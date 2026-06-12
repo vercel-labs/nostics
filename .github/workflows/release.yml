@@ -62,7 +62,7 @@ jobs:
 
             # Package folder mapping
             declare -A MAP=(
-              # ["@posva/lib-demo"]="demo-lib"
+              ["@nostics/unplugin"]="packages/unplugin"
             )
 
             if [[ -z "${MAP[$PKG_NAME]}" ]]; then

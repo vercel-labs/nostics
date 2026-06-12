@@ -21,6 +21,7 @@
     "nostics": "workspace:*"
   },
   "devDependencies": {
+    "@nostics/unplugin": "workspace:*",
     "tsdown": "catalog:cli"
   }
 }

@@ -1,0 +1,62 @@
+{
+  "name": "@nostics/unplugin",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Build-time plugins for nostics: strip diagnostics from production builds and collect them during dev",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "contributors": [
+    "Eduardo San Martin Morote <posva13@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/vercel-labs/nostics#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vercel-labs/nostics.git",
+    "directory": "packages/unplugin"
+  },
+  "bugs": "https://github.com/vercel-labs/nostics/issues",
+  "keywords": [
+    "nostics",
+    "unplugin",
+    "vite-plugin",
+    "diagnostics"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "exports": {
+    "./dev-server-collector": "./dist/dev-server-collector.mjs",
+    "./strip-transform": "./dist/strip-transform.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "vitest",
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "peerDependencies": {
+    "nostics": "workspace:^"
+  },
+  "dependencies": {
+    "magic-string": "catalog:deps",
+    "oxc-parser": "catalog:deps",
+    "unplugin": "catalog:deps"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:types",
+    "esbuild": "catalog:cli",
+    "nostics": "workspace:*",
+    "publint": "catalog:cli",
+    "tsdown": "catalog:cli",
+    "tsnapi": "catalog:testing",
+    "typescript": "catalog:cli",
+    "vite": "catalog:cli",
+    "vitest": "catalog:testing"
+  }
+}

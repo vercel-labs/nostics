@@ -1,9 +1,9 @@
+import type { FileReporterOptions } from 'nostics/reporters/node'
 import type { UnpluginInstance } from 'unplugin'
-import type { FileReporterOptions } from '../reporters/node'
 import { existsSync, writeFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
+import { createFileReporter } from 'nostics/reporters/node'
 import { createUnplugin } from 'unplugin'
-import { createFileReporter } from '../reporters/node'
 
 export interface NosticsCollectorOptions {
   /**
@@ -35,7 +35,7 @@ export interface NosticsCollectorOptions {
  *
  * ```ts
  * // vite.config.ts
- * import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
+ * import { nosticsCollector } from '@nostics/unplugin/dev-server-collector'
  * export default defineConfig({ plugins: [nosticsCollector.vite()] })
  * ```
  *

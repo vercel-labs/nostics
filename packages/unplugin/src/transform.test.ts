@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { transform } from './transform'
 
-const CALLSITE_ID = join(import.meta.dirname, '../../demo-lib/src/math.ts')
+const CALLSITE_ID = join(import.meta.dirname, '../../../demo-lib/src/math.ts')
 
 function expectDefinitionTransform(input: string, expected: string, options?: TransformOptions) {
   const result = transform(input, 'test.ts', options)

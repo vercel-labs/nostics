@@ -87,10 +87,16 @@ The structured shape also makes diagnostics easier for tools and coding agents t
 
 ## Vite plugins
 
+Build-time plugins live in the separate [`@nostics/unplugin`](./packages/unplugin) package:
+
+```bash
+pnpm add -D @nostics/unplugin
+```
+
 For library builds, use the strip plugin:
 
 ```ts
-import { nosticsStrip } from 'nostics/unplugin/strip-transform'
+import { nosticsStrip } from '@nostics/unplugin/strip-transform'
 
 export default defineConfig({
   plugins: [nosticsStrip.vite()],
@@ -100,7 +106,7 @@ export default defineConfig({
 For browser diagnostics during Vite dev, use `createDevReporter()` in the browser and `nosticsCollector` in the consuming app:
 
 ```ts
-import { nosticsCollector } from 'nostics/unplugin/dev-server-collector'
+import { nosticsCollector } from '@nostics/unplugin/dev-server-collector'
 
 export default defineConfig({
   plugins: [nosticsCollector.vite()],
