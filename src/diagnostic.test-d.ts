@@ -7,6 +7,9 @@ import { createConsoleReporter, defineDiagnostics } from './diagnostic'
 
 function reporterWithPriority(_diagnostic: Diagnostic, _options: { priority: number }): void {}
 
+// used for throws
+const maybe: boolean = Math.random() > 0.5
+
 describe('defineDiagnostics: reporter options inference', () => {
   it('options is optional when there are no reporters', () => {
     const errs = defineDiagnostics({
@@ -34,7 +37,9 @@ describe('defineDiagnostics: reporter options inference', () => {
     })
     errs.X()
     errs.X(undefined, { method: 'warn' })
-    throw errs.X()
+    if (maybe) {
+      throw errs.X()
+    }
     throw errs.X(undefined, { method: 'warn' })
   })
 
@@ -44,9 +49,12 @@ describe('defineDiagnostics: reporter options inference', () => {
       reporters: [reporterWithPriority],
     })
     errs.X(undefined, { priority: 1 })
-    throw errs.X(undefined, { priority: 1 })
     // @ts-expect-error: options is required
     errs.X()
+
+    if (maybe) {
+      throw errs.X(undefined, { priority: 1 })
+    }
     // @ts-expect-error: options is required
     throw errs.X()
   })
@@ -142,7 +150,9 @@ describe('defineDiagnostics: params inference', () => {
       reporters: [reporterWithPriority],
     })
     errs.X({ who: 'me' }, { priority: 2 })
-    throw errs.X({ who: 'me' }, { priority: 2 })
+    if (maybe) {
+      throw errs.X({ who: 'me' }, { priority: 2 })
+    }
     // @ts-expect-error: options required
     errs.X({ who: 'me' })
     // @ts-expect-error: params required
