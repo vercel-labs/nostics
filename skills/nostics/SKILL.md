@@ -117,6 +117,7 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
 
 - **Codes** are stable, fully-qualified `PREFIX_XNNNN` (`B` build, `R` runtime, `C` config, `D` deprecation). Never reuse or reassign a published code.
 - Always provide `why`; provide `fix` whenever the solution is known (the most actionable field for humans and agents). Use parameterized templates for runtime values, not string concatenation outside the factory.
+- **`why` is the diagnosis, `fix` is the remedy — split them, don't overlap them.** `why` states only what is wrong; `fix` states only what to do. The reporter prints both, so any wording that appears in both is dead weight. When a single source sentence carries both (`"A hash must start with '#'. Prefix it with '#'."`), cut it in two — diagnosis to `why`, remedy to `fix` — rather than pasting the whole thing into `why` and echoing it in `fix`. `fix` accepts a param function too (`(p) => ...`), so move value-bearing remedies (`use "#${p.hash}"`) into it instead of leaving them in `why`.
 - Pass `cause` when re-raising; pass `sources` when the JS stack doesn't reflect the user's source.
 - Split large catalogs by domain (`diagnostics/build.ts`, `runtime.ts`, `config.ts`, re-exported from `index.ts`), each `defineDiagnostics()` sharing `docsBase` with its own code range.
 

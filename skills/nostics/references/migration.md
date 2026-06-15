@@ -50,6 +50,20 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
 
 - Codes are `PREFIX_XNNNN`. Pick the category letter by **area**, not severity: `B` build, `R` runtime, `C` config, `D` deprecation. A runtime warning is `R`; reserve `D` for deprecations. Published codes are permanent: never rename or reuse one.
 - `why` says what happened with runtime values interpolated through typed param functions (both `why` and `fix` accept them; their params are merged and required at the call site). `fix` is the concrete next action, never a restatement of the problem.
+- **Split the original warning; never copy it whole into `why`.** Most existing warnings bundle the diagnosis and the remedy in one string (`"A hash must start with '#'. Prefix it with '#'."`). The reporter prints `why` **and** `fix`, so pasting the full sentence into `why` and then writing a `fix` duplicates the remedy on screen. Cut the sentence in two: diagnosis to `why`, remedy to `fix`. If the remedy needs the offending value, make `fix` a param function — its params merge with `why`'s.
+
+  ```ts
+  // before:  warn(`A \`hash\` should start with "#". Replace "${hash}" with "#${hash}".`)
+
+  // ❌ remedy lives in why and is echoed by fix
+  { why: (p) => `A \`hash\` should start with "#". Replace "${p.hash}" with "#${p.hash}".`,
+    fix: 'Prefix the hash with "#".' }
+
+  // ✅ diagnosis in why, remedy in fix (a function, because it needs the value)
+  { why: (p) => `A \`hash\` should start with "#" but received "${p.hash}".`,
+    fix: (p) => `Prepend "#": use "#${p.hash}".` }
+  ```
+
 - Extra `console.warn`/`console.error` arguments must not be lost: an error value becomes `cause`; data values are interpolated into `why` (e.g. `JSON.stringify(p.value)`).
 - `cause` and `sources` (`'file:line:column'` strings pointing at user code) go **inside the params object** (the first argument), merged with the message params. The second argument is reporter options only, e.g. `{ method: 'error' }`.
 - `docsBase` is optional. If the project has no documented error-page URL scheme, propose one and surface it to the maintainer rather than inventing pages that do not exist.
@@ -75,5 +89,6 @@ Dropping diagnostics from production builds takes two pieces: `/*#__PURE__*/` an
 ## Verify
 
 - Tests for warnings, throws, guards, and error shapes still pass; tests asserting exact message text are updated consciously, not accidentally.
+- Watch substring assertions when splitting a warning. `toHaveBeenWarned('...')` / `toContain` pin a **fragment**, not the whole message, and a fragment may sit in the remedy half you just moved to `fix`. Before splitting, grep the tests for substrings of each warning: keep pinned **diagnosis** fragments in `why`; when a test pins a **remedy** fragment, update that assertion to the surviving `why` text. The same warning is often pinned by a shared constant duplicated across several spec files — fix every copy.
 - Dev-only gates are still present everywhere the source had them, and no new gates were added.
 - Report-only diagnostics remain strippable expression statements. Thrown/returned diagnostics keep their message text in production by design: they are behavior, not reports.
