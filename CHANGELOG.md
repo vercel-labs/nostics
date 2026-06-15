@@ -1,3 +1,17 @@
+# [1.0.0](https://github.com/vercel-labs/nostics/compare/v0.5.0...v1.0.0) (2026-06-15)
+
+Stable v1 🎊
+
+### Features
+
+- remove deprecated reporterLog and devReporter ([4546507](https://github.com/vercel-labs/nostics/commit/4546507ba64b062eb84d218717a84847947cd96c))
+
+### BREAKING CHANGES
+
+- replace `reporterLog` with `createConsoleReporter(),`
+
+* replace `devReporter` with `createDevReporter()`
+
 # [0.5.0](https://github.com/vercel-labs/nostics/compare/v0.4.0...v0.5.0) (2026-06-12)
 
 ### Code Refactoring

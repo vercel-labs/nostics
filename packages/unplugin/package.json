@@ -1,7 +1,7 @@
 {
   "name": "@nostics/unplugin",
   "type": "module",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Build-time plugins for nostics: strip diagnostics from production builds and collect them during dev",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "contributors": [

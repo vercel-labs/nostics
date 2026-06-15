@@ -1,3 +1,7 @@
+# [1.0.0](https://github.com/vercel-labs/nostics/compare/@nostics/unplugin@0.1.0...@nostics/unplugin@1.0.0) (2026-06-15)
+
+Stable release 🎊
+
 # 0.1.0 (2026-06-12)
 
 ### Code Refactoring
