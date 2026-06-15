@@ -74,6 +74,16 @@ throw diagnostics.NUXT_B5001({
 
 Calling a handle reports the diagnostic and returns a `Diagnostic`. Throwing the return value raises it. The params are inferred from your `why` and `fix` functions.
 
+## Claude Code plugin
+
+Install the plugin to give Claude skills for your diagnostic catalog:
+
+```bash
+claude plugin add https://github.com/vercel-labs/nostics
+```
+
+Claude will automatically pick up the `nostics` API reference and an `add-diagnostic` skill that finds the right catalog, chooses the next free code, and wires the call site.
+
 ## Why use it
 
 - Stable codes that users can search and docs can link to.
