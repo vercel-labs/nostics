@@ -18,7 +18,3 @@ export function createConsoleReporter(_) {}
 export function defineDiagnostics(_) {}
 export function formatDiagnostic(_) {}
 // #endregion
-
-// #region Variables
-export var reporterLog /* const */
-// #endregion

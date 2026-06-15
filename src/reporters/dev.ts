@@ -19,10 +19,3 @@ export function createDevReporter(): DiagnosticReporter {
     }
   }
 }
-
-/**
- * Ready-made dev reporter, equivalent to `createDevReporter()`.
- *
- * @deprecated Use `createDevReporter()` instead.
- */
-export const devReporter: DiagnosticReporter = createDevReporter()

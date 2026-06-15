@@ -4,7 +4,3 @@
 // #region Functions
 export declare function createDevReporter(): DiagnosticReporter;
 // #endregion
-
-// #region Variables
-export declare const devReporter: DiagnosticReporter;
-// #endregion

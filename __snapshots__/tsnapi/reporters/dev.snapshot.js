@@ -4,7 +4,3 @@
 // #region Functions
 export function createDevReporter() {}
 // #endregion
-
-// #region Variables
-export var devReporter /* const */
-// #endregion

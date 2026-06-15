@@ -1,4 +1,4 @@
-export { createConsoleReporter, defineDiagnostics, Diagnostic, reporterLog } from './diagnostic'
+export { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
 
 export type {
   ConsoleMethod,

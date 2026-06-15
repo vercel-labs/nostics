@@ -145,13 +145,6 @@ export function createConsoleReporter({
 }
 
 /**
- * Ready-made console reporter, equivalent to `createConsoleReporter()`.
- *
- * @deprecated Use `createConsoleReporter()` instead.
- */
-export const reporterLog: DiagnosticReporter<{ method?: ConsoleMethod }> = createConsoleReporter()
-
-/**
  * Resolves the `params` type a code expects from the intersection of params
  * across all function-typed fields, falling back to `{}` when every field is
  * static. Merged with {@link DiagnosticCallParams} at the call site.

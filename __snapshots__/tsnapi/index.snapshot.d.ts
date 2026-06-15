@@ -58,9 +58,3 @@ export declare function createConsoleReporter({
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
 export declare function formatDiagnostic(_: Diagnostic): string;
 // #endregion
-
-// #region Variables
-export declare const reporterLog: DiagnosticReporter<{
-  method?: ConsoleMethod;
-}>;
-// #endregion
