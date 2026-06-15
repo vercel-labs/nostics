@@ -51,5 +51,6 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined> = (optio
  * export default defineConfig({ plugins: [nosticsStrip.vite()] })
  * ```
  */
-export const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined>
-  /* #__PURE__ */ = createUnplugin<NosticsStripOptions | undefined>(unpluginFactory)
+export const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined> = createUnplugin<
+  NosticsStripOptions | undefined
+>(unpluginFactory)
