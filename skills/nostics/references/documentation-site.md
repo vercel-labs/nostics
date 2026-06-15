@@ -1,152 +1,10 @@
 # Documentation Site and Error Code Registry
 
-## Table of Contents
-
-- [Why a documentation site matters](#why-a-documentation-site-matters)
-- [Setting up docsBase](#setting-up-docsbase)
-- [Documentation page structure](#documentation-page-structure)
-- [Page template](#page-template)
-- [Deployment recommendations](#deployment-recommendations)
-- [Keeping docs in sync with code](#keeping-docs-in-sync-with-code)
-- [Optimizing for AI agent consumption](#optimizing-for-ai-agent-consumption)
-
-## Why a documentation site matters
-
-Every diagnostic code needs a public documentation page. It serves three audiences:
-
-1. **Developers** encountering the error in their terminal or logs can click the `see:` URL and get immediate guidance
-2. **AI agents** (Claude, Copilot, etc.) can fetch the page to help when a user pastes an error
-3. **Search engines** index these pages so developers searching for `NUXT_B2011` find the answer directly
-
-## Setting up docsBase
-
-The `docsBase` option in `defineDiagnostics()` controls the auto-generated `docs` URL. It can be a string or a function:
-
-```ts
-// Function form — full control over the URL
-const diagnostics = defineDiagnostics({
-  docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
-  codes: {
-    NUXT_B2011: { why: '...' },
-  },
-})
-// diagnostics.NUXT_B2011().docs → 'https://nuxt.com/e/b2011'
-```
-
-```ts
-// String form — code appended automatically as ${docsBase}/${code.toLowerCase()}
-const diagnostics = defineDiagnostics({
-  docsBase: 'https://example.com/errors',
-  codes: {
-    MY_E001: { why: '...' },
-  },
-})
-// diagnostics.MY_E001().docs → 'https://example.com/errors/my_e001'
-```
-
-Plan your URL structure accordingly.
-
-## Documentation page structure
-
-Each error code page (e.g. `https://nuxt.com/e/b2011`) should follow this structure. The content must be both human-readable and optimized for AI agent consumption. Use clear headings, concise language, and structured sections.
-
-### Required sections
-
-**Title and code identifier**
-
-```markdown
-# NUXT_B2011: Invalid plugin — src option is required
-
-Code: `NUXT_B2011`
-Level: error
-```
-
-Start with the code and a short title. Include the code and the severity level.
-
-**What this error means**
-
-```markdown
-## What this error means
-
-This error occurs when a plugin is registered via `addPlugin()` without providing a
-valid `src` path. Nuxt requires every plugin to have a source file so it can be
-resolved and included in the build.
-```
-
-Explain the error in plain language. Assume the reader has no prior context. Describe what the system expected versus what it received. AI agents rely on this section to explain the error to users.
-
-**Why this happens**
-
-```markdown
-## Why this happens
-
-Common causes:
-
-- Passing an object to `addPlugin()` without a `src` property
-- Passing `undefined` or `null` as the plugin path
-- A module is constructing a plugin object dynamically and the `src` field is missing
-  due to a conditional branch or typo
-```
-
-List the concrete scenarios that trigger this diagnostic as bullets. Each bullet should describe a specific situation the developer might be in.
-
-**How to fix it**
-
-````markdown
-## How to fix it
-
-Ensure every call to `addPlugin()` includes a valid `src` path:
-
-```ts
-// Wrong
-addPlugin({ name: 'my-plugin' })
-
-// Correct
-addPlugin({ src: resolve('./runtime/my-plugin'), name: 'my-plugin' })
-
-// Also correct — pass a string directly
-addPlugin(resolve('./runtime/my-plugin'))
-```
-
-If the plugin path is computed dynamically, verify the variable is defined before
-passing it to `addPlugin()`.
-````
-
-Provide concrete code examples showing the wrong pattern and the corrected version. This is the most important section; it should be copy-pasteable.
-
-### Optional sections
-
-**Additional context**
-
-```markdown
-## Additional context
-
-- This validation was added in Nuxt 3.2
-- If you are writing a Nuxt module, see the [Module Author Guide](https://nuxt.com/docs/guide/going-further/modules)
-- Related codes: [NUXT_B1001](./nuxt_b1001) (template compilation), [NUXT_B3005](./nuxt_b3005) (module resolution)
-```
-
-Link to related documentation, changelog entries, or related diagnostic codes.
-
-**Example diagnostic output**
-
-````markdown
-## Example output
-
-```
-[NUXT_B2011] Invalid plugin`/plugins/bad.ts`. src option is required.
-├▶ why:  plugin object was passed without a src path
-├▶ fix: Pass a string path or an object with a `src`property to`addPlugin()`.
-├▶ hint: Check your module's addPlugin() calls
-╰▶ see: https://nuxt.com/e/b2011
-```
-````
-
-Show what the user actually sees in their terminal so they can confirm they're on the right page.
+Every published code needs a stable, public documentation page forever. It serves three audiences: **developers** clicking the `see:` URL from their terminal, **AI agents** fetching the page to help when a user pastes an error, and **search engines** indexing `NUXT_B2011` so it's findable. Plan the URL structure to match `docsBase` (string form → `${docsBase}/${code.toLowerCase()}`; function form → full control).
 
 ## Page template
 
-Use this template for each error code page:
+Each code page (`https://nuxt.com/e/b2011`) follows this structure. Keep it human-readable and agent-parseable: consistent `##` headings, actionable content early, no critical info hidden in tabs/collapsed sections/JS-rendered content.
 
 ```markdown
 # {CODE}: {Short title}
@@ -156,48 +14,33 @@ Level: {error|warn|suggestion|deprecation}
 
 ## What this error means
 
-{Plain-language explanation of the diagnostic. 1-3 sentences.}
+{Plain-language explanation, no assumed context: what the system expected vs received. 1-3 sentences. Agents rely on this to explain the error.}
 
 ## Why this happens
 
-{Bulleted list of concrete scenarios that trigger this diagnostic.}
+{Bulleted list of the concrete scenarios that trigger this diagnostic.}
 
 ## How to fix it
 
-{Code examples showing the wrong pattern and the corrected version.}
+{The most important section: copy-pasteable code showing the wrong pattern and the corrected version.}
 
 ## Additional context
 
-{Links to related docs, changelog, or related diagnostic codes. Optional.}
+{Optional: links to related docs, changelog, or related codes.}
 
 ## Example output
 
-{Terminal output showing the formatted diagnostic. Optional.}
+{Optional: the formatted terminal output, so users confirm they're on the right page.}
 ```
 
-## Deployment recommendations
+## Deployment
 
-Host the error code pages on a public URL that matches your `docsBase`:
+- Host on a public URL matching `docsBase`: a static site generator (VitePress, Nuxt Content) with a catch-all `/e/[code]` route, or a dedicated `/errors` route in existing docs.
+- Return 200 for valid codes, 404 for unknown ones, so agents and crawlers distinguish them.
+- Add frontmatter/`<meta>` structured data (code, level, title). Keep pages lightweight; avoid SPAs that block fetch-based agents.
 
-- **GitHub Pages or static site generator** (VitePress, Nuxt Content, etc.): create a directory of markdown files, one per code, with a catch-all route at `/e/[code].md`
-- **Dedicated `/errors` or `/e` route** in your existing documentation site
-- Return proper HTTP status codes (200 for valid codes, 404 for unknown ones) so agents and crawlers can tell valid codes from missing ones
-- Add `<meta>` tags or frontmatter with structured data (code, level, title) to help agents and search engines parse pages
-- Keep pages lightweight. Avoid heavy JavaScript or SPAs that block content rendering for fetch-based agents.
+## Keep docs in sync with code
 
-## Keeping docs in sync with code
-
-- Store documentation markdown alongside your diagnostic definitions or in a dedicated `docs/errors/` directory
-- Generate an index page listing all codes with their messages and levels
-- In CI, validate that every code in `defineDiagnostics()` has a corresponding documentation page. Fail the build if a page is missing.
-- When adding a new diagnostic code, add the documentation page in the same PR
-
-## Optimizing for AI agent consumption
-
-Structure pages so an AI agent fetching the URL can extract the right information without ambiguity:
-
-- Use consistent heading hierarchy (`##` for sections)
-- Put the most actionable content (fix instructions) early
-- Avoid hiding critical information in collapsed sections, tabs, or JavaScript-rendered content
-- Include the code in the page title and body so keyword matching works
-- Keep code examples self-contained: an agent should be able to suggest the fix from the page content alone.
+- Store the markdown alongside the diagnostic definitions or in `docs/errors/`, and add the page in the same PR as a new code.
+- Generate an index page listing all codes with messages and levels.
+- In CI, validate that every code in `defineDiagnostics()` has a corresponding page; fail the build if one is missing.

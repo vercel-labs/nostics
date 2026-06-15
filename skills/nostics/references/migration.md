@@ -1,12 +1,6 @@
----
-name: nostics-migration
-description: Migrate a library's user-facing errors, warnings, and logs to nostics diagnostics. Use when replacing console.warn/console.error, warn() helpers, or thrown Errors with stable diagnostic codes, or when designing or extending a defineDiagnostics catalog.
-license: MIT
----
-
 # Migrate errors and warnings to nostics
 
-Turn ad hoc warnings and errors into a catalog of stable diagnostic codes **without changing runtime behavior**. API details: `references/nostics-api.md`.
+Follow this start to finish whenever the task is migrating a library's existing user-facing errors, warnings, and logs (`console.warn`/`console.error`, `warn()` helpers, thrown `Error`s) to nostics diagnostics. Turn ad hoc reporting into a catalog of stable diagnostic codes **without changing runtime behavior**. Full API: the `nostics` skill's `SKILL.md` (this reference lives beside it).
 
 ## What to migrate
 
