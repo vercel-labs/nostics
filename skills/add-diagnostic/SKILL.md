@@ -3,52 +3,26 @@ name: add-diagnostic
 description: 'Add a new diagnostic code following the defineDiagnostics() conventions from nostics'
 user-invocable: true
 allowed-tools: Read Grep Glob Edit Write
+license: MIT
 ---
 
 # Add a New Diagnostic Code
 
-## Step 1: Find the Target File
-
-Locate the file containing the `defineDiagnostics()` call where the new code should be added.
-
-Use Grep to search for `defineDiagnostics` across the project.
-
-## Step 2: Determine the Code Identifier
-
-Diagnostic codes follow the pattern `PREFIX_XNNNN`:
-
-- **PREFIX**: project/domain name in uppercase (e.g., `NUXT`, `MATH`, `I18N`)
-- **X**: category letter. `B` (build), `R` (runtime), `C` (config), `E` (error), `W` (warning), `D` (deprecation), `I` (info)
-- **NNNN**: numeric sequence
-
-Check existing codes in the file to pick the prefix, category, and next free number. Never reuse a published code.
-
-## Step 3: Add the Definition
-
-Add the new entry to the `codes` object inside `defineDiagnostics()`:
+1. **Find the catalog.** Grep for `defineDiagnostics` to locate the `codes` object the new entry belongs in. With several catalogs, pick by area.
+2. **Pick the code.** `PREFIX_XNNNN`: `PREFIX` is the project name uppercased (`NUXT`, `I18N`); `X` is the area letter (`B` build, `R` runtime, `C` config, `D` deprecation); `NNNN` is the next free number. Read existing codes to choose. Never rename or reuse a published code.
+3. **Add the entry:**
 
 ```ts
-CODE_NAME: {
-  why: 'Static explanation of why this failed.',
-  // OR with parameters:
-  why: (p: { paramName: string }) => `Template with ${p.paramName}.`,
-  fix: 'How to resolve the issue.', // optional but recommended
-  docs: 'https://example.com/custom-page', // optional — overrides docsBase, or `false` to opt out
+LIB_R0001: {
+  why: (p: { hook: string }) => `${p.hook}() must run at the top of setup().`, // string or typed fn; becomes Error.message (required)
+  fix: 'Move the call into setup() or a composable it calls.', // optional, but add whenever the fix is known
+  docs: 'https://example.com/custom', // optional: overrides docsBase, or `false` to opt out
 },
 ```
 
-Rules:
+- `why` is the only required field. Params from `why` and `fix` are intersected and required at the call site.
+- Runtime fields (`cause`, `sources`) are passed at the call site, never in the definition.
 
-- `why` is the only required field. It becomes `Error.message` on the resulting `Diagnostic` instance.
-- Parameters can appear in any template field (`why`, `fix`). TypeScript unions them and requires them at the call site.
-- Always provide `fix` when the solution is known
-- Use typed arrow functions for parameterized templates: `(p: { key: Type }) => string`
-- Runtime fields (`cause`, `sources`) are passed at the call site, not in the definition
-- `docs?: string | false` overrides `docsBase` for this code, or opts out entirely with `false`
+4. **Call it:** `diagnostics.LIB_R0001({ hook })` to report, `throw diagnostics.LIB_R0001({ hook, cause: err })` to raise. Both run the reporters.
 
-## Step 4: Call the Code
-
-```ts
-diagnostics.CODE_NAME({ paramName: 'value' })
-throw diagnostics.CODE_NAME({ paramName: 'value', cause: originalError })
-```
+Full API and reporter/formatter/plugin details: the `nostics` skill.
