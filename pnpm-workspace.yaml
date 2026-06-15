@@ -23,14 +23,14 @@ catalogs:
     conventional-changelog-angular: ^8.3.1
     esbuild: ^0.28.0
     eslint: ^10.3.0
-    lint-staged: ^17.0.4
+    lint-staged: ^17.0.7
     oxfmt: ^0.50.0
     publint: ^0.3.21
     semver: ^7.8.0
     simple-git-hooks: ^2.13.1
     tsdown: ^0.22.0
     typescript: ^6.0.3
-    vite: ^8.0.12
+    vite: ^8.0.16
     vite-plugin-inspect: ^12.0.0-beta.1
     vue-tsc: ^3.3.0
   deps:
@@ -51,10 +51,10 @@ catalogs:
     '@vitejs/plugin-vue': ^6.0.0
     vue: ^3.5.13
   testing:
-    '@vitest/coverage-v8': 4.1.6
-    '@vitest/ui': 4.1.6
+    '@vitest/coverage-v8': 4.1.8
+    '@vitest/ui': 4.1.8
     tsnapi: ^0.3.3
-    vitest: ^4.1.6
+    vitest: ^4.1.8
   types:
     '@types/node': ^25.7.0
     '@types/semver': ^7.7.1
