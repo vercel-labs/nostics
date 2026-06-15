@@ -12,8 +12,8 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> { }
-  interface AsymmetricMatchersContaining extends CustomMatchers { }
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
 function matchMessage(args: any[], received: string | RegExp): boolean {
@@ -52,14 +52,21 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
       const count = mockInstance.mock.calls.filter(args => matchMessage(args, received)).length
 
       return count === n
-        ? { pass: true, message: () => `expected "${received}" to have been ${method}ed ${n} times.` }
-        : { pass: false, message: () => `expected "${received}" to have been ${method}ed ${n} times but got ${count}.` }
+        ? {
+            pass: true,
+            message: () => `expected "${received}" to have been ${method}ed ${n} times.`,
+          }
+        : {
+            pass: false,
+            message: () =>
+              `expected "${received}" to have been ${method}ed ${n} times but got ${count}.`,
+          }
     },
   })
 
   beforeEach(() => {
     asserted.clear()
-    mockInstance = vi.spyOn(console, method).mockImplementation(() => { })
+    mockInstance = vi.spyOn(console, method).mockImplementation(() => {})
   })
 
   afterEach(() => {

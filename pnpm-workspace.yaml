@@ -18,45 +18,45 @@ catalogs:
     '@antfu/eslint-config': ^9.0.0
     '@antfu/ni': ^30.1.0
     '@posva/prompts': ^2.4.4
-    '@vitejs/devtools': ^0.1.13
+    '@vitejs/devtools': ^0.3.3
     conventional-changelog: ^7.2.0
     conventional-changelog-angular: ^8.3.1
-    esbuild: ^0.28.0
-    eslint: ^10.3.0
+    esbuild: ^0.28.1
+    eslint: ^10.5.0
     lint-staged: ^17.0.7
-    oxfmt: ^0.50.0
+    oxfmt: ^0.54.0
     publint: ^0.3.21
-    semver: ^7.8.0
+    semver: ^7.8.4
     simple-git-hooks: ^2.13.1
-    tsdown: ^0.22.0
+    tsdown: ^0.22.2
     typescript: ^6.0.3
     vite: ^8.0.16
-    vite-plugin-inspect: ^12.0.0-beta.1
-    vue-tsc: ^3.3.0
+    vite-plugin-inspect: 12.0.0-beta.3
+    vue-tsc: ^3.3.5
   deps:
     magic-string: ^0.30.21
-    oxc-parser: ^0.132.0
+    oxc-parser: ^0.135.0
     unplugin: ^3.0.0
   docs:
     '@nuxt/fonts': 0.14.0
-    '@nuxt/ui': ^4.7.1
+    '@nuxt/ui': ^4.8.2
     '@vercel/analytics': ^2.0.1
     '@vercel/speed-insights': ^2.0.0
-    better-sqlite3: ^12.10.0
-    docus: ^5.11.0
-    nuxt: ^4.4.6
+    better-sqlite3: ^12.10.1
+    docus: ^5.12.1
+    nuxt: ^4.4.8
   inlined:
     '@antfu/utils': ^9.3.0
   playground:
-    '@vitejs/plugin-vue': ^6.0.0
-    vue: ^3.5.13
+    '@vitejs/plugin-vue': ^6.0.7
+    vue: ^3.5.38
   testing:
     '@vitest/coverage-v8': 4.1.8
     '@vitest/ui': 4.1.8
     tsnapi: ^0.3.3
     vitest: ^4.1.8
   types:
-    '@types/node': ^25.7.0
+    '@types/node': ^25.9.3
     '@types/semver': ^7.7.1
 allowBuilds:
   '@parcel/watcher': false
