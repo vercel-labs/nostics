@@ -13,6 +13,12 @@ packages:
   - docs
   - packages/*
   - examples/*
+# Force a single h3 (Nitro 2.13.4 / Nuxt 4.4.8 use v1). Without this, @nuxt/content
+# (which does not pin h3) resolves to the h3 v2 RC pulled in by docus/@nuxtjs/mcp-toolkit
+# and vite-devtools, breaking server-side queryCollection (event.req.headers.entries).
+overrides:
+  h3: 1.15.11
+
 catalogs:
   cli:
     '@antfu/eslint-config': ^9.0.0
