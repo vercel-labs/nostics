@@ -65,6 +65,28 @@ describe('createFileReporter', () => {
     expect(entry.stack).toContain('node.test.ts')
   })
 
+  it('defaults to excluding node_modules frames', () => {
+    const diagnostics = defineDiagnostics({
+      codes: { E1: { why: 'msg' } },
+      reporters: [createFileReporter({ logFile })],
+    })
+    diagnostics.E1()
+    const entry = JSON.parse(readFileSync(logFile, 'utf8').trim())
+    expect(entry.stack).not.toContain('node_modules')
+  })
+
+  it('an explicit empty array keeps the node_modules frames the default strips', () => {
+    const diagnostics = defineDiagnostics({
+      codes: { E1: { why: 'msg' } },
+      reporters: [createFileReporter({ logFile, excludeStackFrames: [] })],
+    })
+    diagnostics.E1()
+    const entry = JSON.parse(readFileSync(logFile, 'utf8').trim())
+    // the runner invokes this through node_modules frames; an empty array
+    // must preserve them, unlike the default which removes them
+    expect(entry.stack).toContain('node_modules')
+  })
+
   it('excludeStackFrames drops frames matching any pattern', () => {
     const diagnostics = defineDiagnostics({
       codes: { E1: { why: 'msg' } },

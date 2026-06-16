@@ -13,9 +13,14 @@ export interface FileReporterOptions {
    * `diagnostic.stack` before it is written to the log file. Useful to strip
    * `node_modules` and Node internals. The `Error: ...` header line is
    * always preserved.
+   *
+   * Pass an empty array to keep every frame.
+   * @default [/\/node_modules\//i]
    */
   excludeStackFrames?: readonly RegExp[]
 }
+
+const DEFAULT_EXCLUDE_STACK_FRAMES: readonly RegExp[] = [/\/node_modules\//i]
 
 function applyExcludeStackFrames(raw: string, exclude: readonly RegExp[]): string {
   const [header, ...frames] = raw.split('\n')
@@ -44,7 +49,7 @@ function applyExcludeStackFrames(raw: string, exclude: readonly RegExp[]): strin
 /* @__NO_SIDE_EFFECTS__ */
 export function createFileReporter(options?: FileReporterOptions): DiagnosticReporter {
   const logFile = options?.logFile ?? '.nostics.log'
-  const excludeStackFrames = options?.excludeStackFrames
+  const excludeStackFrames = options?.excludeStackFrames ?? DEFAULT_EXCLUDE_STACK_FRAMES
   return (diagnostic) => {
     try {
       const d = diagnostic as Diagnostic & Record<string, unknown>

@@ -21,7 +21,9 @@ export interface NosticsCollectorOptions {
   /**
    * Stack frames matching ANY of these patterns are removed from each
    * diagnostic's stack trace before it is written to the log file.
-   * Forwarded to {@link createFileReporter}.
+   * Forwarded to {@link createFileReporter}. Pass an empty array to keep
+   * every frame.
+   * @default [/\/node_modules\//i]
    */
   excludeStackFrames?: readonly RegExp[]
 }
