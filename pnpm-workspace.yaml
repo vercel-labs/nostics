@@ -24,6 +24,8 @@ catalogs:
     '@antfu/eslint-config': ^9.0.0
     '@antfu/ni': ^30.1.0
     '@posva/prompts': ^2.4.4
+    '@size-limit/esbuild-why': ^12.1.0
+    '@size-limit/preset-small-lib': ^12.1.0
     '@vitejs/devtools': ^0.3.3
     conventional-changelog: ^7.2.0
     conventional-changelog-angular: ^8.3.1
@@ -34,6 +36,7 @@ catalogs:
     publint: ^0.3.21
     semver: ^7.8.4
     simple-git-hooks: ^2.13.1
+    size-limit: ^12.1.0
     tsdown: ^0.22.2
     typescript: ^6.0.3
     vite: ^8.0.16

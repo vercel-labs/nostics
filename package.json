@@ -40,6 +40,7 @@
     "lint": "eslint",
     "prepublishOnly": "pnpm run build",
     "release": "node scripts/release.ts",
+    "size": "size-limit",
     "test": "pnpm run build && vitest run --coverage && pnpm -C demo-lib run build && pnpm -C playground run build && pnpm run typecheck && pnpm run lint",
     "typecheck": "tsc && pnpm --filter \"./packages/*\" run typecheck",
     "prepare": "simple-git-hooks"
@@ -49,6 +50,8 @@
     "@antfu/ni": "catalog:cli",
     "@antfu/utils": "catalog:inlined",
     "@posva/prompts": "catalog:cli",
+    "@size-limit/esbuild-why": "catalog:cli",
+    "@size-limit/preset-small-lib": "catalog:cli",
     "@types/node": "catalog:types",
     "@types/semver": "catalog:types",
     "@vitest/coverage-v8": "catalog:testing",
@@ -62,6 +65,7 @@
     "publint": "catalog:cli",
     "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",
+    "size-limit": "catalog:cli",
     "tsdown": "catalog:cli",
     "tsnapi": "catalog:testing",
     "typescript": "catalog:cli",
@@ -73,5 +77,37 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
-  }
+  },
+  "size-limit": [
+    {
+      "name": "defineDiagnostics from source",
+      "path": "src/index.ts",
+      "import": "{ defineDiagnostics }"
+    },
+    {
+      "name": "defineDiagnostics",
+      "path": "dist/index.mjs",
+      "import": "{ defineDiagnostics }"
+    },
+    {
+      "name": "defineDiagnostics + Diagnostic + createConsoleReporter",
+      "path": "dist/index.mjs",
+      "import": "{ defineDiagnostics, Diagnostic, createConsoleReporter }"
+    },
+    {
+      "name": "formatDiagnostic",
+      "path": "dist/index.mjs",
+      "import": "{ formatDiagnostic }"
+    },
+    {
+      "name": "full root",
+      "path": "dist/index.mjs",
+      "import": "*"
+    },
+    {
+      "name": "ansi formatter",
+      "path": "dist/formatters/ansi.mjs",
+      "import": "*"
+    }
+  ]
 }
