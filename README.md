@@ -84,6 +84,14 @@ claude plugin add https://github.com/vercel-labs/nostics
 
 Claude will automatically pick up the `nostics` API reference and an `add-diagnostic` skill that finds the right catalog, chooses the next free code, and wires the call site.
 
+## Agent skills
+
+Prefer just the skills, without the plugin? Install them with [`npx skills`](https://github.com/vercel-labs/skills) into any supported agent (Claude Code, Codex, Cursor, opencode, and more):
+
+```bash
+npx skills add vercel-labs/nostics
+```
+
 ## Why use it
 
 - Stable codes that users can search and docs can link to.
