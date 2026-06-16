@@ -6,6 +6,7 @@
 
 [![npm version](https://img.shields.io/npm/v/nostics?color=blue)](https://npmx.dev/nostics)
 [![CI](https://github.com/vercel-labs/nostics/actions/workflows/ci.yml/badge.svg)](https://github.com/vercel-labs/nostics/actions/workflows/ci.yml)
+[![bundle size](https://deno.bundlejs.com/badge?q=nostics&treeshake=[{+defineDiagnostics+}])](https://bundlejs.com/?q=nostics&treeshake=%5B%7B+defineDiagnostics+%7D%5D)
 
 Errors worth reading.
 
