@@ -1,6 +1,6 @@
 ---
 name: nostics
-description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`createConsoleReporter`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `createDevReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nosticsStrip` from @nostics/unplugin/strip-transform, `nosticsCollector` from @nostics/unplugin/dev-server-collector). Also use when migrating a library's existing `console.warn`/`console.error`/`warn()` helpers or thrown `Error`s to diagnostics: follow `references/migration.md`."
+description: "Structured diagnostic code library for JavaScript/TypeScript. Turns errors and other conditions into typed, machine-readable `Diagnostic` instances with stable codes, docs URLs, and actionable fields. Use this skill whenever the project imports `nostics`, or works with `defineDiagnostics`/`defineProdDiagnostics`, the `Diagnostic` class, diagnostic code registries, or structured error handling. Also covers reporters (`createConsoleReporter`, `createFetchReporter` from nostics/reporters/fetch, `createFileReporter` from nostics/reporters/node, `createDevReporter` from nostics/reporters/dev), formatters (`formatDiagnostic`, `ansiFormatter`, `jsonFormatter`), and Vite plugins (`nosticsStrip` from @nostics/unplugin/strip-transform, `nosticsCollector` from @nostics/unplugin/dev-server-collector). Also use when migrating a library's existing `console.warn`/`console.error`/`warn()` helpers or thrown `Error`s to diagnostics: follow `references/migration.md`."
 license: MIT
 ---
 
@@ -36,7 +36,7 @@ const diagnostics = /*#__PURE__*/ defineDiagnostics({
 
 - **`docsBase`** `string | (code) => string | undefined`: string appends `/${code.toLowerCase()}`; function returns the full URL (or `undefined` to omit).
 - **`codes`**: each definition needs `why` (`string | (params) => string`, the only required field, becomes `Error.message`); optional `fix` (`string | (params) => string`) and `docs` (`string | false`).
-- **`reporters`**: fired on every call. Their `options` types are intersected; required reporter options become required at the call site.
+- **`reporters`**: fired on every call; optional. Their `options` types are intersected; required reporter options become required at the call site. Omit it (or pass `[]`) for a catalog whose codes are only ever `throw`n: the thrown `Diagnostic` already carries the message, so a console reporter would print it once and surface it again from the uncaught error, a visible duplicate. Keep report-only warnings and fatal throws in separate catalogs when one needs a reporter and the other does not.
 - **Param inference**: params from `why` and `fix` are intersected and required at the call site. If `why` needs `{ src }` and `fix` needs `{ date }`, the call requires `{ src, date }`.
 
 ## Call sites
@@ -44,7 +44,11 @@ const diagnostics = /*#__PURE__*/ defineDiagnostics({
 ```ts
 diagnostics.NUXT_B1001() // no params: report only
 diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' }) // params first
-diagnostics.NUXT_B2011({ src, cause: originalError, sources: ['nuxt.config.ts:42:3'] }) // runtime fields merge in
+diagnostics.NUXT_B2011({
+  src,
+  cause: originalError,
+  sources: ['nuxt.config.ts:42:3'],
+}) // runtime fields merge in
 diagnostics.NUXT_B2011({ src }, { method: 'error' }) // reporter options second
 throw diagnostics.NUXT_B2011({ src }) // raise
 ```
@@ -100,7 +104,9 @@ const audited: DiagnosticReporter<{ priority: number }> = (d, o) =>
 // vite.config.ts
 import { nosticsStrip } from '@nostics/unplugin/strip-transform'
 import { nosticsCollector } from '@nostics/unplugin/dev-server-collector'
-export default defineConfig({ plugins: [nosticsStrip.vite(), nosticsCollector.vite()] })
+export default defineConfig({
+  plugins: [nosticsStrip.vite(), nosticsCollector.vite()],
+})
 
 // src/diagnostics.ts — pair the collector with createDevReporter()
 import { createConsoleReporter, defineDiagnostics } from 'nostics'
@@ -112,6 +118,31 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
   },
 })
 ```
+
+## Production builds
+
+- **Report-only** diagnostics (bare `diagnostics.X()`) should disappear: `nosticsStrip` or hand annotations drop them, then the unused catalog tree-shakes.
+- **Surviving** diagnostics (`throw`/`return`/assigned/argument) stay, and each keeps the _whole_ catalog reachable, so every `why`/`fix` ships. Not every library throws in production: if yours only reports, stripping is enough, stop here.
+
+When a library _does_ `throw` in production, pick `defineProdDiagnostics` at definition time with a `NODE_ENV` ternary, so a consumer bundler drops the dev branch (all catalog text):
+
+```ts
+import { defineDiagnostics, defineProdDiagnostics } from 'nostics'
+export const diagnostics =
+  process.env.NODE_ENV === 'production'
+    ? /*#__PURE__*/ defineProdDiagnostics({ docsBase })
+    : /*#__PURE__*/ defineDiagnostics({
+        docsBase,
+        reporters: [
+          /* ... */
+        ],
+        codes: {
+          /* text */
+        },
+      })
+```
+
+The accessed code becomes the `message`, `docs` still derives from `docsBase`, no `why`/`fix` text ships. No `reporters` by default (so a surviving `throw` doesn't also log and then resurface as the uncaught error); pass `reporters` to keep prod telemetry. `nosticsStrip` tracks this ternary like a direct catalog export.
 
 ## Conventions
 

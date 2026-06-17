@@ -66,7 +66,7 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
 
 - Extra `console.warn`/`console.error` arguments must not be lost: an error value becomes `cause`; data values are interpolated into `why` (e.g. `JSON.stringify(p.value)`).
 - `cause` and `sources` (`'file:line:column'` strings pointing at user code) go **inside the params object** (the first argument), merged with the message params. The second argument is reporter options only, e.g. `{ method: 'error' }`.
-- `docsBase` is optional. If the project has no documented error-page URL scheme, propose one and surface it to the maintainer rather than inventing pages that do not exist.
+- `docsBase` is optional. If the project has no documented error-page URL scheme, propose one and surface it to the maintainer rather than inventing pages that do not exist. When pointing per-code `docs` at existing documentation with `#hash` anchors, verify each anchor against the built or published HTML (grep the `id=`) instead of guessing it. A custom slugify can keep heading casing and leave a trailing hyphen, so the real anchor may look like `#Using-the-store-outside-of-setup-`.
 
 ## Call-site patterns
 
@@ -80,7 +80,7 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
 | caught error tied to a user file            | `diagnostics.LIB_B0002({ ...params, cause: err, sources: ['src/file.ts:10:5'] }, { method: 'error' })` |
 | structured/internal error                   | leave unchanged                                                                                        |
 
-Calling a handle always runs the reporters, so `throw diagnostics.CODE(params)` reports **and** throws. For a warn-then-throw site that is the same double output it already had; for a bare `throw new Error(...)` it adds a console report before the throw, which is normally fine but worth mentioning if the library is strict about console output.
+Calling a handle always runs the reporters, so `throw diagnostics.CODE(params)` reports **and** throws. For a warn-then-throw site that is the same double output it already had. For a bare `throw new Error(...)` it adds a console report before the throw, which duplicates the message the uncaught error already shows. When a catalog's codes are only ever thrown (config validators, fatal asserts), give that catalog **no reporters** (`reporters` is optional) so the throw is the only output, and keep warnings in a separate reporter-backed catalog. Dropping the reporter also keeps a strict test harness happy when its `afterEach` fails on any unasserted `console.warn`/`console.error`.
 
 Report-only calls must stay bare expression statements (`DEV && diagnostics.LIB_R0001(p)` included) so `nosticsStrip` can remove them in production. `throw`/`return`/assigned diagnostics are behavior and stay.
 
