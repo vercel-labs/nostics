@@ -12,7 +12,8 @@ export function add(a: number, b: number): number {
 
 export function divide(a: number, b: number): number {
   if (b === 0) {
-    diagnostics.MATH_E001()
+    // intentionally throw to keep this error even in prod
+    throw diagnostics.MATH_E001()
   }
   return a / b
 }
