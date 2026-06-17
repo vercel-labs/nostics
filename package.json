@@ -90,9 +90,19 @@
       "import": "{ defineDiagnostics }"
     },
     {
-      "name": "defineDiagnostics + Diagnostic + createConsoleReporter",
+      "name": "defineProdDiagnostics",
       "path": "dist/index.mjs",
-      "import": "{ defineDiagnostics, Diagnostic, createConsoleReporter }"
+      "import": "{ defineProdDiagnostics }"
+    },
+    {
+      "name": "defineDiagnostics + createConsoleReporter",
+      "path": "dist/index.mjs",
+      "import": "{ defineDiagnostics, createConsoleReporter }"
+    },
+    {
+      "name": "defineProdDiagnostics + createConsoleReporter",
+      "path": "dist/index.mjs",
+      "import": "{ defineProdDiagnostics, createConsoleReporter }"
     },
     {
       "name": "formatDiagnostic",
