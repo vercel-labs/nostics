@@ -38,6 +38,7 @@ export interface DiagnosticInit extends DiagnosticCallParams {
 export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
 export type ConsoleMethod = "log" | "error" | "warn";
 export type DiagnosticReporter<ReporterOpts extends object = {}> = (_: Diagnostic, _: ReporterOpts) => void;
+export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>> };
 // #endregion
 
 // #region Classes
