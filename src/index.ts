@@ -1,6 +1,7 @@
 export { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
 
 export type {
+  AnyDiagnosticReporter,
   ConsoleMethod,
   ConsoleReporterOptions,
   DefineDiagnosticsOptions,

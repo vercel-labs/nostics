@@ -11,7 +11,8 @@
     "strictNullChecks": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "isolatedDeclarations": false,
+    "isolatedDeclarations": true,
+    "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
