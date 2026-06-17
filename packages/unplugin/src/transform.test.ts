@@ -112,6 +112,28 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({ reporters: [/*#__PU
 
       expectDefinitionTransform(input, expected)
     })
+
+    it('adds /*#__PURE__*/ to defineProdDiagnostics calls (manual prod opt-in)', () => {
+      const input = `import { defineProdDiagnostics } from 'nostics'
+export const diagnostics = defineProdDiagnostics({ docsBase: 'https://x.com' })`
+
+      const expected = `import { defineProdDiagnostics } from 'nostics'
+export const diagnostics = /*#__PURE__*/ defineProdDiagnostics({ docsBase: 'https://x.com' })`
+
+      expectDefinitionTransform(input, expected)
+    })
+
+    it('annotates both branches of a NODE_ENV ternary selecting prod/dev diagnostics', () => {
+      const input = `import { defineDiagnostics, defineProdDiagnostics } from 'nostics'
+export const diagnostics = process.env.NODE_ENV === 'production' ? defineProdDiagnostics({ docsBase }) : defineDiagnostics({ docsBase, codes: {} })
+diagnostics.E1()`
+
+      const expected = `import { defineDiagnostics, defineProdDiagnostics } from 'nostics'
+export const diagnostics = process.env.NODE_ENV === 'production' ? /*#__PURE__*/ defineProdDiagnostics({ docsBase }) : /*#__PURE__*/ defineDiagnostics({ docsBase, codes: {} })
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      expectDefinitionTransform(input, expected)
+    })
   })
 
   describe('cross-file tracking', () => {
@@ -136,6 +158,29 @@ export function run() {
       transform(
         `import { defineDiagnostics } from 'nostics'
 export const diagnostics = defineDiagnostics({ codes: {} })`,
+        diagnosticsId,
+        undefined,
+        trackedExportsMap,
+      )
+
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      const result = transform(input, CALLSITE_ID, undefined, trackedExportsMap)
+      expect(result).toBeDefined()
+      expect(result!.code).toBe(expected)
+    })
+
+    it('tracks a NODE_ENV ternary (prod/dev) export across a relative import', () => {
+      const trackedExportsMap: TrackedExportsMap = new Map()
+      const diagnosticsId = join(import.meta.dirname, '../../demo-lib/src/diagnostics.ts')
+
+      transform(
+        `import { defineDiagnostics, defineProdDiagnostics } from 'nostics'
+export const diagnostics = process.env.NODE_ENV === 'production' ? defineProdDiagnostics({}) : defineDiagnostics({ codes: {} })`,
         diagnosticsId,
         undefined,
         trackedExportsMap,

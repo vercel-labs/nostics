@@ -37,6 +37,7 @@ async function bundleProduction(input: string): Promise<string> {
           build.onLoad({ filter: /.*/, namespace: 'nostics-stub' }, () => ({
             contents: `
             export function defineDiagnostics(opts) { return opts }
+            export function defineProdDiagnostics(opts) { return opts }
             export function createConsoleReporter() { return () => {} }
             export function createDevReporter() { return () => {} }
           `,

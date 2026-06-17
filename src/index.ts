@@ -13,4 +13,8 @@ export type {
 
 export { formatDiagnostic } from './formatters/plain'
 
+export { defineProdDiagnostics } from './prod-diagnostics'
+
+export type { DefineProdDiagnosticsOptions } from './prod-diagnostics'
+
 export type { ValueOrFn as _ValueOrFn } from './utils'

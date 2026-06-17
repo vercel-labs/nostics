@@ -11,6 +11,10 @@ export interface DefineDiagnosticsOptions<Codes extends Record<string, Diagnosti
   codes: Codes;
   reporters?: Reporters;
 }
+export interface DefineProdDiagnosticsOptions<Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]> {
+  docsBase?: string | ((_: string) => string | undefined);
+  reporters?: Reporters;
+}
 export interface DiagnosticCallParams {
   cause?: unknown;
   sources?: string[];
@@ -56,5 +60,6 @@ export declare function createConsoleReporter({
   method?: ConsoleMethod;
 }>;
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
+export declare function defineProdDiagnostics<const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters>;
 export declare function formatDiagnostic(_: Diagnostic): string;
 // #endregion

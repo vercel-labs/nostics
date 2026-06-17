@@ -102,7 +102,7 @@ export type DiagnosticReporter<ReporterOpts extends object = {}> = (
  *
  * @internal
  */
-type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
+export type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
 
 /**
  * The `console` methods a log reporter can route to.
@@ -234,8 +234,10 @@ export interface DiagnosticHandle<Params, ReporterOpts> {
 
 /**
  * Return type of {@link defineDiagnostics}.
+ *
+ * @internal
  */
-type Diagnostics<
+export type Diagnostics<
   Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
 > = {
@@ -313,6 +315,21 @@ export class Diagnostic extends Error {
 }
 
 /**
+ * Resolves the docs URL for a code from a `docsBase` (string template or
+ * resolver function). Shared by {@link defineDiagnostics} and
+ * {@link defineProdDiagnostics}. Per-code `docs` overrides are handled by the
+ * caller; this only covers the `docsBase`-derived case.
+ *
+ * @internal
+ */
+export function deriveDocs(
+  docsBase: string | ((code: any) => string | undefined) | undefined,
+  code: string,
+): string | undefined {
+  return typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code)
+}
+
+/**
  * Creates a typed diagnostics object from a set of code definitions. Each
  * code becomes a callable {@link DiagnosticHandle}: invoke to report, or
  * `throw` the result to raise. No `new` required, no proxy.
@@ -330,11 +347,7 @@ export function defineDiagnostics<
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const def = options.codes[code]
     // skip docs if set to false, otherwise use it or derive it from docsBase
-    const docs
-      = def.docs === false
-        ? undefined
-        : def.docs
-          || (typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code))
+    const docs = def.docs === false ? undefined : def.docs || deriveDocs(docsBase, code)
 
     const handle = (
       params: DiagnosticCallParams & Record<string, unknown> = {},

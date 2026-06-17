@@ -1,3 +1,14 @@
+import type {
+  BindingPattern,
+  BindingRestElement,
+  CallExpression,
+  Directive,
+  Expression,
+  Node,
+  ParamPattern,
+  Statement,
+  VariableDeclaration,
+} from 'oxc-parser'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import MagicString from 'magic-string'
@@ -22,6 +33,14 @@ export interface TransformOptions {
  */
 export type TrackedExportsMap = Map<string, Set<string>>
 
+/**
+ * Any value encountered while walking the oxc AST generically: a node, a list
+ * of child nodes, or a leaf value on a node (e.g. an operator string or a
+ * `computed` boolean). The generic walkers descend into every property, so
+ * they must accept all of these.
+ */
+type AstChild = Node | AstChild[] | string | number | boolean | bigint | null | undefined
+
 const CONDITION = 'process.env.NODE_ENV !== "production"'
 
 /**
@@ -35,6 +54,7 @@ const PURE_FACTORIES = new Set([
   'createDevReporter',
   'createFileReporter',
   'createFetchReporter',
+  'defineProdDiagnostics',
 ])
 
 /**
@@ -91,7 +111,7 @@ export function transform(
   if (trackedExportsMap) {
     for (const node of ast.body) {
       if (node.type === 'ImportDeclaration' && node.source.value !== packageName) {
-        const source = node.source.value as string
+        const source = node.source.value
         // Only resolve relative imports
         if (!source.startsWith('.'))
           continue
@@ -177,7 +197,7 @@ export function transform(
  * Check if an expression has lower precedence than `&&` and needs inner parens
  * when used as the right-hand side of `guard && expr`.
  */
-function expressionNeedsParens(node: any): boolean {
+function expressionNeedsParens(node: Expression): boolean {
   if (node.type === 'ConditionalExpression')
     return true
   if (node.type === 'LogicalExpression' && (node.operator === '||' || node.operator === '??'))
@@ -270,10 +290,8 @@ function analyzeModule(
     ) {
       for (const decl of node.declaration.declarations) {
         if (
-          decl.init?.type === 'CallExpression'
-          && decl.init.callee?.type === 'Identifier'
-          && defineDiagnosticsImports.has(decl.init.callee.name)
-          && decl.id?.type === 'Identifier'
+          decl.id?.type === 'Identifier'
+          && findDefineDiagnosticsCalls(decl.init, defineDiagnosticsImports).length > 0
         ) {
           trackedExports.add(decl.id.name)
         }
@@ -287,7 +305,7 @@ function analyzeModule(
 }
 
 function trackTopLevelDefinitions(
-  body: any[],
+  body: Array<Directive | Statement>,
   s: MagicString,
   defineDiagnosticsImports: Set<string>,
   trackedVars: Set<string>,
@@ -305,22 +323,50 @@ function trackTopLevelDefinitions(
   }
 }
 
+/**
+ * Collect the `defineDiagnostics()` call expressions in a variable initializer
+ * that make the variable a diagnostics object and should receive a
+ * `\/*#__PURE__*\/` annotation. Recognizes a direct call and the
+ * production-builds ternary (`cond ? defineProdDiagnostics(...) :
+ * defineDiagnostics(...)`), where the dev branch is the `defineDiagnostics()`
+ * call. `defineProdDiagnostics` is a pure factory and is annotated separately.
+ */
+function findDefineDiagnosticsCalls(
+  init: Expression | null | undefined,
+  defineDiagnosticsImports: Set<string>,
+): CallExpression[] {
+  if (!init)
+    return []
+  if (
+    init.type === 'CallExpression'
+    && init.callee?.type === 'Identifier'
+    && defineDiagnosticsImports.has(init.callee.name)
+  ) {
+    return [init]
+  }
+  if (init.type === 'ConditionalExpression') {
+    return [
+      ...findDefineDiagnosticsCalls(init.consequent, defineDiagnosticsImports),
+      ...findDefineDiagnosticsCalls(init.alternate, defineDiagnosticsImports),
+    ]
+  }
+  return []
+}
+
 function trackVariableDeclaration(
-  node: any,
+  node: VariableDeclaration,
   s: MagicString,
   defineDiagnosticsImports: Set<string>,
   trackedVars: Set<string>,
 ): void {
   for (const decl of node.declarations) {
-    if (
-      decl.init?.type === 'CallExpression'
-      && decl.init.callee?.type === 'Identifier'
-      && defineDiagnosticsImports.has(decl.init.callee.name)
-      && decl.id?.type === 'Identifier'
-    ) {
-      trackedVars.add(decl.id.name)
-      s.appendLeft(decl.init.start, '/*#__PURE__*/ ')
-    }
+    if (decl.id?.type !== 'Identifier')
+      continue
+    const calls = findDefineDiagnosticsCalls(decl.init, defineDiagnosticsImports)
+    if (calls.length === 0)
+      continue
+    trackedVars.add(decl.id.name)
+    for (const call of calls) s.appendLeft(call.start, '/*#__PURE__*/ ')
   }
 }
 
@@ -331,7 +377,7 @@ function trackVariableDeclaration(
  * safe: used results are kept by the bundler regardless.
  */
 function annotatePureFactoryCalls(
-  node: any,
+  node: AstChild,
   s: MagicString,
   pureFactoryImports: Set<string>,
 ): void {
@@ -356,12 +402,16 @@ function annotatePureFactoryCalls(
   for (const key in node) {
     if (key === 'type' || key === 'start' || key === 'end')
       continue
-    annotatePureFactoryCalls(node[key], s, pureFactoryImports)
+    annotatePureFactoryCalls(
+      (node as unknown as Record<string, AstChild>)[key],
+      s,
+      pureFactoryImports,
+    )
   }
 }
 
 function wrapTrackedExpressionStatements(
-  node: any,
+  node: AstChild,
   s: MagicString,
   trackedVars: Set<string>,
   shadowedVars: Set<string>,
@@ -430,11 +480,17 @@ function wrapTrackedExpressionStatements(
   for (const key in node) {
     if (key === 'type' || key === 'start' || key === 'end')
       continue
-    wrapTrackedExpressionStatements(node[key], s, trackedVars, shadowedVars, condition)
+    wrapTrackedExpressionStatements(
+      (node as unknown as Record<string, AstChild>)[key],
+      s,
+      trackedVars,
+      shadowedVars,
+      condition,
+    )
   }
 }
 
-function collectStatementBindingNames(node: any, names: Set<string>): void {
+function collectStatementBindingNames(node: Statement | Directive, names: Set<string>): void {
   if (!node)
     return
 
@@ -448,7 +504,10 @@ function collectStatementBindingNames(node: any, names: Set<string>): void {
   }
 }
 
-function collectPatternNames(node: any, names: Set<string>): void {
+function collectPatternNames(
+  node: BindingPattern | BindingRestElement | ParamPattern | null | undefined,
+  names: Set<string>,
+): void {
   if (!node)
     return
 
@@ -468,7 +527,12 @@ function collectPatternNames(node: any, names: Set<string>): void {
   }
   else if (node.type === 'ObjectPattern') {
     for (const property of node.properties) {
-      collectPatternNames(property.value ?? property.argument, names)
+      if (property.type === 'RestElement') {
+        collectPatternNames(property.argument, names)
+      }
+      else {
+        collectPatternNames(property.value, names)
+      }
     }
   }
 }
@@ -477,7 +541,7 @@ function collectPatternNames(node: any, names: Set<string>): void {
  * Check if an expression references a tracked variable as the root of a member/call chain.
  */
 function expressionUsesTrackedVar(
-  node: any,
+  node: Expression | null | undefined,
   trackedVars: Set<string>,
   shadowedVars: Set<string>,
 ): boolean {
@@ -527,7 +591,7 @@ function expressionUsesTrackedVar(
 
   // Sequence expression: check any element
   if (node.type === 'SequenceExpression') {
-    return node.expressions.some((expr: any) =>
+    return node.expressions.some(expr =>
       expressionUsesTrackedVar(expr, trackedVars, shadowedVars),
     )
   }
