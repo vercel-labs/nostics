@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/vercel-labs/nostics/compare/v1.1.0...v1.1.1) (2026-06-17)
+
+
+### Bug Fixes
+
+* expose Diagnostics ([eb4b63b](https://github.com/vercel-labs/nostics/commit/eb4b63b26d8bfc30c2969192bb7028b7d28b032f))
+
 # [1.1.0](https://github.com/vercel-labs/nostics/compare/v1.0.0...v1.1.0) (2026-06-17)
 
 
