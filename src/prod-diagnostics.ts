@@ -32,9 +32,8 @@ export interface DefineProdDiagnosticsOptions<
 /**
  * Production counterpart to {@link defineDiagnostics}. Returns a `Proxy` that
  * builds a minimal {@link Diagnostic} for any accessed code: the code becomes
- * the `message` (`why`), `name` stays the default `'Diagnostic'`, and `docs` is
- * derived from `docsBase`. It carries no catalog text, so it stays tiny in a
- * bundle.
+ * both the `message` (`why`) and the instance `name`, and `docs` is derived
+ * from `docsBase`. It carries no catalog text, so it stays tiny in a bundle.
  *
  * The strip plugin (`@nostics/unplugin`) can rewrite a `defineDiagnostics()`
  * call into a `process.env.NODE_ENV === 'production'` ternary that selects this
@@ -72,6 +71,7 @@ export function defineProdDiagnostics<
           },
           handle,
         )
+        diagnostic.name = code
         for (const reporter of reporters) reporter(diagnostic, reporterOptions)
         return diagnostic
       }

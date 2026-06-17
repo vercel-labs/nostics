@@ -10,10 +10,11 @@ describe('defineProdDiagnostics', () => {
     expect(d).toBeInstanceOf(Diagnostic)
   })
 
-  it('uses the accessed code as `why` and keeps the default `name`', () => {
+  it('uses the accessed code as `why` and as the instance `name`', () => {
     const errs = defineProdDiagnostics()
     const d = errs.NUXT_B2011()
-    expect(d.name).toBe('Diagnostic')
+    // parity with defineDiagnostics: the code becomes the instance name
+    expect(d.name).toBe('NUXT_B2011')
     expect(d.message).toBe('NUXT_B2011')
     expect(d.why).toBe('NUXT_B2011')
   })
