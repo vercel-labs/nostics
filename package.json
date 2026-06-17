@@ -41,7 +41,11 @@
     "prepublishOnly": "pnpm run build",
     "release": "node scripts/release.ts",
     "size": "size-limit",
-    "test": "pnpm run build && vitest run --coverage && pnpm -C demo-lib run build && pnpm -C demo-lib run test && pnpm -C playground run build && pnpm run typecheck && pnpm run lint",
+    "test": "pnpm run build && pnpm run \"/^test:/\"",
+    "test:unit": "vitest run --coverage",
+    "test:types": "pnpm run typecheck",
+    "test:lint": "pnpm run lint",
+    "test:demo": "pnpm -C demo-lib run build && pnpm -C demo-lib run test && pnpm -C playground run build",
     "typecheck": "tsc && pnpm --filter \"./packages/*\" run typecheck",
     "prepare": "simple-git-hooks"
   },

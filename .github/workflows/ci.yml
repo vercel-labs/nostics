@@ -20,16 +20,13 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      # nostics dist is needed by every other task, so build first
       # build, typecheck, and vitest (projects) also cover packages/*
       - run: pnpm run build
-      - run: pnpm run lint
-      - run: pnpm run typecheck
-      - run: pnpm exec vitest run --coverage
-      # docs and playgrounds should also work
-      - run: pnpm -C demo-lib run build
-      # guards against a public type leak from nostics (TS2883 on declaration emit)
-      - run: pnpm -C demo-lib run test
-      - run: pnpm -C playground run build
+      # then run the rest in parallel: unit (coverage), types, lint, and the
+      # demo-lib build -> demo-lib test (guards a public type leak from nostics,
+      # TS2883 on declaration emit) -> playground build chain
+      - run: pnpm run "/^test:/"
       # docs often run out of memory and is very slow, we will catch the error
       # on Vercel deployments
       # - run: pnpm -C docs run build

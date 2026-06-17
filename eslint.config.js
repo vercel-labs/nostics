@@ -10,6 +10,9 @@ export default antfu(
       'PLAN.md',
       '.context/**',
       'skills/**/*.md',
+      // generated .d.ts artifacts from `pnpm -C demo-lib run test` (tsc);
+      // gitignored via demo-lib/.gitignore, which the root config doesn't read
+      'demo-lib/dts-check/**',
       // Docs snippets are illustrative (incomplete TS, pseudo-types, etc).
       // Lint the markdown structure, not the embedded code blocks.
       'docs/content/**/*.md',
