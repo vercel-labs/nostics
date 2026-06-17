@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "tsc --noEmit",
+    "test": "tsc",
     "build": "tsdown"
   },
   "dependencies": {

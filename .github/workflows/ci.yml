@@ -27,6 +27,8 @@ jobs:
       - run: pnpm exec vitest run --coverage
       # docs and playgrounds should also work
       - run: pnpm -C demo-lib run build
+      # guards against a public type leak from nostics (TS2883 on declaration emit)
+      - run: pnpm -C demo-lib run test
       - run: pnpm -C playground run build
       # docs often run out of memory and is very slow, we will catch the error
       # on Vercel deployments

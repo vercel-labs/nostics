@@ -5,10 +5,18 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "noEmit": true,
+    // Emit declarations (not noEmit) so a public type leak from a dependency
+    // surfaces as TS2883 "cannot be named ... not portable" at typecheck time.
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dts-check",
     "esModuleInterop": true,
     // can't be enabled: https://github.com/microsoft/TypeScript/issues/58944#issuecomment-2452188819
     "isolatedDeclarations": false,
+    // Resolve `nostics` as a node_modules package (not via the workspace
+    // symlink), so an unexported public type triggers TS2883 here the same way
+    // it would for a real external consumer.
+    "preserveSymlinks": true,
     "skipLibCheck": true
   },
   "include": ["src"]
