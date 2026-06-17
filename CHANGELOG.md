@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/vercel-labs/nostics/compare/v1.0.0...v1.1.0) (2026-06-17)
+
+
+### Features
+
+* prod diagnostics at 340b only ([353700e](https://github.com/vercel-labs/nostics/commit/353700e47eda2b3fbac33df1c7bfafa63ae11751))
+* **unplugin:** improve default stacktrace cleanup ([ccc847f](https://github.com/vercel-labs/nostics/commit/ccc847fc884597346a0941d58b7659b5ca45b8eb))
+
 # [1.0.0](https://github.com/vercel-labs/nostics/compare/v0.5.0...v1.0.0) (2026-06-15)
 
 Stable v1 🎊
