@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/vercel-labs/nostics/compare/v1.1.3...v1.1.4) (2026-06-17)
+
+
+### Bug Fixes
+
+* incorrect name in prod diagnostic ([0987482](https://github.com/vercel-labs/nostics/commit/0987482532f9bc8228635ee1f40767f0d477a746))
+
 ## [1.1.3](https://github.com/vercel-labs/nostics/compare/v1.1.2...v1.1.3) (2026-06-17)
 
 
