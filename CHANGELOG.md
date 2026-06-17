@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/vercel-labs/nostics/compare/v1.1.2...v1.1.3) (2026-06-17)
+
+
+### Bug Fixes
+
+* expose missing type ([8aa993d](https://github.com/vercel-labs/nostics/commit/8aa993db6a88edc87f7c74e627d57af4729f1bff))
+
 ## [1.1.2](https://github.com/vercel-labs/nostics/compare/v1.1.1...v1.1.2) (2026-06-17)
 
 No code changes.
