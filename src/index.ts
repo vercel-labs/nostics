@@ -9,6 +9,7 @@ export type {
   DiagnosticHandle,
   DiagnosticInit,
   DiagnosticReporter,
+  Diagnostics,
 } from './diagnostic'
 
 export { formatDiagnostic } from './formatters/plain'

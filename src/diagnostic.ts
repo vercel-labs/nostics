@@ -234,8 +234,6 @@ export interface DiagnosticHandle<Params, ReporterOpts> {
 
 /**
  * Return type of {@link defineDiagnostics}.
- *
- * @internal
  */
 export type Diagnostics<
   Codes extends Record<string, DiagnosticDefinition>,
