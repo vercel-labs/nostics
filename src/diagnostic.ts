@@ -265,7 +265,9 @@ export class Diagnostic extends Error {
 
   /**
    * Locations in user code that contributed to this diagnostic, in
-   * `file:line:column` format.
+   * `file:line:column` format. Relevant when the stack trace doesn't reflect
+   * the user's source (e.g. compilers, bundlers), otherwise redundant with the
+   * stack and should be omitted.
    */
   sources?: string[]
 
