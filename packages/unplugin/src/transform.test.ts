@@ -249,6 +249,64 @@ process.env.NODE_ENV !== "production" && diagnostics.E3()`
 
       expectCallSiteTransform(input, expected)
     })
+
+    it('wraps an awaited diagnostic handle call', () => {
+      const input = `import { diagnostics } from './diagnostics'
+async function handler() {
+  await diagnostics.E1()
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+async function handler() {
+  process.env.NODE_ENV !== "production" && await diagnostics.E1()
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps a sequence expression whose first element reports', () => {
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1(), foo`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && (diagnostics.E1(), foo)`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps a parenthesized diagnostic handle call', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function handler() {
+  (diagnostics.E1())
+}`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function handler() {
+  process.env.NODE_ENV !== "production" && (diagnostics.E1())
+}`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps a void-prefixed diagnostic handle call', () => {
+      const input = `import { diagnostics } from './diagnostics'
+void diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && void diagnostics.E1()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('wraps a negated diagnostic handle call', () => {
+      const input = `import { diagnostics } from './diagnostics'
+!diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && !diagnostics.E1()`
+
+      expectCallSiteTransform(input, expected)
+    })
   })
 
   describe('nested usages', () => {
@@ -307,6 +365,104 @@ diagnostics.E2()`
       const expected = `import { diagnostics } from './diagnostics'
 if (condition) {
   const diagnostics = getDiagnostics()
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform an object-destructured parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup({ diagnostics }) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function setup({ diagnostics }) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform an array-destructured parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup([diagnostics]) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function setup([diagnostics]) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform a default-valued parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup(diagnostics = fallback) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function setup(diagnostics = fallback) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform a rest parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup(...diagnostics) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function setup(...diagnostics) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform an object-rest parameter that shadows diagnostics', () => {
+      const input = `import { diagnostics } from './diagnostics'
+function setup({ ...diagnostics }) {
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+function setup({ ...diagnostics }) {
+  diagnostics.E1()
+}
+process.env.NODE_ENV !== "production" && diagnostics.E2()`
+
+      expectCallSiteTransform(input, expected)
+    })
+
+    it('does not transform a function declaration that shadows diagnostics in a block', () => {
+      const input = `import { diagnostics } from './diagnostics'
+{
+  function diagnostics() {}
+  diagnostics.E1()
+}
+diagnostics.E2()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+{
+  function diagnostics() {}
   diagnostics.E1()
 }
 process.env.NODE_ENV !== "production" && diagnostics.E2()`

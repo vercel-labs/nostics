@@ -1,3 +1,4 @@
+import type { Diagnostic } from '../diagnostic'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -85,6 +86,14 @@ describe('createFileReporter', () => {
     // the runner invokes this through node_modules frames; an empty array
     // must preserve them, unlike the default which removes them
     expect(entry.stack).toContain('node_modules')
+  })
+
+  it('spreads the payload when the diagnostic has no toJSON method', () => {
+    const reporter = createFileReporter({ logFile })
+    // a plain object reporter input (no toJSON) exercises the spread fallback
+    reporter({ name: 'E1', why: 'plain', extra: 42 } as unknown as Diagnostic, {})
+    const entry = JSON.parse(readFileSync(logFile, 'utf8').trim())
+    expect(entry).toMatchObject({ name: 'E1', why: 'plain', extra: 42 })
   })
 
   it('excludeStackFrames drops frames matching any pattern', () => {
