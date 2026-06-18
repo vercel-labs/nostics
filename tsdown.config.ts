@@ -1,7 +1,9 @@
+import type { UserConfig } from 'tsdown'
 import { defineConfig } from 'tsdown'
 import ApiSnapshot from 'tsnapi/rolldown'
 
-export default defineConfig({
+// annotated so the default export is emittable under isolatedDeclarations
+const config: UserConfig = defineConfig({
   entry: {
     'index': 'src/index.ts',
     'formatters/ansi': 'src/formatters/ansi.ts',
@@ -27,3 +29,5 @@ export default defineConfig({
   publint: true,
   plugins: [ApiSnapshot()],
 })
+
+export default config

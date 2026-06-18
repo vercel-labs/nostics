@@ -1,6 +1,8 @@
+import type { ViteUserConfig } from 'vitest/config'
 import { defineConfig } from 'vitest/config'
 
-export default defineConfig({
+// annotated so the default export is emittable under isolatedDeclarations
+const config: ViteUserConfig = defineConfig({
   test: {
     projects: [
       {
@@ -25,3 +27,5 @@ export default defineConfig({
     },
   },
 })
+
+export default config
