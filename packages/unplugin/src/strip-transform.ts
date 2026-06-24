@@ -23,7 +23,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
 
   return [
     {
-      name: 'nostics-strip-transform',
+      name: 'nostics:strip-transform',
 
       transform: {
         filter: {
@@ -44,7 +44,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
       },
     },
     {
-      name: 'nostics-detect-duplicate-codes',
+      name: 'nostics:detect-duplicate-codes',
 
       vite: {
         configResolved(config) {
@@ -84,11 +84,11 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
  *
  * This is an array of two [unplugin](https://github.com/unjs/unplugin) plugins:
  *
- * - `nostics-strip-transform` marks `defineDiagnostics()` calls as
+ * - `nostics:strip-transform` marks `defineDiagnostics()` calls as
  *   `/*#__PURE__*\/` and wraps diagnostic call sites with a
  *   `NODE_ENV !== 'production'` guard so they tree-shake out of production
  *   builds.
- * - `nostics-detect-duplicate-codes` extracts the `codes` keys from every
+ * - `nostics:detect-duplicate-codes` extracts the `codes` keys from every
  *   `defineDiagnostics()` call across the module graph and flags any code
  *   defined in more than one file. It warns on a Vite dev server and errors in
  *   every build (so CI fails).

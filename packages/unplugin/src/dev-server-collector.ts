@@ -56,7 +56,7 @@ export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefi
     const reporter = createFileReporter(reporterOptions)
 
     return {
-      name: 'nostics-collector',
+      name: 'nostics:collector',
       enforce: 'pre',
 
       vite: {
