@@ -5,7 +5,8 @@
   "description": "Build-time plugins for nostics: strip diagnostics from production builds and collect them during dev",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "contributors": [
-    "Eduardo San Martin Morote <posva13@gmail.com>"
+    "Eduardo San Martin Morote <posva13@gmail.com>",
+    "Daniel Roe <daniel@roe.dev>"
   ],
   "license": "MIT",
   "homepage": "https://github.com/vercel-labs/nostics#readme",
