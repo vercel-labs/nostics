@@ -6,5 +6,5 @@ export type NosticsStripOptions = TransformOptions;
 // #endregion
 
 // #region Variables
-export declare const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined>;
+export declare const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined, true>;
 // #endregion
