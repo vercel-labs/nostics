@@ -66,6 +66,7 @@ export function defineProdDiagnostics<
         const docs = deriveDocs(docsBase, code)
         const diagnostic = new Diagnostic(
           {
+            code,
             // the code is already the `name`; an empty `why` keeps the thrown
             // header down to `CODE` / `CODE: <docs>` instead of `CODE: CODE`
             why: docs ?? '',
@@ -75,7 +76,6 @@ export function defineProdDiagnostics<
           },
           handle,
         )
-        diagnostic.name = code
         for (const reporter of reporters) reporter(diagnostic, reporterOptions)
         return diagnostic
       }

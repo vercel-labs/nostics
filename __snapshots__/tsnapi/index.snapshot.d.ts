@@ -28,6 +28,7 @@ export interface DiagnosticHandle<Params, ReporterOpts> {
   (..._: ActionArgs<Params, ReporterOpts>): Diagnostic;
 }
 export interface DiagnosticInit extends DiagnosticCallParams {
+  code: string;
   why: string;
   fix?: string;
   docs?: string;
@@ -45,6 +46,7 @@ export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Repo
 // #region Classes
 export declare class Diagnostic extends Error {
   name: string;
+  code: string;
   docs?: string;
   fix?: string;
   sources?: string[];
