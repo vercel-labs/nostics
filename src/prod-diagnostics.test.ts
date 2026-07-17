@@ -10,13 +10,27 @@ describe('defineProdDiagnostics', () => {
     expect(d).toBeInstanceOf(Diagnostic)
   })
 
-  it('uses the accessed code as `why` and as the instance `name`', () => {
+  it('uses the accessed code as the instance `name`', () => {
     const errs = defineProdDiagnostics()
     const d = errs.NUXT_B2011()
     // parity with defineDiagnostics: the code becomes the instance name
     expect(d.name).toBe('NUXT_B2011')
-    expect(d.message).toBe('NUXT_B2011')
-    expect(d.why).toBe('NUXT_B2011')
+  })
+
+  it('points `why` at the docs URL when available', () => {
+    const errs = defineProdDiagnostics({ docsBase: 'https://example.com/errors' })
+    const d = errs.NUXT_B2011()
+    expect(d.why).toBe('https://example.com/errors/nuxt_b2011')
+    // header reads `NUXT_B2011: https://...` instead of doubling the code
+    expect(String(d)).toBe('NUXT_B2011: https://example.com/errors/nuxt_b2011')
+  })
+
+  it('leaves `why` empty without docs so the thrown header is just the code', () => {
+    const errs = defineProdDiagnostics()
+    const d = errs.NUXT_B2011()
+    expect(d.why).toBe('')
+    // Error.prototype.toString drops the colon for an empty message
+    expect(String(d)).toBe('NUXT_B2011')
   })
 
   it('produces fresh instances per call', () => {

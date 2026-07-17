@@ -32,8 +32,9 @@ export interface DefineProdDiagnosticsOptions<
 /**
  * Production counterpart to {@link defineDiagnostics}. Returns a `Proxy` that
  * builds a minimal {@link Diagnostic} for any accessed code: the code becomes
- * both the `message` (`why`) and the instance `name`, and `docs` is derived
- * from `docsBase`. It carries no catalog text, so it stays tiny in a bundle.
+ * the instance `name`, `docs` is derived from `docsBase`, and `why` points to
+ * the docs URL when one exists (empty otherwise, so the thrown header is just
+ * the code). It carries no catalog text, so it stays tiny in a bundle.
  *
  * The strip plugin (`@nostics/unplugin`) can rewrite a `defineDiagnostics()`
  * call into a `process.env.NODE_ENV === 'production'` ternary that selects this
@@ -42,7 +43,7 @@ export interface DefineProdDiagnosticsOptions<
  * @example
  * ```ts
  * const diagnostics = defineProdDiagnostics({ docsBase: 'https://docs.example.com' })
- * throw diagnostics.NUXT_B2011() // Error: NUXT_B2011, docs derived from docsBase
+ * throw diagnostics.NUXT_B2011() // NUXT_B2011: https://docs.example.com/nuxt_b2011
  * ```
  */
 /* @__NO_SIDE_EFFECTS__ */
@@ -62,10 +63,13 @@ export function defineProdDiagnostics<
         params: DiagnosticCallParams & Record<string, unknown> = {},
         reporterOptions: any = {},
       ): Diagnostic => {
+        const docs = deriveDocs(docsBase, code)
         const diagnostic = new Diagnostic(
           {
-            why: code,
-            docs: deriveDocs(docsBase, code),
+            // the code is already the `name`; an empty `why` keeps the thrown
+            // header down to `CODE` / `CODE: <docs>` instead of `CODE: CODE`
+            why: docs ?? '',
+            docs,
             cause: params.cause,
             sources: params.sources,
           },
