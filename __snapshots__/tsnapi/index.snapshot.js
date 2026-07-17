@@ -4,6 +4,7 @@
 // #region Classes
 export class Diagnostic extends Error {
   name
+  code
   docs
   fix
   sources

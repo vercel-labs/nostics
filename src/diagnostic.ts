@@ -69,6 +69,11 @@ export interface DiagnosticCallParams {
  */
 export interface DiagnosticInit extends DiagnosticCallParams {
   /**
+   * The diagnostic code, e.g. `MATH_E001`. Appear as {@link Diagnostic.name}.
+   */
+  code: string
+
+  /**
    * The actual error message: why this failed.
    * Mirrored to `Error.message`.
    */
@@ -250,7 +255,13 @@ const captureStackTrace = (
 ).captureStackTrace
 
 export class Diagnostic extends Error {
-  name: string = 'Diagnostic'
+  name: string
+
+  /**
+   * The diagnostic code, e.g. `MATH_E001`.
+   * Also appears as the `name` property.
+   */
+  code: string
 
   /**
    * URL to extended documentation for this diagnostic code.
@@ -287,6 +298,7 @@ export class Diagnostic extends Error {
    */
   constructor(init: DiagnosticInit, captureFrom: Function = Diagnostic) {
     super(init.why, { cause: init.cause })
+    this.code = this.name = init.code
     this.fix = init.fix
     this.docs = init.docs
     this.sources = init.sources
@@ -353,6 +365,7 @@ export function defineDiagnostics<
     ): Diagnostic => {
       const diagnostic = new Diagnostic(
         {
+          code,
           why: toValueWithArgs(def.why, params),
           fix: toValueWithArgs(def.fix, params),
           docs,
@@ -361,7 +374,6 @@ export function defineDiagnostics<
         },
         handle,
       )
-      diagnostic.name = code
       for (const reporter of reporters) reporter(diagnostic, reporterOptions)
       return diagnostic
     }
