@@ -35,9 +35,9 @@ const diagnostics = /*#__PURE__*/ defineDiagnostics({
 ```
 
 - **`docsBase`** `string | (code) => string | undefined`: string appends `/${code.toLowerCase()}`; function returns the full URL (or `undefined` to omit).
-- **`codes`**: each definition needs `why` (`string | (params) => string`, the only required field, becomes `Error.message`); optional `fix` (`string | (params) => string`) and `docs` (`string | false`).
+- **`codes`**: each definition needs `why` (`string | (params) => string`, the only required field, becomes `Error.message`); optional `fix` (`string | (params) => string`), `docs` (`string | false`), and `data` (`object | (params) => object`). Each code's resolved `data` is typed and included in `toJSON()`.
 - **`reporters`**: fired on every call; optional. Their `options` types are intersected; required reporter options become required at the call site. Omit it (or pass `[]`) for a catalog whose codes are only ever `throw`n: the thrown `Diagnostic` already carries the message, so a console reporter would print it once and surface it again from the uncaught error, a visible duplicate. Keep report-only warnings and fatal throws in separate catalogs when one needs a reporter and the other does not.
-- **Param inference**: params from `why` and `fix` are intersected and required at the call site. If `why` needs `{ src }` and `fix` needs `{ date }`, the call requires `{ src, date }`.
+- **Param inference**: params from `why`, `fix`, and `data` are intersected and required at the call site. If `why` needs `{ src }` and `fix` needs `{ date }`, the call requires `{ src, date }`.
 
 ## Call sites
 
@@ -53,7 +53,9 @@ diagnostics.NUXT_B2011({ src }, { method: 'error' }) // reporter options second
 throw diagnostics.NUXT_B2011({ src }) // raise
 ```
 
-`cause`/`sources` go in the params object; `sources` matters most for build/config diagnostics where the JS stack points inside the library. Catch with `if (err instanceof Diagnostic)` then read `.name`, `.message`, `.fix`, `.docs`.
+`cause`/`sources` go in the params object; `sources` matters most for build/config diagnostics where the JS stack points inside the library. Catch with `if (err instanceof Diagnostic)` then read `.name`, `.message`, `.fix`, `.docs`, and `.data`.
+
+Definition data is not present in `defineProdDiagnostics()`. Its `.data` is `undefined`. A dev/prod ternary therefore types `.data` as the code's data type or `undefined`.
 
 ## Reporters
 

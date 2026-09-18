@@ -26,7 +26,10 @@ describe('createFileReporter', () => {
     const diagnostics = defineDiagnostics({
       codes: {
         E1: { why: 'broken' },
-        E2: { why: (p: { name: string }) => `bad ${p.name}` },
+        E2: {
+          why: (p: { name: string }) => `bad ${p.name}`,
+          data: (p: { name: string }) => ({ input: p.name }),
+        },
       },
       reporters: [createFileReporter({ logFile })],
     })
@@ -37,7 +40,11 @@ describe('createFileReporter', () => {
     const lines = readFileSync(logFile, 'utf8').trim().split('\n')
     expect(lines).toHaveLength(2)
     expect(JSON.parse(lines[0]!)).toMatchObject({ name: 'E1', why: 'broken' })
-    expect(JSON.parse(lines[1]!)).toMatchObject({ name: 'E2', why: 'bad foo' })
+    expect(JSON.parse(lines[1]!)).toMatchObject({
+      name: 'E2',
+      why: 'bad foo',
+      data: { input: 'foo' },
+    })
   })
 
   it('uses the default file name when no option is provided', () => {

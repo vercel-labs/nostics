@@ -9,6 +9,7 @@ export type {
   DiagnosticDefinition,
   DiagnosticHandle,
   DiagnosticInit,
+  DiagnosticJSON,
   DiagnosticReporter,
   Diagnostics,
 } from './diagnostic'

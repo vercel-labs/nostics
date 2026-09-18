@@ -54,7 +54,7 @@ export function createFileReporter(options?: FileReporterOptions): DiagnosticRep
     try {
       const d = diagnostic as Diagnostic & Record<string, unknown>
       const base: Record<string, unknown> =
-        typeof d.toJSON === 'function' ? (d.toJSON() as Record<string, unknown>) : { ...d }
+        typeof d.toJSON === 'function' ? { ...d.toJSON() } : { ...d }
       if (d.stack) {
         base.stack = excludeStackFrames?.length
           ? applyExcludeStackFrames(d.stack, excludeStackFrames)

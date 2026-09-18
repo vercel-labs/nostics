@@ -82,6 +82,25 @@ describe('diagnostic', () => {
         stack: d.stack, // stack is included but we don't assert on the exact value
       })
     })
+
+    it('stores resolved data and includes it in JSON', () => {
+      const errs = defineDiagnostics({
+        codes: {
+          X_001: {
+            why: 'boom',
+            data: (p: { actual: number }) => ({ actual: p.actual, expected: 'string' }),
+          },
+        },
+      })
+      const d = errs.X_001({ actual: 42 })
+
+      expect(d.data).toEqual({ actual: 42, expected: 'string' })
+      expect(JSON.parse(JSON.stringify(d))).toMatchObject({
+        name: 'X_001',
+        why: 'boom',
+        data: { actual: 42, expected: 'string' },
+      })
+    })
   })
 
   describe('reporters', () => {

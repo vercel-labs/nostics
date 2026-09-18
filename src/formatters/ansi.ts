@@ -10,7 +10,7 @@ export interface Colors {
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function ansiFormatter(colors: Colors): (d: Diagnostic) => string {
+export function ansiFormatter(colors: Colors): (d: Diagnostic<any>) => string {
   return (d) => {
     const tag = colors.bold(colors.red(`[${d.name}]`))
     const header = `${tag} ${d.message}`
