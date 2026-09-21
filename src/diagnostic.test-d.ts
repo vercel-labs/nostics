@@ -258,20 +258,20 @@ describe('defineDiagnostics: return types', () => {
   })
 
   it('makes data optional across development and production diagnostics', () => {
-    const errs =
-      process.env.NODE_ENV === 'production'
-        ? defineProdDiagnostics()
-        : defineDiagnostics({
-            codes: {
-              X: {
-                why: 'msg',
-                data: (p: { actual: number }) => ({ actual: p.actual }),
-              },
-            },
-          })
+    const errsDev = defineDiagnostics({
+      codes: {
+        X: {
+          why: 'msg',
+          data: (p: { actual: number }) => ({ actual: p.actual }),
+        },
+      },
+    })
+    const errsProd = defineProdDiagnostics()
+    const errs = process.env.NODE_ENV === 'production' ? errsProd : errsDev
 
     expectTypeOf(errs.X({ actual: 42 }).data).toEqualTypeOf<{ actual: number } | undefined>()
-    expectTypeOf(defineProdDiagnostics().X().data).toEqualTypeOf<undefined>()
+    expectTypeOf(errsProd.X().data).toEqualTypeOf<undefined>()
+    expectTypeOf(errsDev.X({ actual: 42 }).data).toEqualTypeOf<{ actual: number }>()
 
     type Codes = Record<
       string,
