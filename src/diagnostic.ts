@@ -304,24 +304,24 @@ const captureStackTrace = (
 ).captureStackTrace
 
 export class Diagnostic<Data = undefined> extends Error {
-  name: string
+  declare name: string
 
   /**
    * The diagnostic code, e.g. `MATH_E001`.
    * Also appears as the `name` property.
    */
-  code: string
+  declare code: string
 
   /**
    * URL to extended documentation for this diagnostic code.
    * Auto-generated from {@link DefineDiagnosticsOptions.docsBase}.
    */
-  docs?: string
+  declare docs?: string
 
   /**
    * Optional actionable instructions on how to resolve the problem.
    */
-  fix?: string
+  declare fix?: string
 
   /**
    * Locations in user code that contributed to this diagnostic, in
@@ -329,12 +329,12 @@ export class Diagnostic<Data = undefined> extends Error {
    * the user's source (e.g. compilers, bundlers), otherwise redundant with the
    * stack and should be omitted.
    */
-  sources?: string[]
+  declare sources?: string[]
 
   /**
    * Structured information associated with this diagnostic code.
    */
-  data: Data
+  declare data: Data
 
   /**
    * Alias for {@link Error.message}: the reason this diagnostic was raised.
@@ -353,8 +353,8 @@ export class Diagnostic<Data = undefined> extends Error {
   constructor(init: DiagnosticInit<Data>, captureFrom: StackTraceFrame = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.code = this.name = init.code
-    this.fix = init.fix
     this.docs = init.docs
+    this.fix = init.fix
     this.sources = init.sources
     this.data = init.data as Data
     // V8-only API, but also implemented pretty much everywhere. Worst case

@@ -3,12 +3,6 @@
  */
 // #region Classes
 export class Diagnostic extends Error {
-  name
-  code
-  docs
-  fix
-  sources
-  data
   get why() {}
   constructor(_, _) {}
   toJSON() {}
