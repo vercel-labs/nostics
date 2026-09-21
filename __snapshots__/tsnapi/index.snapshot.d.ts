@@ -39,7 +39,7 @@ export interface DiagnosticInit extends DiagnosticCallParams {
 export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
 export type AnyDiagnosticReporter = (_: Diagnostic, _: any) => void;
 export type ConsoleMethod = "log" | "error" | "warn";
-export type DiagnosticReporter<ReporterOpts extends object = {}> = (_: Diagnostic, _: ReporterOpts) => void;
+export type DiagnosticReporter<ReporterOpts extends object = object> = (_: Diagnostic, _: ReporterOpts) => void;
 export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>>; };
 // #endregion
 
@@ -51,7 +51,7 @@ export declare class Diagnostic extends Error {
   fix?: string;
   sources?: string[];
   get why(): string;
-  constructor(_: DiagnosticInit, _?: Function);
+  constructor(_: DiagnosticInit, _?: StackTraceFrame);
   toJSON(): object;
 }
 // #endregion

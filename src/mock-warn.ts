@@ -13,7 +13,7 @@ interface CustomMatchers<R = unknown> {
 
 declare module 'vitest' {
   interface Assertion<
-    /* eslint-disable unused-imports/no-unused-vars */
+    // eslint-disable-next-line unused-imports/no-unused-vars -- Vitest declaration merging requires both type parameters
     R,
     T,
   > extends CustomMatchers<T> {}
@@ -84,7 +84,7 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
     mockInstance.mockRestore()
 
     if (unassertedLogs.length) {
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console -- reports unexpected calls through their original console method
       unassertedLogs.forEach((msg) => console[method](msg))
       throw new Error(`Test case threw unexpected ${method}s.`, {
         cause: unassertedLogs,

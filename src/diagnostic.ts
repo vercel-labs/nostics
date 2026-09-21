@@ -1,6 +1,3 @@
-/* eslint-disable ts/no-empty-object-type -- `{}` is used as the neutral element when intersecting reporter option shapes */
-/* eslint-disable ts/no-unsafe-function-type -- used by captureStackTrace */
-
 import type { ExtractFnParam, IsUnknown, Prettify, UnionToIntersection, ValueOrFn } from './utils'
 import { formatDiagnostic } from './formatters/plain'
 import { toValueWithArgs } from './utils'
@@ -96,7 +93,7 @@ export interface DiagnosticInit extends DiagnosticCallParams {
  * options they need via `ReporterOpts`; `defineDiagnostics` intersects every
  * reporter's options into a single object passed at the call site.
  */
-export type DiagnosticReporter<ReporterOpts extends object = {}> = (
+export type DiagnosticReporter<ReporterOpts extends object = object> = (
   diagnostic: Diagnostic,
   options: ReporterOpts,
 ) => void
@@ -144,20 +141,20 @@ export function createConsoleReporter({
   formatter = formatDiagnostic,
 }: ConsoleReporterOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
   return (diagnostic, { method = defaultMethod } = {}) => {
-    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console -- this reporter writes to the configured console method
     console[method](formatter(diagnostic))
   }
 }
 
 /**
  * Resolves the `params` type a code expects from the intersection of params
- * across all function-typed fields, falling back to `{}` when every field is
+ * across all function-typed fields, falling back to `unknown` when every field is
  * static. Merged with {@link DiagnosticCallParams} at the call site.
  *
  * @internal
  */
 type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
-  ? {}
+  ? unknown
   : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
 
 /**
@@ -197,6 +194,14 @@ export interface DefineDiagnosticsOptions<
 type CallSiteParams<Params> = Params & DiagnosticCallParams
 
 /**
+ * Checks whether an object has required fields. Making every field optional
+ * changes assignability only when the original type has required fields.
+ *
+ * @internal
+ */
+type HasRequiredFields<Type> = Partial<Type> extends Type ? false : true
+
+/**
  * Resolves the full argument tuple for a {@link DiagnosticHandle} call.
  * Branches on whether params and reporter options each have required fields.
  * Required positions become required tuple elements, all-optional ones
@@ -206,14 +211,14 @@ type CallSiteParams<Params> = Params & DiagnosticCallParams
  * @internal
  */
 type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
-  ? {} extends Params
+  ? HasRequiredFields<Params> extends false
     ? [params?: CallSiteParams<Params>]
     : [params: CallSiteParams<Params>]
-  : {} extends ReporterOpts
-    ? {} extends Params
+  : HasRequiredFields<ReporterOpts> extends false
+    ? HasRequiredFields<Params> extends false
       ? [params?: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
       : [params: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
-    : {} extends Params
+    : HasRequiredFields<Params> extends false
       ? [params: CallSiteParams<Params> | undefined, reporterOptions: ReporterOpts]
       : [params: CallSiteParams<Params>, reporterOptions: ReporterOpts]
 
@@ -250,8 +255,12 @@ export type Diagnostics<
   >
 }
 
+type StackTraceFrame =
+  | ((...args: never[]) => unknown)
+  | (abstract new (...args: never[]) => unknown)
+
 const captureStackTrace = (
-  Error as { captureStackTrace?: (target: object, frame: Function) => void }
+  Error as { captureStackTrace?: (target: object, frame: StackTraceFrame) => void }
 ).captureStackTrace
 
 export class Diagnostic extends Error {
@@ -296,7 +305,7 @@ export class Diagnostic extends Error {
    * `defineDiagnostics` passes its action method to strip its own frames too.
    * Ignored on engines without `Error.captureStackTrace`.
    */
-  constructor(init: DiagnosticInit, captureFrom: Function = Diagnostic) {
+  constructor(init: DiagnosticInit, captureFrom: StackTraceFrame = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.code = this.name = init.code
     this.fix = init.fix
@@ -386,7 +395,7 @@ export function defineDiagnostics<
 
 /**
  * Extracts the options object a reporter accepts as its 2nd argument. Returns
- * `{}` when the reporter has no 2nd arg (so it contributes nothing to the
+ * `unknown` when the reporter has no 2nd arg (so it contributes nothing to the
  * merged shape).
  */
 type ExtractSingleReporterOptions<Reporter> = Reporter extends (
@@ -394,19 +403,19 @@ type ExtractSingleReporterOptions<Reporter> = Reporter extends (
   options: infer ReporterOpts,
 ) => any
   ? IsUnknown<ReporterOpts> extends true
-    ? {}
+    ? unknown
     : Exclude<ReporterOpts, undefined>
-  : {}
+  : unknown
 
 /**
  * Intersects every reporter's options shape into a single object. If any
  * reporter has a required field, the merged shape has a required field, and
- * {@link ActionArgs} flips `reporterOptions` from optional to required via
- * `{} extends Merged`.
+ * {@link ActionArgs} makes `reporterOptions` required when the merged shape
+ * has required keys.
  */
 type ExtractReportersOptions<Reporters extends readonly any[]> = Reporters extends readonly [
   infer First,
   ...infer Rest,
 ]
   ? ExtractSingleReporterOptions<First> & ExtractReportersOptions<Rest>
-  : {}
+  : unknown

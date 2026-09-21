@@ -1,11 +1,13 @@
-/* eslint-disable ts/explicit-function-return-type -- type tests intentionally construct values without using them and exist purely to exercise inference */
-/* eslint-disable unused-imports/no-unused-vars -- type tests intentionally construct values without using them and exist purely to exercise inference */
-
 import type { Diagnostic, DiagnosticCallParams } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { createConsoleReporter, defineDiagnostics } from './diagnostic'
 
 function reporterWithPriority(_diagnostic: Diagnostic, _options: { priority: number }): void {}
+
+function reporterWithUndefined(
+  _diagnostic: Diagnostic,
+  _options: { value: string | undefined },
+): void {}
 
 // used for throws
 const maybe: boolean = Math.random() > 0.5
@@ -59,9 +61,19 @@ describe('defineDiagnostics: reporter options inference', () => {
     throw errs.X()
   })
 
+  it('keeps an option required when its value includes undefined', () => {
+    const errs = defineDiagnostics({
+      codes: { X: { why: 'msg' } },
+      reporters: [reporterWithUndefined],
+    })
+    errs.X(undefined, { value: undefined })
+    // @ts-expect-error: options is required
+    errs.X()
+  })
+
   it('merges required + no-options reporters → required options on the required shape', () => {
-    const r1 = (_diagnostic: Diagnostic) => {}
-    const r2 = (_diagnostic: Diagnostic, _options: { priority: number }) => {}
+    const r1 = (_diagnostic: Diagnostic): void => {}
+    const r2 = (_diagnostic: Diagnostic, _options: { priority: number }): void => {}
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } }, reporters: [r1, r2] })
     errs.X(undefined, { priority: 5 })
     // @ts-expect-error: options is required

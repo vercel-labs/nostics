@@ -47,8 +47,6 @@ export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefi
   createUnplugin((options) => {
     const logFile = options?.logFile ?? '.nostics.log'
     const debug = options?.debug ?? !!process.env.DEBUG
-    // eslint-disable-next-line no-console -- debug logging opt-in
-    const log = debug ? (...args: unknown[]) => console.log('[nostics]', ...args) : () => {}
     const reporterOptions: FileReporterOptions = {
       logFile,
       excludeStackFrames: options?.excludeStackFrames,
@@ -61,6 +59,9 @@ export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefi
 
       vite: {
         configureServer(server) {
+          const log = (...args: unknown[]): void => {
+            if (debug) server.config.logger.info(`[nostics] ${args.join(' ')}`)
+          }
           const resolvedLogFile = resolve(server.config.root, logFile)
           if (!existsSync(resolvedLogFile)) {
             writeFileSync(resolvedLogFile, '')
