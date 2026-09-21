@@ -4,7 +4,7 @@ import { defineDiagnostics } from '../diagnostic'
 import { ansiFormatter } from './ansi'
 
 function tag(label: string): (s: string) => string {
-  return s => `<${label}>${s}</${label}>`
+  return (s) => `<${label}>${s}</${label}>`
 }
 
 const colors: Colors = {

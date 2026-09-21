@@ -113,9 +113,7 @@ import { createConsoleReporter, defineDiagnostics } from 'nostics'
 import { createDevReporter } from 'nostics/reporters/dev'
 export const diagnostics = /*#__PURE__*/ defineDiagnostics({
   reporters: [/*#__PURE__*/ createConsoleReporter(), /*#__PURE__*/ createDevReporter()],
-  codes: {
-    /* ... */
-  },
+  codes: {/* ... */},
 })
 ```
 
@@ -133,12 +131,8 @@ export const diagnostics =
     ? /*#__PURE__*/ defineProdDiagnostics({ docsBase })
     : /*#__PURE__*/ defineDiagnostics({
         docsBase,
-        reporters: [
-          /* ... */
-        ],
-        codes: {
-          /* text */
-        },
+        reporters: [/* ... */],
+        codes: {/* text */},
       })
 ```
 

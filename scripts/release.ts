@@ -128,8 +128,7 @@ function run(bin: string, args: string[], opts: RunOptions = {}): Promise<RunRes
         }
         error.exitCode = code
         reject(error)
-      }
-      else {
+      } else {
         resolve(result)
       }
     })
@@ -179,8 +178,7 @@ async function main() {
       )
       return
     }
-  }
-  else {
+  } else {
     console.log(c.boldWhite(`Skipping git checks...`))
   }
 
@@ -222,7 +220,7 @@ async function main() {
       message: 'What packages do you want to release?',
       instructions: false,
       min: 1,
-      choices: changedPackages.map(pkg => ({
+      choices: changedPackages.map((pkg) => ({
         title: pkg.name,
         value: pkg.name,
         selected: true,
@@ -230,7 +228,7 @@ async function main() {
     })
 
     // const packagesToRelease = changedPackages
-    packagesToRelease = changedPackages.filter(pkg => pickedPackages.includes(pkg.name))
+    packagesToRelease = changedPackages.filter((pkg) => pickedPackages.includes(pkg.name))
   }
 
   step(`Ready to release ${packagesToRelease.map(({ name }) => c.boldWhite(name)).join(', ')}`)
@@ -282,8 +280,7 @@ async function main() {
           initial: version,
         })
       ).version
-    }
-    else {
+    } else {
       version = release
     }
 
@@ -323,7 +320,7 @@ async function main() {
   step('\nUpdating versions in package.json files...')
   updateVersions(pkgWithVersions)
 
-  const mainPkg = pkgWithVersions.find(p => p.name === MAIN_PKG_NAME)
+  const mainPkg = pkgWithVersions.find((p) => p.name === MAIN_PKG_NAME)
   if (mainPkg) {
     step('\nUpdating Claude plugin manifests...')
     updatePluginManifests(mainPkg.version)
@@ -399,8 +396,7 @@ async function main() {
       '-m',
       `release: ${pkgWithVersions.map(({ name, version }) => `${name}@${version}`).join(' ')}`,
     ])
-  }
-  else {
+  } else {
     console.log('No changes to commit.')
   }
 
@@ -431,8 +427,7 @@ function updatePluginManifests(newVersion: string) {
   const pluginContent = `${JSON.stringify(plugin, null, 2)}\n`
   if (isDryRun) {
     dryRun('write', ['.claude-plugin/plugin.json'], { version: plugin.version })
-  }
-  else {
+  } else {
     fs.writeFileSync(pluginPath, pluginContent)
   }
 
@@ -446,8 +441,7 @@ function updatePluginManifests(newVersion: string) {
   const marketplaceContent = `${JSON.stringify(marketplace, null, 2)}\n`
   if (isDryRun) {
     dryRun('write', ['.claude-plugin/marketplace.json'], { version: entry.version })
-  }
-  else {
+  } else {
     fs.writeFileSync(marketplacePath, marketplaceContent)
   }
 }
@@ -466,8 +460,7 @@ function updateVersions(packageList: PackageInfo[]) {
         dependencies: pkg.dependencies,
         peerDependencies: pkg.peerDependencies,
       })
-    }
-    else {
+    } else {
       fs.writeFileSync(join(path, 'package.json'), content)
     }
   }
@@ -479,18 +472,16 @@ function updateDeps(
   updatedPackages: PackageInfo[],
 ) {
   const deps = pkg[depType]
-  if (!deps)
-    return
+  if (!deps) return
   step(`Updating ${c.bold(depType)} for ${c.boldWhite(pkg.name)}...`)
   Object.keys(deps).forEach((dep) => {
-    const updatedDep = updatedPackages.find(pkg => pkg.name === dep)
+    const updatedDep = updatedPackages.find((pkg) => pkg.name === dep)
     // avoid updated peer deps that are external like @vue/devtools-api
     if (dep && updatedDep && deps[dep]) {
       // skip any workspace reference, pnpm will handle it
       if (deps[dep].startsWith('workspace:')) {
         console.log(c.dimYellow(`${pkg.name} -> ${depType} -> ${dep}@${deps[dep]} (skipped)`))
-      }
-      else {
+      } else {
         console.log(c.yellow(`${pkg.name} -> ${depType} -> ${dep}@>=${updatedDep.version}`))
         deps[dep] = `>=${updatedDep.version}`
       }
@@ -515,8 +506,8 @@ async function getLastTag(pkgName: string): Promise<string> {
 
     // Parse and sort tags by semver (highest first)
     const sortedTags = tags
-      .map(tag => ({ tag, version: semver.parse(tag.replace(prefix, '')) }))
-      .filter((t): t is { tag: string, version: semver.SemVer } => t.version !== null)
+      .map((tag) => ({ tag, version: semver.parse(tag.replace(prefix, '')) }))
+      .filter((t): t is { tag: string; version: semver.SemVer } => t.version !== null)
       .sort((a, b) => semver.rcompare(a.version, b.version))
 
     if (!sortedTags[0]) {
@@ -524,8 +515,7 @@ async function getLastTag(pkgName: string): Promise<string> {
     }
 
     return sortedTags[0].tag
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.log(c.dim(`Couldn't get "${c.bold(pkgName)}" last tag, using first commit...`))
 
     if (error.message !== 'No tags found' && error.message !== 'No valid semver tags found') {
@@ -592,8 +582,7 @@ async function getChangedPackages(...folders: string[]): Promise<PackageInfo[]> 
           pkg,
           start: lastTag,
         }
-      }
-      else {
+      } else {
         console.warn(
           c.dim(`Skipping "${pkg.name}" as it has no changes since last release (${lastTag})`),
         )

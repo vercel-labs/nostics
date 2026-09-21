@@ -43,8 +43,8 @@ export interface NosticsCollectorOptions {
  *
  * Note: Vite only. Other unplugin adapters are no-ops.
  */
-export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefined>
-  = createUnplugin((options) => {
+export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefined> =
+  createUnplugin((options) => {
     const logFile = options?.logFile ?? '.nostics.log'
     const debug = options?.debug ?? !!process.env.DEBUG
     // eslint-disable-next-line no-console -- debug logging opt-in

@@ -1,5 +1,5 @@
 <script setup lang="ts">
- /**
+/**
  * The full nostics logo (glyph + wordmark) as inline SVG.
  *
  * The tubes keep their brand color and the ear tips swap between the light

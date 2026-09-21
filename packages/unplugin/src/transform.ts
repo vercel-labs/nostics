@@ -85,21 +85,18 @@ export function transform(
   const defineDiagnosticsImports = new Set<string>()
   const pureFactoryImports = new Set<string>()
   for (const node of ast.body) {
-    if (node.type !== 'ImportDeclaration')
-      continue
+    if (node.type !== 'ImportDeclaration') continue
     const source = node.source.value
     const isRoot = source === packageName
     const isSubpath = typeof source === 'string' && source.startsWith(`${packageName}/`)
-    if (!isRoot && !isSubpath)
-      continue
+    if (!isRoot && !isSubpath) continue
     for (const spec of node.specifiers) {
       if (spec.type === 'ImportSpecifier') {
-        const importedName
-          = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+        const importedName =
+          spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
         if (isRoot && importedName === 'defineDiagnostics') {
           defineDiagnosticsImports.add(spec.local.name)
-        }
-        else if (PURE_FACTORIES.has(importedName)) {
+        } else if (PURE_FACTORIES.has(importedName)) {
           pureFactoryImports.add(spec.local.name)
         }
       }
@@ -113,12 +110,10 @@ export function transform(
       if (node.type === 'ImportDeclaration' && node.source.value !== packageName) {
         const source = node.source.value
         // Only resolve relative imports
-        if (!source.startsWith('.'))
-          continue
+        if (!source.startsWith('.')) continue
 
         const resolvedPath = resolveModulePath(source, id)
-        if (!resolvedPath)
-          continue
+        if (!resolvedPath) continue
 
         // Analyze the imported module if not already cached
         if (!trackedExportsMap.has(resolvedPath)) {
@@ -129,8 +124,8 @@ export function transform(
         if (trackedNames) {
           for (const spec of node.specifiers) {
             if (spec.type === 'ImportSpecifier') {
-              const importedName
-                = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+              const importedName =
+                spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
               if (trackedNames.has(importedName)) {
                 crossFileTracked.add(spec.local.name)
               }
@@ -142,9 +137,9 @@ export function transform(
   }
 
   if (
-    defineDiagnosticsImports.size === 0
-    && crossFileTracked.size === 0
-    && pureFactoryImports.size === 0
+    defineDiagnosticsImports.size === 0 &&
+    crossFileTracked.size === 0 &&
+    pureFactoryImports.size === 0
   ) {
     return undefined
   }
@@ -164,16 +159,15 @@ export function transform(
   // respecting lexical shadowing in nested scopes.
   wrapTrackedExpressionStatements(ast, s, trackedVars, new Set(), CONDITION)
 
-  if (!s.hasChanged())
-    return undefined
+  if (!s.hasChanged()) return undefined
 
   // Step 4: Record exported tracked vars for cross-file tracking
   if (trackedExportsMap) {
     const exportedTracked = new Set<string>()
     for (const node of ast.body) {
       if (
-        node.type === 'ExportNamedDeclaration'
-        && node.declaration?.type === 'VariableDeclaration'
+        node.type === 'ExportNamedDeclaration' &&
+        node.declaration?.type === 'VariableDeclaration'
       ) {
         for (const decl of node.declaration.declarations) {
           if (decl.id?.type === 'Identifier' && trackedVars.has(decl.id.name)) {
@@ -198,14 +192,12 @@ export function transform(
  * when used as the right-hand side of `guard && expr`.
  */
 function expressionNeedsParens(node: Expression): boolean {
-  if (node.type === 'ConditionalExpression')
+  if (node.type === 'ConditionalExpression') return true
+  if (node.type === 'LogicalExpression' && (node.operator === '||' || node.operator === '??')) {
     return true
-  if (node.type === 'LogicalExpression' && (node.operator === '||' || node.operator === '??'))
-    return true
-  if (node.type === 'SequenceExpression')
-    return true
-  if (node.type === 'AssignmentExpression')
-    return true
+  }
+  if (node.type === 'SequenceExpression') return true
+  if (node.type === 'AssignmentExpression') return true
   return false
 }
 
@@ -216,21 +208,18 @@ function resolveModulePath(source: string, importer: string): string | undefined
   const base = join(dir, source)
 
   // Try exact path (for imports with extension)
-  if (existsSync(base))
-    return base
+  if (existsSync(base)) return base
 
   // Try with extensions
   for (const ext of EXTENSIONS) {
     const candidate = base + ext
-    if (existsSync(candidate))
-      return candidate
+    if (existsSync(candidate)) return candidate
   }
 
   // Try index files
   for (const ext of EXTENSIONS) {
     const candidate = join(base, `index${ext}`)
-    if (existsSync(candidate))
-      return candidate
+    if (existsSync(candidate)) return candidate
   }
 
   return undefined
@@ -251,13 +240,11 @@ function analyzeModule(
   let source: string
   try {
     source = readFileSync(filePath, 'utf-8')
-  }
-  catch {
+  } catch {
     return
   }
 
-  if (!source.includes(packageName))
-    return
+  if (!source.includes(packageName)) return
 
   const result = parseSync(filePath, source)
   const ast = result.program
@@ -268,8 +255,8 @@ function analyzeModule(
     if (node.type === 'ImportDeclaration' && node.source.value === packageName) {
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
-          const importedName
-            = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+          const importedName =
+            spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
           if (importedName === 'defineDiagnostics') {
             defineDiagnosticsImports.add(spec.local.name)
           }
@@ -278,20 +265,19 @@ function analyzeModule(
     }
   }
 
-  if (defineDiagnosticsImports.size === 0)
-    return
+  if (defineDiagnosticsImports.size === 0) return
 
   // Find exported variables assigned from imported function calls
   const trackedExports = new Set<string>()
   for (const node of ast.body) {
     if (
-      node.type === 'ExportNamedDeclaration'
-      && node.declaration?.type === 'VariableDeclaration'
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'VariableDeclaration'
     ) {
       for (const decl of node.declaration.declarations) {
         if (
-          decl.id?.type === 'Identifier'
-          && findDefineDiagnosticsCalls(decl.init, defineDiagnosticsImports).length > 0
+          decl.id?.type === 'Identifier' &&
+          findDefineDiagnosticsCalls(decl.init, defineDiagnosticsImports).length > 0
         ) {
           trackedExports.add(decl.id.name)
         }
@@ -313,10 +299,9 @@ function trackTopLevelDefinitions(
   for (const node of body) {
     if (node.type === 'VariableDeclaration') {
       trackVariableDeclaration(node, s, defineDiagnosticsImports, trackedVars)
-    }
-    else if (
-      node.type === 'ExportNamedDeclaration'
-      && node.declaration?.type === 'VariableDeclaration'
+    } else if (
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'VariableDeclaration'
     ) {
       trackVariableDeclaration(node.declaration, s, defineDiagnosticsImports, trackedVars)
     }
@@ -335,12 +320,11 @@ function findDefineDiagnosticsCalls(
   init: Expression | null | undefined,
   defineDiagnosticsImports: Set<string>,
 ): CallExpression[] {
-  if (!init)
-    return []
+  if (!init) return []
   if (
-    init.type === 'CallExpression'
-    && init.callee?.type === 'Identifier'
-    && defineDiagnosticsImports.has(init.callee.name)
+    init.type === 'CallExpression' &&
+    init.callee?.type === 'Identifier' &&
+    defineDiagnosticsImports.has(init.callee.name)
   ) {
     return [init]
   }
@@ -360,11 +344,9 @@ function trackVariableDeclaration(
   trackedVars: Set<string>,
 ): void {
   for (const decl of node.declarations) {
-    if (decl.id?.type !== 'Identifier')
-      continue
+    if (decl.id?.type !== 'Identifier') continue
     const calls = findDefineDiagnosticsCalls(decl.init, defineDiagnosticsImports)
-    if (calls.length === 0)
-      continue
+    if (calls.length === 0) continue
     trackedVars.add(decl.id.name)
     for (const call of calls) s.appendLeft(call.start, '/*#__PURE__*/ ')
   }
@@ -381,8 +363,7 @@ function annotatePureFactoryCalls(
   s: MagicString,
   pureFactoryImports: Set<string>,
 ): void {
-  if (!node || typeof node !== 'object')
-    return
+  if (!node || typeof node !== 'object') return
 
   if (Array.isArray(node)) {
     for (const child of node) {
@@ -392,16 +373,15 @@ function annotatePureFactoryCalls(
   }
 
   if (
-    node.type === 'CallExpression'
-    && node.callee?.type === 'Identifier'
-    && pureFactoryImports.has(node.callee.name)
+    node.type === 'CallExpression' &&
+    node.callee?.type === 'Identifier' &&
+    pureFactoryImports.has(node.callee.name)
   ) {
     s.appendLeft(node.start, '/*#__PURE__*/ ')
   }
 
   for (const key in node) {
-    if (key === 'type' || key === 'start' || key === 'end')
-      continue
+    if (key === 'type' || key === 'start' || key === 'end') continue
     annotatePureFactoryCalls(
       (node as unknown as Record<string, AstChild>)[key],
       s,
@@ -417,8 +397,7 @@ function wrapTrackedExpressionStatements(
   shadowedVars: Set<string>,
   condition: string,
 ): void {
-  if (!node || typeof node !== 'object')
-    return
+  if (!node || typeof node !== 'object') return
 
   if (Array.isArray(node)) {
     for (const child of node) {
@@ -442,9 +421,9 @@ function wrapTrackedExpressionStatements(
   }
 
   if (
-    node.type === 'FunctionDeclaration'
-    || node.type === 'FunctionExpression'
-    || node.type === 'ArrowFunctionExpression'
+    node.type === 'FunctionDeclaration' ||
+    node.type === 'FunctionExpression' ||
+    node.type === 'ArrowFunctionExpression'
   ) {
     if (node.body?.type === 'BlockStatement') {
       const functionShadowedVars = new Set(shadowedVars)
@@ -464,22 +443,20 @@ function wrapTrackedExpressionStatements(
   }
 
   if (
-    node.type === 'ExpressionStatement'
-    && expressionUsesTrackedVar(node.expression, trackedVars, shadowedVars)
+    node.type === 'ExpressionStatement' &&
+    expressionUsesTrackedVar(node.expression, trackedVars, shadowedVars)
   ) {
     if (expressionNeedsParens(node.expression)) {
       s.appendLeft(node.expression.start, `${condition} && (`)
       s.appendRight(node.expression.end, `)`)
-    }
-    else {
+    } else {
       s.appendLeft(node.expression.start, `${condition} && `)
     }
     return
   }
 
   for (const key in node) {
-    if (key === 'type' || key === 'start' || key === 'end')
-      continue
+    if (key === 'type' || key === 'start' || key === 'end') continue
     wrapTrackedExpressionStatements(
       (node as unknown as Record<string, AstChild>)[key],
       s,
@@ -491,15 +468,13 @@ function wrapTrackedExpressionStatements(
 }
 
 function collectStatementBindingNames(node: Statement | Directive, names: Set<string>): void {
-  if (!node)
-    return
+  if (!node) return
 
   if (node.type === 'VariableDeclaration') {
     for (const decl of node.declarations) {
       collectPatternNames(decl.id, names)
     }
-  }
-  else if (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') {
+  } else if (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') {
     collectPatternNames(node.id, names)
   }
 }
@@ -508,29 +483,23 @@ function collectPatternNames(
   node: BindingPattern | BindingRestElement | ParamPattern | null | undefined,
   names: Set<string>,
 ): void {
-  if (!node)
-    return
+  if (!node) return
 
   if (node.type === 'Identifier') {
     names.add(node.name)
-  }
-  else if (node.type === 'AssignmentPattern') {
+  } else if (node.type === 'AssignmentPattern') {
     collectPatternNames(node.left, names)
-  }
-  else if (node.type === 'RestElement') {
+  } else if (node.type === 'RestElement') {
     collectPatternNames(node.argument, names)
-  }
-  else if (node.type === 'ArrayPattern') {
+  } else if (node.type === 'ArrayPattern') {
     for (const element of node.elements) {
       collectPatternNames(element, names)
     }
-  }
-  else if (node.type === 'ObjectPattern') {
+  } else if (node.type === 'ObjectPattern') {
     for (const property of node.properties) {
       if (property.type === 'RestElement') {
         collectPatternNames(property.argument, names)
-      }
-      else {
+      } else {
         collectPatternNames(property.value, names)
       }
     }
@@ -545,8 +514,7 @@ function expressionUsesTrackedVar(
   trackedVars: Set<string>,
   shadowedVars: Set<string>,
 ): boolean {
-  if (!node)
-    return false
+  if (!node) return false
 
   // Direct identifier reference
   if (node.type === 'Identifier') {
@@ -566,16 +534,16 @@ function expressionUsesTrackedVar(
   // Logical expression: check either side
   if (node.type === 'LogicalExpression') {
     return (
-      expressionUsesTrackedVar(node.left, trackedVars, shadowedVars)
-      || expressionUsesTrackedVar(node.right, trackedVars, shadowedVars)
+      expressionUsesTrackedVar(node.left, trackedVars, shadowedVars) ||
+      expressionUsesTrackedVar(node.right, trackedVars, shadowedVars)
     )
   }
 
   // Conditional (ternary): check consequent or alternate
   if (node.type === 'ConditionalExpression') {
     return (
-      expressionUsesTrackedVar(node.consequent, trackedVars, shadowedVars)
-      || expressionUsesTrackedVar(node.alternate, trackedVars, shadowedVars)
+      expressionUsesTrackedVar(node.consequent, trackedVars, shadowedVars) ||
+      expressionUsesTrackedVar(node.alternate, trackedVars, shadowedVars)
     )
   }
 
@@ -591,7 +559,7 @@ function expressionUsesTrackedVar(
 
   // Sequence expression: check any element
   if (node.type === 'SequenceExpression') {
-    return node.expressions.some(expr =>
+    return node.expressions.some((expr) =>
       expressionUsesTrackedVar(expr, trackedVars, shadowedVars),
     )
   }

@@ -207,15 +207,15 @@ type CallSiteParams<Params> = Params & DiagnosticCallParams
  */
 type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
   ? {} extends Params
-      ? [params?: CallSiteParams<Params>]
-      : [params: CallSiteParams<Params>]
+    ? [params?: CallSiteParams<Params>]
+    : [params: CallSiteParams<Params>]
   : {} extends ReporterOpts
-      ? {} extends Params
-          ? [params?: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
-          : [params: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
-      : {} extends Params
-          ? [params: CallSiteParams<Params> | undefined, reporterOptions: ReporterOpts]
-          : [params: CallSiteParams<Params>, reporterOptions: ReporterOpts]
+    ? {} extends Params
+      ? [params?: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
+      : [params: CallSiteParams<Params>, reporterOptions?: ReporterOpts]
+    : {} extends Params
+      ? [params: CallSiteParams<Params> | undefined, reporterOptions: ReporterOpts]
+      : [params: CallSiteParams<Params>, reporterOptions: ReporterOpts]
 
 /**
  * Per-code handle exposed by {@link defineDiagnostics}. Each code is a

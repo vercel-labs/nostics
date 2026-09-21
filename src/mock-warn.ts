@@ -34,7 +34,7 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
   expect.extend({
     [`toHaveBeen${capitalMethod}ed`](received: string | RegExp) {
       asserted.set(received.toString(), received)
-      const passed = mockInstance.mock.calls.some(args => matchMessage(args, received))
+      const passed = mockInstance.mock.calls.some((args) => matchMessage(args, received))
 
       return passed
         ? { pass: true, message: () => `expected "${received}" not to have been ${method}ed.` }
@@ -53,7 +53,7 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
 
     [`toHaveBeen${capitalMethod}edTimes`](received: string | RegExp, n: number) {
       asserted.set(received.toString(), received)
-      const count = mockInstance.mock.calls.filter(args => matchMessage(args, received)).length
+      const count = mockInstance.mock.calls.filter((args) => matchMessage(args, received)).length
 
       return count === n
         ? {
@@ -76,16 +76,16 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
   afterEach(() => {
     const assertedArray = Array.from(asserted)
     const unassertedLogs = mockInstance.mock.calls
-      .map(args => String(args[0]))
+      .map((args) => String(args[0]))
       .filter(
-        msg => !assertedArray.some(([_key, assertedMsg]) => matchMessage([msg], assertedMsg)),
+        (msg) => !assertedArray.some(([_key, assertedMsg]) => matchMessage([msg], assertedMsg)),
       )
 
     mockInstance.mockRestore()
 
     if (unassertedLogs.length) {
       // eslint-disable-next-line no-console
-      unassertedLogs.forEach(msg => console[method](msg))
+      unassertedLogs.forEach((msg) => console[method](msg))
       throw new Error(`Test case threw unexpected ${method}s.`, {
         cause: unassertedLogs,
       })

@@ -1,28 +1,24 @@
 # [1.2.0](https://github.com/vercel-labs/nostics/compare/v1.1.4...v1.2.0) (2026-07-17)
 
-
 ### Bug Fixes
 
-* **prod:** avoid duplicated code in production diagnostics ([c90e708](https://github.com/vercel-labs/nostics/commit/c90e708acf6f83f5abf8f57897616ec6b0320d7a))
-
+- **prod:** avoid duplicated code in production diagnostics ([c90e708](https://github.com/vercel-labs/nostics/commit/c90e708acf6f83f5abf8f57897616ec6b0320d7a))
 
 ### Features
 
-* add `code` property to `Diagnostic` ([2c7f7ec](https://github.com/vercel-labs/nostics/commit/2c7f7ec023814beb68bee8857a199ffe878862f6))
+- add `code` property to `Diagnostic` ([2c7f7ec](https://github.com/vercel-labs/nostics/commit/2c7f7ec023814beb68bee8857a199ffe878862f6))
 
 ## [1.1.4](https://github.com/vercel-labs/nostics/compare/v1.1.3...v1.1.4) (2026-06-17)
 
-
 ### Bug Fixes
 
-* incorrect name in prod diagnostic ([0987482](https://github.com/vercel-labs/nostics/commit/0987482532f9bc8228635ee1f40767f0d477a746))
+- incorrect name in prod diagnostic ([0987482](https://github.com/vercel-labs/nostics/commit/0987482532f9bc8228635ee1f40767f0d477a746))
 
 ## [1.1.3](https://github.com/vercel-labs/nostics/compare/v1.1.2...v1.1.3) (2026-06-17)
 
-
 ### Bug Fixes
 
-* expose missing type ([8aa993d](https://github.com/vercel-labs/nostics/commit/8aa993db6a88edc87f7c74e627d57af4729f1bff))
+- expose missing type ([8aa993d](https://github.com/vercel-labs/nostics/commit/8aa993db6a88edc87f7c74e627d57af4729f1bff))
 
 ## [1.1.2](https://github.com/vercel-labs/nostics/compare/v1.1.1...v1.1.2) (2026-06-17)
 

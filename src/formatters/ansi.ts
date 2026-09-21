@@ -16,15 +16,11 @@ export function ansiFormatter(colors: Colors): (d: Diagnostic) => string {
     const header = `${tag} ${d.message}`
 
     const details: string[] = []
-    if (d.fix)
-      details.push(`${colors.dim('fix:')} ${d.fix}`)
-    if (d.sources?.length)
-      details.push(`${colors.dim('sources:')} ${d.sources.join(', ')}`)
-    if (d.docs)
-      details.push(`${colors.dim('see:')} ${colors.cyan(d.docs)}`)
+    if (d.fix) details.push(`${colors.dim('fix:')} ${d.fix}`)
+    if (d.sources?.length) details.push(`${colors.dim('sources:')} ${d.sources.join(', ')}`)
+    if (d.docs) details.push(`${colors.dim('see:')} ${colors.cyan(d.docs)}`)
 
-    if (details.length === 0)
-      return header
+    if (details.length === 0) return header
 
     const lines = details.map((detail, i) => {
       const connector = colors.dim(i < details.length - 1 ? '├▶' : '╰▶')
