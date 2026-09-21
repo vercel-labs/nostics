@@ -5,7 +5,7 @@ import type { Diagnostic } from '../diagnostic'
  * for terminal output. The first line is `[<name>] <message>`; optional
  * details (`fix`, `sources`, `docs`) follow with `├▶`/`╰▶` connectors.
  */
-export function formatDiagnostic(diagnostic: Diagnostic<any>): string {
+export function formatDiagnostic(diagnostic: Diagnostic): string {
   const header = `[${diagnostic.name}] ${diagnostic.message}`
 
   const details: string[] = []
