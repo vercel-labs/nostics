@@ -8,3 +8,9 @@ export type NosticsStripOptions = TransformOptions;
 // #region Variables
 export declare const nosticsStrip: UnpluginInstance<NosticsStripOptions | undefined, true>;
 // #endregion
+
+// #region Referenced (internal)
+interface TransformOptions {
+  packageName?: string;
+}
+// #endregion

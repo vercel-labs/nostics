@@ -11,7 +11,7 @@ const commonConfig = {
   },
   dts: {
     // can't enable due to https://github.com/microsoft/TypeScript/issues/58944#issuecomment-4213203205
-    oxc: true,
+    generator: 'oxc',
   },
   plugins: [nosticsStrip.rolldown()],
 } satisfies UserConfig

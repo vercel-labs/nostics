@@ -40,7 +40,7 @@ export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
 export type AnyDiagnosticReporter = (_: Diagnostic, _: any) => void;
 export type ConsoleMethod = "log" | "error" | "warn";
 export type DiagnosticReporter<ReporterOpts extends object = {}> = (_: Diagnostic, _: ReporterOpts) => void;
-export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>> };
+export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>>; };
 // #endregion
 
 // #region Classes
@@ -57,10 +57,7 @@ export declare class Diagnostic extends Error {
 // #endregion
 
 // #region Functions
-export declare function createConsoleReporter({
-  method: defaultMethod,
-  formatter
-}?: ConsoleReporterOptions): DiagnosticReporter<{
+export declare function createConsoleReporter({ method: defaultMethod, formatter }?: ConsoleReporterOptions): DiagnosticReporter<{
   method?: ConsoleMethod;
 }>;
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;

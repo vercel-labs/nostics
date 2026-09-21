@@ -12,7 +12,11 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface Assertion<
+    /* eslint-disable unused-imports/no-unused-vars */
+    R,
+    T,
+  > extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 

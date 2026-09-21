@@ -10,7 +10,7 @@ export default defineConfig({
     enabled: true,
     // NOTE: cannot use isolatedDeclarations
     // https://github.com/microsoft/TypeScript/issues/58944#issuecomment-4213203205
-    oxc: true,
+    generator: 'oxc',
   },
   target: 'esnext',
   sourcemap: true,

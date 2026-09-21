@@ -16,7 +16,7 @@ const config: UserConfig = defineConfig({
     enabled: true,
     // NOTE: cannot use isolatedDeclarations
     // https://github.com/microsoft/TypeScript/issues/58944#issuecomment-4213203205
-    oxc: true,
+    generator: 'oxc',
   },
   deps: {
     // virtual module so we can warn if plugin is missing during dev
