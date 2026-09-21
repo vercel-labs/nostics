@@ -16,7 +16,7 @@ describe('createFetchReporter', () => {
 
   it('pOSTs the diagnostic as JSON to the URL', () => {
     const diagnostics = defineDiagnostics({
-      codes: { E1: { why: 'broken', fix: 'fix it' } },
+      codes: { E1: { why: 'broken', fix: 'fix it', data: { severity: 'error' } } },
       reporters: [createFetchReporter('https://example.test/report')],
     })
 
@@ -28,7 +28,12 @@ describe('createFetchReporter', () => {
     expect(init.method).toBe('POST')
     expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
     const body = JSON.parse(init.body)
-    expect(body).toMatchObject({ name: 'E1', why: 'broken', fix: 'fix it' })
+    expect(body).toMatchObject({
+      name: 'E1',
+      why: 'broken',
+      fix: 'fix it',
+      data: { severity: 'error' },
+    })
   })
 
   it('swallows fetch rejections', () => {

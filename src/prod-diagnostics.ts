@@ -34,7 +34,7 @@ export interface DefineProdDiagnosticsOptions<
  * builds a minimal {@link Diagnostic} for any accessed code: the code becomes
  * the instance `name`, `docs` is derived from `docsBase`, and `why` points to
  * the docs URL when one exists (empty otherwise, so the thrown header is just
- * the code). It carries no catalog text, so it stays tiny in a bundle.
+ * the code). It carries no catalog text or data, so it stays tiny in a bundle.
  *
  * The strip plugin (`@nostics/unplugin`) can rewrite a `defineDiagnostics()`
  * call into a `process.env.NODE_ENV === 'production'` ternary that selects this
@@ -50,10 +50,10 @@ export interface DefineProdDiagnosticsOptions<
 export function defineProdDiagnostics<
   const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[],
->(options: DefineProdDiagnosticsOptions<Reporters> = {}): Diagnostics<Codes, Reporters> {
+>(options: DefineProdDiagnosticsOptions<Reporters> = {}): Diagnostics<Codes, Reporters, undefined> {
   const { docsBase, reporters = [] } = options
 
-  return new Proxy({} as Diagnostics<Codes, Reporters>, {
+  return new Proxy({} as Diagnostics<Codes, Reporters, undefined>, {
     get(_target, code) {
       // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
       if (typeof code !== 'string') return undefined

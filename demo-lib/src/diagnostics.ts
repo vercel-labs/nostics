@@ -26,6 +26,7 @@ export const diagnostics =
               `Invalid number inputs: ${numbers.join(', ')}`,
             fix: ({ name }: { name: string }) =>
               `Ensure all inputs are valid numbers with typed numbers if TypeScript is used, otherwise validate inputs before calling the function "${name}"`,
+            data: ({ numbers }: { numbers: number[] }) => ({ numbers }),
           },
           MATH_W001: {
             why: (p: { n: number }) => `Negative input ${p.n} for factorial`,

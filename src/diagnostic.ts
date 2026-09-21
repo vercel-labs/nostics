@@ -8,7 +8,10 @@ import { toValueWithArgs } from './utils'
  * time. Runtime-only fields (`cause`, `sources`) from {@link DiagnosticInit}
  * are intentionally omitted: they're only meaningful at the call site.
  */
-export interface DiagnosticDefinition<P = any> {
+export interface DiagnosticDefinition<
+  P = any,
+  Data extends Record<string, unknown> = Record<string, unknown>,
+> {
   /**
    * The error message: why this failed. String, or a function of `params`.
    *
@@ -37,6 +40,12 @@ export interface DiagnosticDefinition<P = any> {
    * derived from `docsBase`.
    */
   docs?: string | false
+
+  /**
+   * Structured information associated with this diagnostic. A function can
+   * derive the data from the same params object as `why` and `fix`.
+   */
+  data?: ValueOrFn<Data, P>
 }
 
 /**
@@ -59,12 +68,7 @@ export interface DiagnosticCallParams {
   sources?: string[]
 }
 
-/**
- * Structured initializer for a {@link Diagnostic}. `why` is the only required
- * field: it becomes the {@link Diagnostic.message}. The remaining fields are
- * optional metadata that reporters and consumers can render or forward.
- */
-export interface DiagnosticInit extends DiagnosticCallParams {
+interface DiagnosticInitBase extends DiagnosticCallParams {
   /**
    * The diagnostic code, e.g. `MATH_E001`. Appear as {@link Diagnostic.name}.
    */
@@ -88,13 +92,35 @@ export interface DiagnosticInit extends DiagnosticCallParams {
 }
 
 /**
+ * Structured initializer for a {@link Diagnostic}. `why` is the only required
+ * field: it becomes the {@link Diagnostic.message}. The remaining fields are
+ * optional metadata that reporters and consumers can render or forward.
+ */
+export type DiagnosticInit<Data = undefined> = DiagnosticInitBase &
+  ([Data] extends [undefined] ? { data?: undefined } : { data: Data })
+
+/**
+ * Serializable representation returned by {@link Diagnostic.toJSON}.
+ */
+export interface DiagnosticJSON<Data = unknown> {
+  name: string
+  why: string
+  fix?: string
+  docs?: string
+  sources?: string[]
+  cause?: unknown
+  data: Data
+  stack?: string
+}
+
+/**
  * Represents how to report a diagnostic. Could call `console.log()`, send the
  * diagnostic to a server, or something else. Reporters declare the shape of
  * options they need via `ReporterOpts`; `defineDiagnostics` intersects every
  * reporter's options into a single object passed at the call site.
  */
-export type DiagnosticReporter<ReporterOpts extends object = object> = (
-  diagnostic: Diagnostic,
+export type DiagnosticReporter<ReporterOpts extends object = object, Data = any> = (
+  diagnostic: Diagnostic<Data>,
   options: ReporterOpts,
 ) => void
 
@@ -104,7 +130,7 @@ export type DiagnosticReporter<ReporterOpts extends object = object> = (
  *
  * @internal
  */
-export type AnyDiagnosticReporter = (diagnostic: Diagnostic, options: any) => void
+export type AnyDiagnosticReporter = (diagnostic: Diagnostic<any>, options: any) => void
 
 /**
  * The `console` methods a log reporter can route to.
@@ -126,7 +152,7 @@ export interface ConsoleReporterOptions {
    * Renders the diagnostic into the string handed to `console`. Defaults to
    * {@link formatDiagnostic}, the plain unicode-decorated formatter.
    */
-  formatter?: (diagnostic: Diagnostic) => string
+  formatter?: (diagnostic: Diagnostic<unknown>) => string
 }
 
 /**
@@ -156,6 +182,18 @@ export function createConsoleReporter({
 type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
   ? unknown
   : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
+
+/**
+ * Resolves the data stored by a code definition. Codes without data return a
+ * diagnostic whose data is `undefined`.
+ *
+ * @internal
+ */
+type InferCodeData<Def> = Def extends { data: infer Data }
+  ? Data extends (...args: any[]) => infer ResolvedData
+    ? ResolvedData
+    : Data
+  : undefined
 
 /**
  * Options for {@link defineDiagnostics}.
@@ -233,13 +271,13 @@ type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
  * throw diagnostics.MATH_E001({ name: 'x' })     // throw
  * ```
  */
-export interface DiagnosticHandle<Params, ReporterOpts> {
+export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
   /**
    * Builds the diagnostic, runs every reporter, and returns the diagnostic
    * instance. The returned diagnostic can be inspected, attached as `cause`,
    * or thrown with `throw`.
    */
-  (...args: ActionArgs<Params, ReporterOpts>): Diagnostic
+  (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>
 }
 
 /**
@@ -248,10 +286,12 @@ export interface DiagnosticHandle<Params, ReporterOpts> {
 export type Diagnostics<
   Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
+  DataOverride = never,
 > = {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
-    Prettify<ExtractReportersOptions<Reporters>>
+    Prettify<ExtractReportersOptions<Reporters>>,
+    [DataOverride] extends [never] ? InferCodeData<Codes[Code]> : DataOverride
   >
 }
 
@@ -263,7 +303,7 @@ const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: StackTraceFrame) => void }
 ).captureStackTrace
 
-export class Diagnostic extends Error {
+export class Diagnostic<Data = undefined> extends Error {
   name: string
 
   /**
@@ -292,6 +332,11 @@ export class Diagnostic extends Error {
   sources?: string[]
 
   /**
+   * Structured information associated with this diagnostic code.
+   */
+  data: Data
+
+  /**
    * Alias for {@link Error.message}: the reason this diagnostic was raised.
    */
   get why(): string {
@@ -305,12 +350,13 @@ export class Diagnostic extends Error {
    * `defineDiagnostics` passes its action method to strip its own frames too.
    * Ignored on engines without `Error.captureStackTrace`.
    */
-  constructor(init: DiagnosticInit, captureFrom: StackTraceFrame = Diagnostic) {
+  constructor(init: DiagnosticInit<Data>, captureFrom: StackTraceFrame = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.code = this.name = init.code
     this.fix = init.fix
     this.docs = init.docs
     this.sources = init.sources
+    this.data = init.data as Data
     // V8-only API, but also implemented pretty much everywhere. Worst case
     // scenario, we fall back to the stack `Error` captures by default, which
     // includes a couple of extra internal frames but is still usable.
@@ -320,7 +366,7 @@ export class Diagnostic extends Error {
   /**
    * Converts the diagnostic into a serializable structured object.
    */
-  toJSON(): object {
+  toJSON(): DiagnosticJSON<Data> {
     return {
       name: this.name,
       why: this.why,
@@ -328,6 +374,7 @@ export class Diagnostic extends Error {
       docs: this.docs,
       sources: this.sources,
       cause: this.cause,
+      data: this.data,
       stack: this.stack,
     }
   }
@@ -380,11 +427,12 @@ export function defineDiagnostics<
           docs,
           cause: params.cause,
           sources: params.sources,
+          data: toValueWithArgs(def.data, params) as InferCodeData<Codes[typeof code]>,
         },
         handle,
       )
       for (const reporter of reporters) reporter(diagnostic, reporterOptions)
-      return diagnostic
+      return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
 
     result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]

@@ -8,6 +8,7 @@ export class Diagnostic extends Error {
   docs
   fix
   sources
+  data
   get why() {}
   constructor(_, _) {}
   toJSON() {}

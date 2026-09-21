@@ -4,7 +4,7 @@
 // #region Interfaces
 export interface ConsoleReporterOptions {
   method?: ConsoleMethod;
-  formatter?: (_: Diagnostic) => string;
+  formatter?: (_: Diagnostic<unknown>) => string;
 }
 export interface DefineDiagnosticsOptions<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> {
   docsBase?: string | ((_: keyof Codes) => string | undefined);
@@ -19,40 +19,51 @@ export interface DiagnosticCallParams {
   cause?: unknown;
   sources?: string[];
 }
-export interface DiagnosticDefinition<P = any> {
+export interface DiagnosticDefinition<P = any, Data extends Record<string, unknown> = Record<string, unknown>> {
   why: ValueOrFn<string, P>;
   fix?: ValueOrFn<string, P>;
   docs?: string | false;
+  data?: ValueOrFn<Data, P>;
 }
-export interface DiagnosticHandle<Params, ReporterOpts> {
-  (..._: ActionArgs<Params, ReporterOpts>): Diagnostic;
+export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
+  (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>;
 }
-export interface DiagnosticInit extends DiagnosticCallParams {
-  code: string;
+export interface DiagnosticJSON<Data = unknown> {
+  name: string;
   why: string;
   fix?: string;
   docs?: string;
+  sources?: string[];
+  cause?: unknown;
+  data: Data;
+  stack?: string;
 }
 // #endregion
 
 // #region Types
 export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
-export type AnyDiagnosticReporter = (_: Diagnostic, _: any) => void;
+export type AnyDiagnosticReporter = (_: Diagnostic<any>, _: any) => void;
 export type ConsoleMethod = "log" | "error" | "warn";
-export type DiagnosticReporter<ReporterOpts extends object = object> = (_: Diagnostic, _: ReporterOpts) => void;
-export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>>; };
+export type DiagnosticInit<Data = undefined> = DiagnosticInitBase & ([Data] extends [undefined] ? {
+  data?: undefined;
+} : {
+  data: Data;
+});
+export type DiagnosticReporter<ReporterOpts extends object = object, Data = any> = (_: Diagnostic<Data>, _: ReporterOpts) => void;
+export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[], DataOverride = never> = { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, [DataOverride] extends [never] ? InferCodeData<Codes[Code]> : DataOverride>; };
 // #endregion
 
 // #region Classes
-export declare class Diagnostic extends Error {
+export declare class Diagnostic<Data = undefined> extends Error {
   name: string;
   code: string;
   docs?: string;
   fix?: string;
   sources?: string[];
+  data: Data;
   get why(): string;
-  constructor(_: DiagnosticInit, _?: StackTraceFrame);
-  toJSON(): object;
+  constructor(_: DiagnosticInit<Data>, _?: StackTraceFrame);
+  toJSON(): DiagnosticJSON<Data>;
 }
 // #endregion
 
@@ -61,6 +72,6 @@ export declare function createConsoleReporter({ method: defaultMethod, formatter
   method?: ConsoleMethod;
 }>;
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
-export declare function defineProdDiagnostics<const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters>;
-export declare function formatDiagnostic(_: Diagnostic): string;
+export declare function defineProdDiagnostics<const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters, undefined>;
+export declare function formatDiagnostic(_: Diagnostic<unknown>): string;
 // #endregion

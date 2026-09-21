@@ -13,5 +13,5 @@ export interface Colors {
 // #endregion
 
 // #region Functions
-export declare function ansiFormatter(_: Colors): (_: Diagnostic) => string;
+export declare function ansiFormatter(_: Colors): (_: Diagnostic<unknown>) => string;
 // #endregion

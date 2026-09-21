@@ -1,6 +1,7 @@
-import type { Diagnostic, DiagnosticCallParams } from './diagnostic'
+import type { Diagnostic, DiagnosticCallParams, DiagnosticReporter } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { createConsoleReporter, defineDiagnostics } from './diagnostic'
+import { defineProdDiagnostics } from './prod-diagnostics'
 
 function reporterWithPriority(_diagnostic: Diagnostic, _options: { priority: number }): void {}
 
@@ -223,5 +224,62 @@ describe('defineDiagnostics: return types', () => {
   it('rejects access to undefined codes at the type level', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
     expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
+  })
+
+  it('infers resolved data for each code', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        STATIC: { why: 'msg', data: { severity: 'error' as const } },
+        DYNAMIC: {
+          why: 'msg',
+          data: (p: { actual: number }) => ({ actual: p.actual, expected: 'string' as const }),
+        },
+        EMPTY: { why: 'msg' },
+      },
+    })
+
+    expectTypeOf(errs.STATIC().data).toEqualTypeOf<{ readonly severity: 'error' }>()
+    expectTypeOf(errs.DYNAMIC({ actual: 42 }).data).toEqualTypeOf<{
+      actual: number
+      expected: 'string'
+    }>()
+    expectTypeOf(errs.DYNAMIC({ actual: 42 }).toJSON().data).toEqualTypeOf<{
+      actual: number
+      expected: 'string'
+    }>()
+    // @ts-expect-error: data resolver params are required
+    errs.DYNAMIC()
+    expectTypeOf(errs.EMPTY().data).toEqualTypeOf<undefined>()
+
+    const reporter: DiagnosticReporter<Record<never, never>, { actual: number }> = (diagnostic) => {
+      expectTypeOf(diagnostic.data.actual).toEqualTypeOf<number>()
+    }
+    reporter(errs.DYNAMIC({ actual: 42 }), {})
+  })
+
+  it('makes data optional across development and production diagnostics', () => {
+    const errsDev = defineDiagnostics({
+      codes: {
+        X: {
+          why: 'msg',
+          data: (p: { actual: number }) => ({ actual: p.actual }),
+        },
+      },
+    })
+    const errsProd = defineProdDiagnostics()
+    const errs = process.env.NODE_ENV === 'production' ? errsProd : errsDev
+
+    expectTypeOf(errs.X({ actual: 42 }).data).toEqualTypeOf<{ actual: number } | undefined>()
+    expectTypeOf(errsProd.X().data).toEqualTypeOf<undefined>()
+    expectTypeOf(errsDev.X({ actual: 42 }).data).toEqualTypeOf<{ actual: number }>()
+
+    type Codes = Record<
+      string,
+      {
+        why: (p: { actual: number }) => string
+        data: (p: { actual: number }) => { actual: number }
+      }
+    >
+    expectTypeOf(defineProdDiagnostics<Codes>().X({ actual: 42 }).data).toEqualTypeOf<undefined>()
   })
 })

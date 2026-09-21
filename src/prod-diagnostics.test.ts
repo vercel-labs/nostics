@@ -38,6 +38,14 @@ describe('defineProdDiagnostics', () => {
     expect(errs.X()).not.toBe(errs.X())
   })
 
+  it('leaves data undefined', () => {
+    const errs = defineProdDiagnostics()
+    const d = errs.NUXT_B2011()
+
+    expect(d.data).toBeUndefined()
+    expect(JSON.parse(JSON.stringify(d))).not.toHaveProperty('data')
+  })
+
   describe('docs derivation', () => {
     it('derives docs from a string docsBase', () => {
       const errs = defineProdDiagnostics({ docsBase: 'https://example.com/errors' })
