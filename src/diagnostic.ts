@@ -152,7 +152,7 @@ export interface ConsoleReporterOptions {
    * Renders the diagnostic into the string handed to `console`. Defaults to
    * {@link formatDiagnostic}, the plain unicode-decorated formatter.
    */
-  formatter?: (diagnostic: Diagnostic) => string
+  formatter?: (diagnostic: Diagnostic<unknown>) => string
 }
 
 /**

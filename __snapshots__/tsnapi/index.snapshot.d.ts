@@ -4,7 +4,7 @@
 // #region Interfaces
 export interface ConsoleReporterOptions {
   method?: ConsoleMethod;
-  formatter?: (_: Diagnostic) => string;
+  formatter?: (_: Diagnostic<unknown>) => string;
 }
 export interface DefineDiagnosticsOptions<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[]> {
   docsBase?: string | ((_: keyof Codes) => string | undefined);
@@ -73,5 +73,5 @@ export declare function createConsoleReporter({ method: defaultMethod, formatter
 }>;
 export declare function defineDiagnostics<const Codes extends Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
 export declare function defineProdDiagnostics<const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters, undefined>;
-export declare function formatDiagnostic(_: Diagnostic): string;
+export declare function formatDiagnostic(_: Diagnostic<unknown>): string;
 // #endregion
