@@ -10,8 +10,8 @@ function docsBase(code: string): string {
 // The `nosticsStrip` plugin adds the `/*#__PURE__*/` annotations and NODE_ENV
 // guards at build time, so the source stays plain. A consumer bundler then
 // drops the dev branch (and all `why`/`fix` text) in a production build.
-export const diagnostics
-  = process.env.NODE_ENV === 'production'
+export const diagnostics =
+  process.env.NODE_ENV === 'production'
     ? defineProdDiagnostics({ docsBase })
     : defineDiagnostics({
         docsBase,

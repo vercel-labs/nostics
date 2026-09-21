@@ -243,7 +243,7 @@ describe('createConsoleReporter', () => {
   it('renders with the provided formatter', () => {
     const errs = defineDiagnostics({
       codes: { X_1: { why: 'boom' } },
-      reporters: [createConsoleReporter({ formatter: d => `formatted:${d.name}` })],
+      reporters: [createConsoleReporter({ formatter: (d) => `formatted:${d.name}` })],
     })
     errs.X_1()
     expect('formatted:X_1').toHaveBeenWarned()
@@ -407,8 +407,7 @@ describe('defineDiagnostics', () => {
       })
       try {
         throw errs.X({ name: 'world', sources: ['world.ts:1:1'] })
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Diagnostic)
         expect((e as Diagnostic).message).toBe('hi world')
         expect((e as Diagnostic).fix).toBe('restart')

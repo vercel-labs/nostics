@@ -24,7 +24,7 @@ const DEFAULT_EXCLUDE_STACK_FRAMES: readonly RegExp[] = [/\/node_modules\//i]
 
 function applyExcludeStackFrames(raw: string, exclude: readonly RegExp[]): string {
   const [header, ...frames] = raw.split('\n')
-  return [header, ...frames.filter(frame => !exclude.some(re => re.test(frame)))].join('\n')
+  return [header, ...frames.filter((frame) => !exclude.some((re) => re.test(frame)))].join('\n')
 }
 
 /**
@@ -53,16 +53,15 @@ export function createFileReporter(options?: FileReporterOptions): DiagnosticRep
   return (diagnostic) => {
     try {
       const d = diagnostic as Diagnostic & Record<string, unknown>
-      const base: Record<string, unknown>
-        = typeof d.toJSON === 'function' ? (d.toJSON() as Record<string, unknown>) : { ...d }
+      const base: Record<string, unknown> =
+        typeof d.toJSON === 'function' ? (d.toJSON() as Record<string, unknown>) : { ...d }
       if (d.stack) {
         base.stack = excludeStackFrames?.length
           ? applyExcludeStackFrames(d.stack, excludeStackFrames)
           : d.stack
       }
       appendFileSync(logFile, `${JSON.stringify(base)}\n`)
-    }
-    catch (err: unknown) {
+    } catch (err: unknown) {
       console.error(`[nostics]: Failed to write log to "${logFile}":`, err)
     }
   }

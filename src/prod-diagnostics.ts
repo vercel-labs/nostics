@@ -56,8 +56,7 @@ export function defineProdDiagnostics<
   return new Proxy({} as Diagnostics<Codes, Reporters>, {
     get(_target, code) {
       // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
-      if (typeof code !== 'string')
-        return undefined
+      if (typeof code !== 'string') return undefined
 
       const handle = (
         params: DiagnosticCallParams & Record<string, unknown> = {},

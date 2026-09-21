@@ -27,8 +27,7 @@ export function extractDiagnosticCodes(
   options?: TransformOptions,
 ): string[] {
   // Cheap bail-out before parsing: every relevant file mentions the call.
-  if (!code.includes('defineDiagnostics'))
-    return []
+  if (!code.includes('defineDiagnostics')) return []
 
   const packageName = options?.packageName ?? 'nostics'
 
@@ -38,12 +37,11 @@ export function extractDiagnosticCodes(
   // Local names bound to `defineDiagnostics` imported from the package root.
   const defineDiagnosticsImports = new Set<string>()
   for (const node of ast.body) {
-    if (node.type !== 'ImportDeclaration' || node.source.value !== packageName)
-      continue
+    if (node.type !== 'ImportDeclaration' || node.source.value !== packageName) continue
     for (const spec of node.specifiers) {
       if (spec.type === 'ImportSpecifier') {
-        const importedName
-          = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
+        const importedName =
+          spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
         if (importedName === 'defineDiagnostics') {
           defineDiagnosticsImports.add(spec.local.name)
         }
@@ -51,8 +49,7 @@ export function extractDiagnosticCodes(
     }
   }
 
-  if (defineDiagnosticsImports.size === 0)
-    return []
+  if (defineDiagnosticsImports.size === 0) return []
 
   const codes: string[] = []
   for (const node of ast.body) {
@@ -60,10 +57,9 @@ export function extractDiagnosticCodes(
       for (const decl of node.declarations) {
         collectCallCodes(decl.init, defineDiagnosticsImports, codes)
       }
-    }
-    else if (
-      node.type === 'ExportNamedDeclaration'
-      && node.declaration?.type === 'VariableDeclaration'
+    } else if (
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'VariableDeclaration'
     ) {
       for (const decl of node.declaration.declarations) {
         collectCallCodes(decl.init, defineDiagnosticsImports, codes)
@@ -85,12 +81,11 @@ function collectCallCodes(
   defineDiagnosticsImports: Set<string>,
   codes: string[],
 ): void {
-  if (!init)
-    return
+  if (!init) return
   if (
-    init.type === 'CallExpression'
-    && init.callee?.type === 'Identifier'
-    && defineDiagnosticsImports.has(init.callee.name)
+    init.type === 'CallExpression' &&
+    init.callee?.type === 'Identifier' &&
+    defineDiagnosticsImports.has(init.callee.name)
   ) {
     collectCodesFromCall(init, codes)
     return
@@ -106,26 +101,24 @@ function collectCallCodes(
  */
 function collectCodesFromCall(call: CallExpression, codes: string[]): void {
   const arg = call.arguments[0]
-  if (!arg || arg.type !== 'ObjectExpression')
-    return
+  if (!arg || arg.type !== 'ObjectExpression') return
 
   const codesProp = arg.properties.find(
-    p =>
-      p.type === 'Property'
-      && !p.computed
-      && ((p.key.type === 'Identifier' && p.key.name === 'codes')
-        || (p.key.type === 'Literal' && p.key.value === 'codes')),
+    (p) =>
+      p.type === 'Property' &&
+      !p.computed &&
+      ((p.key.type === 'Identifier' && p.key.name === 'codes') ||
+        (p.key.type === 'Literal' && p.key.value === 'codes')),
   )
-  if (!codesProp || codesProp.type !== 'Property' || codesProp.value.type !== 'ObjectExpression')
+  if (!codesProp || codesProp.type !== 'Property' || codesProp.value.type !== 'ObjectExpression') {
     return
+  }
 
   for (const prop of codesProp.value.properties) {
-    if (prop.type !== 'Property' || prop.computed)
-      continue
+    if (prop.type !== 'Property' || prop.computed) continue
     if (prop.key.type === 'Identifier') {
       codes.push(prop.key.name)
-    }
-    else if (prop.key.type === 'Literal' && typeof prop.key.value === 'string') {
+    } else if (prop.key.type === 'Literal' && typeof prop.key.value === 'string') {
       codes.push(prop.key.value)
     }
   }
@@ -155,15 +148,12 @@ export function createCodeRegistry(): CodeRegistry {
 
   function remove(id: string): void {
     const previous = fileCodes.get(id)
-    if (!previous)
-      return
+    if (!previous) return
     for (const code of previous) {
       const owners = codeOwners.get(code)
-      if (!owners)
-        continue
+      if (!owners) continue
       owners.delete(id)
-      if (owners.size === 0)
-        codeOwners.delete(code)
+      if (owners.size === 0) codeOwners.delete(code)
     }
     fileCodes.delete(id)
   }
@@ -184,8 +174,7 @@ export function createCodeRegistry(): CodeRegistry {
 
   function findDuplicatesFor(id: string): DuplicateCode[] {
     const codes = fileCodes.get(id)
-    if (!codes)
-      return []
+    if (!codes) return []
     const duplicates: DuplicateCode[] = []
     for (const code of codes) {
       const owners = codeOwners.get(code)

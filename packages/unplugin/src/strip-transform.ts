@@ -11,7 +11,7 @@ const JS_EXTENSIONS_RE = /\.[jt]sx?$/
 const NODE_MODULES_RE = /\/node_modules\//
 
 function formatDuplicate(code: string, files: string[]): string {
-  const display = files.map(file => relative(process.cwd(), file) || file)
+  const display = files.map((file) => relative(process.cwd(), file) || file)
   return `Duplicate diagnostic code "${code}" defined in: ${display.join(', ')}`
 }
 
@@ -34,8 +34,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
         },
         handler(code, id) {
           const result = transform(code, id, options, trackedExportsMap)
-          if (!result)
-            return
+          if (!result) return
           return {
             code: result.code,
             map: result.map,
@@ -53,8 +52,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
       },
 
       watchChange(id, change) {
-        if (change.event === 'delete')
-          registry.remove(id)
+        if (change.event === 'delete') registry.remove(id)
       },
 
       transform: {
@@ -68,8 +66,7 @@ const unpluginFactory: UnpluginFactory<NosticsStripOptions | undefined, true> = 
           registry.update(id, extractDiagnosticCodes(code, id, options))
           for (const { code: duplicate, files } of registry.findDuplicatesFor(id)) {
             const message = formatDuplicate(duplicate, files)
-            if (isBuild)
-              this.error(message)
+            if (isBuild) this.error(message)
             else this.warn(message)
           }
         },

@@ -38,7 +38,9 @@
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
     "play": "pnpm -C playground run dev",
-    "lint": "eslint",
+    "lint": "oxlint ${CI:+--deny-warnings} . && oxfmt --check .",
+    "lint:fix": "oxfmt && oxlint --fix .",
+    "fmt": "oxfmt",
     "prepublishOnly": "pnpm run build",
     "release": "node scripts/release.ts",
     "size": "size-limit",
@@ -51,22 +53,18 @@
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "catalog:cli",
-    "@antfu/ni": "catalog:cli",
-    "@antfu/utils": "catalog:inlined",
     "@posva/prompts": "catalog:cli",
     "@size-limit/esbuild-why": "catalog:cli",
     "@size-limit/preset-small-lib": "catalog:cli",
     "@types/node": "catalog:types",
     "@types/semver": "catalog:types",
     "@vitest/coverage-v8": "catalog:testing",
-    "@vitest/ui": "catalog:testing",
     "conventional-changelog": "catalog:cli",
     "conventional-changelog-angular": "catalog:cli",
-    "eslint": "catalog:cli",
     "lint-staged": "catalog:cli",
-    "nostics": "workspace:*",
     "oxfmt": "catalog:cli",
+    "oxlint": "catalog:cli",
+    "oxlint-plugin-posva": "catalog:cli",
     "publint": "catalog:cli",
     "semver": "catalog:cli",
     "simple-git-hooks": "catalog:cli",
@@ -78,10 +76,13 @@
     "vitest": "catalog:testing"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
+    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && pnpm lint-staged"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*": [
+      "oxfmt --no-error-on-unmatched-pattern",
+      "oxlint --no-error-on-unmatched-pattern --fix"
+    ]
   },
   "size-limit": [
     {

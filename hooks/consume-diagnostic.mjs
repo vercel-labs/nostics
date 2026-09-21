@@ -9,8 +9,7 @@ const debugEnabled = !!process.env.DEBUG
 const debugLog = join(projectDir, '.nostics-hook-debug.log')
 
 function debug(msg) {
-  if (!debugEnabled)
-    return
+  if (!debugEnabled) return
   const ts = new Date().toLocaleTimeString('en-GB')
   writeFileSync(debugLog, `[${ts}] ${msg}\n`, { flag: 'a' })
 }
@@ -20,8 +19,7 @@ let input = {}
 try {
   const stdin = readFileSync(0, 'utf-8')
   input = JSON.parse(stdin)
-}
-catch {}
+} catch {}
 
 debug(`Hook fired. stop_hook_active=${input.stop_hook_active}`)
 
@@ -38,8 +36,7 @@ try {
     debug('Log file empty, allowing stop.')
     process.exit(0)
   }
-}
-catch {
+} catch {
   debug('No log file, allowing stop.')
   process.exit(0)
 }
@@ -61,8 +58,7 @@ try {
   const d = JSON.parse(firstLine)
   dropCode = d.code
   dropFile = d.sources?.[0]?.file
-}
-catch {}
+} catch {}
 
 const remaining = lines.slice(1).filter((line) => {
   // keep l
@@ -73,8 +69,7 @@ const remaining = lines.slice(1).filter((line) => {
   try {
     const d = JSON.parse(line)
     return !(d.code === dropCode && d.sources?.[0]?.file === dropFile)
-  }
-  catch (err) {
+  } catch (err) {
     debug(`Error parsing line, keeping it: ${line}\nError: ${err}`)
     return true
   }

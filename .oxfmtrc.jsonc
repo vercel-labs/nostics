@@ -8,11 +8,9 @@
   "ignorePatterns": [
     "AGENTS.md",
     "CLAUDE.md",
-    "typed-router.d.ts",
-    "components.d.ts",
-    "codemods/rule-tests/__snapshots__/",
-    // it breaks vitepress features
+    "**/__snapshots__/tsnapi/**",
+    // Docus Markdown uses syntax that oxfmt does not preserve.
     "docs/**/*.md",
-    "pnpm-lock.yaml"
-  ]
+    "pnpm-lock.yaml",
+  ],
 }

@@ -32,11 +32,11 @@ pnpm add nostics
 import { createConsoleReporter, defineDiagnostics } from 'nostics'
 
 export const diagnostics = defineDiagnostics({
-  docsBase: code => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
+  docsBase: (code) => `https://nuxt.com/e/${code.replace('NUXT_', '').toLowerCase()}`,
   reporters: [createConsoleReporter()],
   codes: {
     NUXT_B2011: {
-      why: (p: { src: string, mode: 'client' | 'server' }) => {
+      why: (p: { src: string; mode: 'client' | 'server' }) => {
         const expected = p.mode === 'client' ? 'server' : 'client'
         return `Plugin "${p.src}" is ${expected}-only but was registered with mode "${p.mode}".`
       },
@@ -46,7 +46,7 @@ export const diagnostics = defineDiagnostics({
       },
     },
     NUXT_B5001: {
-      why: (p: { value: string, configPath: string }) =>
+      why: (p: { value: string; configPath: string }) =>
         `Invalid compatibilityDate "${p.value}" in ${p.configPath}.`,
       fix: (p: { example: string }) => `Use an ISO date like "${p.example}", or "latest".`,
     },

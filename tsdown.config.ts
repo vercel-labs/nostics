@@ -5,7 +5,7 @@ import ApiSnapshot from 'tsnapi/rolldown'
 // annotated so the default export is emittable under isolatedDeclarations
 const config: UserConfig = defineConfig({
   entry: {
-    'index': 'src/index.ts',
+    index: 'src/index.ts',
     'formatters/ansi': 'src/formatters/ansi.ts',
     'formatters/json': 'src/formatters/json.ts',
     'reporters/dev': 'src/reporters/dev.ts',

@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["unicorn", "typescript", "oxc"],
+  "jsPlugins": ["oxlint-plugin-posva"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "off",
+    "perf": "warn",
+  },
+  "rules": {
+    "no-debugger": "off",
+    "no-control-regex": "off",
+    "no-dupe-class-members": "error",
+    "no-unused-vars": "off",
+    "unicorn/no-useless-spread": "off",
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "numeric-separators-style": "warn",
+    "curly": ["error", "multi-line"],
+    "require-post-message-target-origin": "off",
+    "posva/vitest-prefer-to-have-been-called-times": "error",
+  },
+  "env": {
+    "builtin": true,
+  },
+  "ignorePatterns": [
+    "**/*.ts.timestamp*",
+    "**/__snapshots__/tsnapi/**",
+    "dist",
+    "scripts",
+    "**/CLAUDE.md",
+  ],
+}
