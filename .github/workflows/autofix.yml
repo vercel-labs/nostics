@@ -1,16 +1,17 @@
-name: ci
+name: autofix.ci
 
 on:
-  push:
+  pull_request:
     branches:
-      - '**'
-    tags-ignore:
-      - '**'
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  autofix:
+    if: "!startsWith(github.event.pull_request.title, 'renovate/')"
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -20,8 +21,6 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test
-      - run: pnpm run size
-      # docs often run out of memory and is very slow, we will catch the error
-      # on Vercel deployments
-      # - run: pnpm -C docs run build
+      - run: pnpm run lint:fix
+
+      - uses: autofix-ci/action@7a166d7532b277f34e16238930461bf77f9d7ed8
