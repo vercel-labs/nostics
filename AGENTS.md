@@ -7,7 +7,7 @@ Structured diagnostic for libraries and frameworks to keep code agents in the lo
 ```bash
 pnpm exec vitest run                          # run all tests once
 pnpm exec vitest run src/diagnostic.test.ts   # single test file
-pnpm lint --fix                           # eslint with auto-fix
+pnpm lint:fix                             # format and lint with oxfmt and oxlint
 pnpm build                                # build with tsdown
 pnpm typecheck                            # tsc
 ```
