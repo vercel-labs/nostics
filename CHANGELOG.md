@@ -1,3 +1,9 @@
+# [1.3.0](https://github.com/vercel-labs/nostics/compare/v1.2.0...v1.3.0) (2026-09-21)
+
+### Features
+
+- support typed diagnostic data ([#28](https://github.com/vercel-labs/nostics/issues/28)) ([92c2157](https://github.com/vercel-labs/nostics/commit/92c21579b7db6e5a8c15980ed2977ac337e42dd3))
+
 # [1.2.0](https://github.com/vercel-labs/nostics/compare/v1.1.4...v1.2.0) (2026-07-17)
 
 ### Bug Fixes
