@@ -27,7 +27,7 @@ A project's dev guard may be `process.env.NODE_ENV !== 'production'` or its own 
 - Keep existing dev guards exactly as they are. nostics stripping is additive and does not replace them. If a throw or reject only happened in dev, it must still only happen in dev.
 - Never add a guard the original did not have. A throw or report that fired in production keeps firing in production builds that do not use stripping; note that migrating an unguarded report-only call makes it strippable, so once `nosticsStrip` runs in the build it disappears from production bundles. That is usually the goal of the migration, but if the library deliberately reports in production, surface that decision instead of changing it silently.
 - Keep throw vs reject, timing, recovery code, and returned fallbacks.
-- Keep structured error shapes (fields, symbols). Migrating a throw replaces the thrown message with the diagnostic's `why`: if tests assert the exact old text, update them deliberately as part of the migration, never weaken the message to dodge a test.
+- Keep structured error shapes (fields, symbols). Migrating a throw replaces the thrown message with the diagnostic's `why`. Update tests that assert the old text to check the diagnostic code.
 
 ## Catalog shape
 
@@ -88,7 +88,6 @@ Dropping diagnostics from production builds takes two pieces: `/*#__PURE__*/` an
 
 ## Verify
 
-- Tests for warnings, throws, guards, and error shapes still pass; tests asserting exact message text are updated consciously, not accidentally.
-- Watch substring assertions when splitting a warning. `toHaveBeenWarned('...')` / `toContain` pin a **fragment**, not the whole message, and a fragment may sit in the remedy half you just moved to `fix`. Before splitting, grep the tests for substrings of each warning: keep pinned **diagnosis** fragments in `why`; when a test pins a **remedy** fragment, update that assertion to the surviving `why` text. The same warning is often pinned by a shared constant duplicated across several spec files — fix every copy.
+- Tests for warnings and throws check only the stable diagnostic code: `.name` on a thrown diagnostic or `[CODE]` in reporter output. Replace exact and substring message assertions, including shared warning constants. Keep tests for guards, recovery, and error shapes.
 - Dev-only gates are still present everywhere the source had them, and no new gates were added.
 - Report-only diagnostics remain strippable expression statements. Thrown/returned diagnostics keep their message text in production by design: they are behavior, not reports.
