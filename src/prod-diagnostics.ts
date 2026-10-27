@@ -1,10 +1,5 @@
-import type {
-  AnyDiagnosticReporter,
-  DiagnosticCallParams,
-  DiagnosticDefinition,
-  Diagnostics,
-} from './diagnostic'
-import { deriveDocs, Diagnostic } from './diagnostic'
+import type { AnyDiagnosticReporter, DiagnosticDefinition, Diagnostics } from './diagnostic'
+import { createHandle } from './diagnostic'
 
 /**
  * Options for {@link defineProdDiagnostics}. A lean subset of
@@ -51,35 +46,14 @@ export function defineProdDiagnostics<
   const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[],
 >(options: DefineProdDiagnosticsOptions<Reporters> = {}): Diagnostics<Codes, Reporters, undefined> {
-  const { docsBase, reporters = [] } = options
-
   return new Proxy({} as Diagnostics<Codes, Reporters, undefined>, {
     get(_target, code) {
       // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
       if (typeof code !== 'string') return undefined
 
-      const handle = (
-        params: DiagnosticCallParams & Record<string, unknown> = {},
-        reporterOptions: any = {},
-      ): Diagnostic => {
-        const docs = deriveDocs(docsBase, code)
-        const diagnostic = new Diagnostic(
-          {
-            code,
-            // the code is already the `name`; an empty `why` keeps the thrown
-            // header down to `CODE` / `CODE: <docs>` instead of `CODE: CODE`
-            why: docs ?? '',
-            docs,
-            cause: params.cause,
-            sources: params.sources,
-          },
-          handle,
-        )
-        for (const reporter of reporters) reporter(diagnostic, reporterOptions)
-        return diagnostic
-      }
-
-      return handle
+      // the code is already the `name`; an empty `why` keeps the thrown
+      // header down to `CODE` / `CODE: <docs>` instead of `CODE: CODE`
+      return createHandle(code, options, (_params, docs) => ({ why: docs ?? '' }))
     },
   })
 }

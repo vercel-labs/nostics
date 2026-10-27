@@ -19,6 +19,21 @@ describe('diagnostic', () => {
       expect(d).toBeInstanceOf(Diagnostic)
     })
 
+    it('is an instance of its own handle only', () => {
+      const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+      const d = errs.A()
+      expect(d).toBeInstanceOf(errs.A)
+      expect(d).not.toBeInstanceOf(errs.B)
+      expect(d).toBeInstanceOf(Diagnostic)
+    })
+
+    it('rejects non-diagnostics and other codes in a handle instanceof check', () => {
+      const errs = defineDiagnostics({ codes: { A: { why: 'a' } } })
+      for (const value of [new Error('a'), null, 'A', new Diagnostic({ code: 'B', why: 'b' })]) {
+        expect(value instanceof errs.A).toBe(false)
+      }
+    })
+
     it('exposes message and uses the code as the instance name', () => {
       const errs = defineDiagnostics({ codes: { X_001: { why: 'boom' } } })
       const d = errs.X_001()

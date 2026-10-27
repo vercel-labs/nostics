@@ -263,12 +263,14 @@ type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
 /**
  * Per-code handle exposed by {@link defineDiagnostics}. Each code is a
  * callable: invoke it to build the diagnostic and run every reporter, or
- * prefix the call with `throw` to raise it.
+ * prefix the call with `throw` to raise it. `instanceof` checks a caught
+ * error against this code.
  *
  * @example
  * ```ts
  * diagnostics.MATH_E001({ name: 'x' })           // report
  * throw diagnostics.MATH_E001({ name: 'x' })     // throw
+ * error instanceof diagnostics.MATH_E001         // check
  * ```
  */
 export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
@@ -278,6 +280,12 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
    * or thrown with `throw`.
    */
   (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>
+
+  /**
+   * Narrows `error instanceof diagnostics.CODE` to this code's diagnostic:
+   * true for any {@link Diagnostic} whose `code` matches.
+   */
+  [Symbol.hasInstance](value: unknown): value is Diagnostic<Data>
 }
 
 /**
@@ -380,19 +388,54 @@ export class Diagnostic<Data = undefined> extends Error {
   }
 }
 
+type HandleParams = DiagnosticCallParams & Record<string, unknown>
+
+interface HandleOptions {
+  /** Per-code override: a string replaces the `docsBase` URL, `false` opts out. */
+  docs?: string | false
+  // `any`: `defineDiagnostics` narrows the resolver to its own code keys
+  docsBase?: string | ((code: any) => string | undefined)
+  reporters?: readonly AnyDiagnosticReporter[]
+}
+
 /**
- * Resolves the docs URL for a code from a `docsBase` (string template or
- * resolver function). Shared by {@link defineDiagnostics} and
- * {@link defineProdDiagnostics}. Per-code `docs` overrides are handled by the
- * caller; this only covers the `docsBase`-derived case.
+ * Builds the runtime {@link DiagnosticHandle} for `code`, shared by
+ * {@link defineDiagnostics} and {@link defineProdDiagnostics}. Resolves the
+ * docs URL once, then on each call `resolve` turns the params (and docs) into
+ * the code-specific fields; the handle adds the call-site fields, runs every
+ * reporter, and matches `instanceof` by code.
  *
  * @internal
  */
-export function deriveDocs(
-  docsBase: string | ((code: any) => string | undefined) | undefined,
+export function createHandle(
   code: string,
-): string | undefined {
-  return typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code)
+  { docs: docsOverride, docsBase, reporters = [] }: HandleOptions,
+  resolve: (
+    params: HandleParams,
+    docs: string | undefined,
+  ) => { why: string; fix?: string; data?: unknown },
+): (params?: HandleParams, reporterOptions?: object) => Diagnostic<unknown> {
+  const docs =
+    docsOverride === false
+      ? undefined
+      : docsOverride ||
+        (typeof docsBase === 'string' ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code))
+
+  const handle = (params: HandleParams = {}, reporterOptions: object = {}) => {
+    const { why, fix, data } = resolve(params, docs)
+    const diagnostic = new Diagnostic<unknown>(
+      { code, why, fix, docs, data, cause: params.cause, sources: params.sources },
+      handle,
+    )
+    for (const reporter of reporters) reporter(diagnostic, reporterOptions)
+    return diagnostic
+  }
+  // match by code, not handle identity: the prod Proxy builds a new handle on
+  // every access. `defineProperty` because the inherited
+  // `Function.prototype[Symbol.hasInstance]` is non-writable.
+  return Object.defineProperty(handle, Symbol.hasInstance, {
+    value: (value: unknown) => value instanceof Diagnostic && value.code === code,
+  })
 }
 
 /**
@@ -405,35 +448,16 @@ export function defineDiagnostics<
   const Codes extends Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
-  const reporters = options.reporters ?? []
+  const { docsBase, reporters } = options
   const result = {} as Diagnostics<Codes, Reporters>
-
-  const { docsBase } = options
 
   for (const code of Object.keys(options.codes) as Extract<keyof Codes, string>[]) {
     const def = options.codes[code]
-    // skip docs if set to false, otherwise use it or derive it from docsBase
-    const docs = def.docs === false ? undefined : def.docs || deriveDocs(docsBase, code)
-
-    const handle = (
-      params: DiagnosticCallParams & Record<string, unknown> = {},
-      reporterOptions: any = {},
-    ): Diagnostic => {
-      const diagnostic = new Diagnostic(
-        {
-          code,
-          why: toValueWithArgs(def.why, params),
-          fix: toValueWithArgs(def.fix, params),
-          docs,
-          cause: params.cause,
-          sources: params.sources,
-          data: toValueWithArgs(def.data, params) as InferCodeData<Codes[typeof code]>,
-        },
-        handle,
-      )
-      for (const reporter of reporters) reporter(diagnostic, reporterOptions)
-      return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
-    }
+    const handle = createHandle(code, { docs: def.docs, docsBase, reporters }, (params) => ({
+      why: toValueWithArgs(def.why, params),
+      fix: toValueWithArgs(def.fix, params),
+      data: toValueWithArgs(def.data, params),
+    }))
 
     result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]
   }

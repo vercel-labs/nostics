@@ -27,6 +27,7 @@ export interface DiagnosticDefinition<P = any, Data extends Record<string, unkno
 }
 export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
   (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>;
+  [Symbol.hasInstance](_: unknown): value is Diagnostic<Data>;
 }
 export interface DiagnosticJSON<Data = unknown> {
   name: string;

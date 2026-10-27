@@ -557,6 +557,17 @@ x = diagnostics.E1()`
 
       expectCallSiteUnchanged(input)
     })
+
+    it('does not wrap an instanceof check against a handle', () => {
+      const input = `import { diagnostics } from './diagnostics'
+try { run() } catch (error) {
+  if (error instanceof diagnostics.E1) console.log(error.fix)
+  const isE2 = error instanceof diagnostics.E2
+  error instanceof diagnostics.E3 && handle(error)
+}`
+
+      expectCallSiteUnchanged(input)
+    })
   })
 
   describe('throw statements', () => {

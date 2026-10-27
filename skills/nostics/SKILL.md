@@ -8,7 +8,7 @@ license: MIT
 
 Every error condition becomes a typed `Diagnostic` (extends `Error`) with a stable code, docs URL, and actionable `fix`. Serializable via `toJSON()`.
 
-`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `instanceof Diagnostic`, send `toJSON()` across process boundaries.
+`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch one code with `instanceof diagnostics.CODE` (or any code with `instanceof Diagnostic`), send `toJSON()` across process boundaries.
 
 ## defineDiagnostics
 
@@ -53,7 +53,7 @@ diagnostics.NUXT_B2011({ src }, { method: 'error' }) // reporter options second
 throw diagnostics.NUXT_B2011({ src }) // raise
 ```
 
-`cause`/`sources` go in the params object; `sources` matters most for build/config diagnostics where the JS stack points inside the library. Catch with `if (err instanceof Diagnostic)` then read `.name`, `.message`, `.fix`, `.docs`, and `.data`.
+`cause`/`sources` go in the params object; `sources` matters most for build/config diagnostics where the JS stack points inside the library. Check one code with `if (err instanceof diagnostics.NUXT_B2011)`: it matches any `Diagnostic` with that code (also across `defineProdDiagnostics` handles) and narrows `err` to that code's typed `.data`. Don't write `err.code === '...'` guards or `isDiagnostic(err, code)` helpers. Check any diagnostic with `if (err instanceof Diagnostic)`. Then read `.name`, `.message`, `.fix`, `.docs`, and `.data`.
 
 Definition data is not present in `defineProdDiagnostics()`. Its `.data` is `undefined`. A dev/prod ternary therefore types `.data` as the code's data type or `undefined`.
 

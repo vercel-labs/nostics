@@ -283,3 +283,31 @@ describe('defineDiagnostics: return types', () => {
     expectTypeOf(defineProdDiagnostics<Codes>().X({ actual: 42 }).data).toEqualTypeOf<undefined>()
   })
 })
+
+describe('defineDiagnostics: instanceof narrowing', () => {
+  const codes = {
+    A: { why: 'a', data: (p: { actual: number }) => ({ actual: p.actual }) },
+    B: { why: 'b' },
+  }
+
+  it('narrows a caught error to the handle code data', () => {
+    const errs = defineDiagnostics({ codes })
+    const error: unknown = errs.A({ actual: 1 })
+    if (error instanceof errs.A) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ actual: number }>>()
+      expectTypeOf(error.data).toEqualTypeOf<{ actual: number }>()
+    }
+    if (error instanceof errs.B) expectTypeOf(error.data).toEqualTypeOf<undefined>()
+  })
+
+  it('narrows through the development and production ternary', () => {
+    const errs =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics({ docsBase: 'https://example.com' })
+        : defineDiagnostics({ docsBase: 'https://example.com', codes })
+    const error: unknown = errs.A({ actual: 1 })
+    if (error instanceof errs.A) {
+      expectTypeOf(error.data).toEqualTypeOf<{ actual: number } | undefined>()
+    }
+  })
+})

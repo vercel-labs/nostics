@@ -10,6 +10,18 @@ describe('defineProdDiagnostics', () => {
     expect(d).toBeInstanceOf(Diagnostic)
   })
 
+  it('matches instanceof by code across freshly built handles', () => {
+    const errs = defineProdDiagnostics()
+    expect(errs.A).not.toBe(errs.A)
+    const d = errs.A()
+    expect(d).toBeInstanceOf(errs.A)
+    expect(d).not.toBeInstanceOf(errs.B)
+    expect(d).toBeInstanceOf(Diagnostic)
+    for (const value of [new Error('a'), null, 'A', new Diagnostic({ code: 'B', why: 'b' })]) {
+      expect(value instanceof errs.A).toBe(false)
+    }
+  })
+
   it('uses the accessed code as the instance `name`', () => {
     const errs = defineProdDiagnostics()
     const d = errs.NUXT_B2011()

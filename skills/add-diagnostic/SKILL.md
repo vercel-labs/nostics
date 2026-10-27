@@ -23,6 +23,6 @@ LIB_R0001: {
 - `why` is the only required field. Params from `why` and `fix` are intersected and required at the call site.
 - Runtime fields (`cause`, `sources`) are passed at the call site, never in the definition.
 
-4. **Call it:** `diagnostics.LIB_R0001({ hook })` to report, `throw diagnostics.LIB_R0001({ hook, cause: err })` to raise. Both run the reporters.
+4. **Call it:** `diagnostics.LIB_R0001({ hook })` to report, `throw diagnostics.LIB_R0001({ hook, cause: err })` to raise. Both run the reporters. To check a caught error for this code, use `err instanceof diagnostics.LIB_R0001`, not a hand-written `err.code === 'LIB_R0001'` guard: it narrows `err` to the code's typed `data`.
 
 Full API and reporter/formatter/plugin details: the `nostics` skill.
