@@ -267,6 +267,50 @@ describe('createConsoleReporter', () => {
     errs.X_1()
     expect('formatted:X_1').toHaveBeenWarned()
   })
+
+  it('passes the cause to the console method as an extra argument', () => {
+    const cause = new Error('boom')
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createConsoleReporter()],
+    })
+    errs.X_1({ cause })
+    expect('[X_1] boom').toHaveBeenWarned()
+    const [message, printedCause] = vi.mocked(console.warn).mock.calls[0]!
+    expect(message).toBe('[X_1] boom')
+    expect(printedCause).toBe(cause)
+    expect((printedCause as Error).message).toBe('boom')
+    expect((printedCause as Error).stack).toContain('boom')
+  })
+
+  it('passes a nested cause chain through unchanged', () => {
+    const inner = new Error('inner')
+    const outer = new Error('outer', { cause: inner })
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'outer' } },
+      reporters: [createConsoleReporter()],
+    })
+    errs.X_1({ cause: outer })
+    expect('[X_1] outer').toHaveBeenWarned()
+    const printedCause = vi.mocked(console.warn).mock.calls[0]?.[1]
+    expect(printedCause).toBe(outer)
+    expect((printedCause as Error).cause).toBe(inner)
+  })
+
+  it('passes non-Error causes through unchanged', () => {
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'boom' } },
+      reporters: [createConsoleReporter()],
+    })
+    errs.X_1({ cause: 'plain string' })
+    expect('[X_1] boom').toHaveBeenWarned()
+    expect(vi.mocked(console.warn).mock.calls[0]?.[1]).toBe('plain string')
+
+    const objectCause = { reason: 'nope' }
+    errs.X_1({ cause: objectCause })
+    expect('[X_1] boom').toHaveBeenWarnedTimes(2)
+    expect(vi.mocked(console.warn).mock.calls[1]?.[1]).toBe(objectCause)
+  })
 })
 
 describe('defineDiagnostics', () => {

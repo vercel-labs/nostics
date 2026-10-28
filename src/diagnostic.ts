@@ -157,9 +157,10 @@ export interface ConsoleReporterOptions {
 
 /**
  * Creates a console reporter that renders each diagnostic with `formatter` and
- * prints the result via `console[method]`. Both default sensibly (`'warn'` and
- * {@link formatDiagnostic}); `method` can also be overridden per call through
- * the reporter options.
+ * prints the result via `console[method]`. Any `cause` attached to the
+ * diagnostic is passed through as a second argument so `console[method]`
+ * renders it natively. Both default sensibly (`'warn'` and {@link formatDiagnostic});
+ * `method` can also be overridden per call through the reporter options.
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function createConsoleReporter({
@@ -167,8 +168,13 @@ export function createConsoleReporter({
   formatter = formatDiagnostic,
 }: ConsoleReporterOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
   return (diagnostic, { method = defaultMethod } = {}) => {
+    const message = formatter(diagnostic)
     // eslint-disable-next-line no-console -- this reporter writes to the configured console method
-    console[method](formatter(diagnostic))
+    if (diagnostic.cause === undefined) {
+      console[method](message)
+    } else {
+      console[method](message, diagnostic.cause)
+    }
   }
 }
 
