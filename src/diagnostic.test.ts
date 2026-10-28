@@ -276,7 +276,8 @@ describe('createConsoleReporter', () => {
     })
     errs.X_1({ cause })
     expect('[X_1] boom').toHaveBeenWarned()
-    const [message, printedCause] = vi.mocked(console.warn).mock.calls[0]!
+    const [format, message, printedCause] = vi.mocked(console.warn).mock.calls[0]!
+    expect(format).toBe('%s')
     expect(message).toBe('[X_1] boom')
     expect(printedCause).toBe(cause)
     expect((printedCause as Error).message).toBe('boom')
@@ -292,7 +293,7 @@ describe('createConsoleReporter', () => {
     })
     errs.X_1({ cause: outer })
     expect('[X_1] outer').toHaveBeenWarned()
-    const printedCause = vi.mocked(console.warn).mock.calls[0]?.[1]
+    const printedCause = vi.mocked(console.warn).mock.calls[0]?.[2]
     expect(printedCause).toBe(outer)
     expect((printedCause as Error).cause).toBe(inner)
   })
@@ -304,12 +305,26 @@ describe('createConsoleReporter', () => {
     })
     errs.X_1({ cause: 'plain string' })
     expect('[X_1] boom').toHaveBeenWarned()
-    expect(vi.mocked(console.warn).mock.calls[0]?.[1]).toBe('plain string')
+    expect(vi.mocked(console.warn).mock.calls[0]?.[2]).toBe('plain string')
 
     const objectCause = { reason: 'nope' }
     errs.X_1({ cause: objectCause })
     expect('[X_1] boom').toHaveBeenWarnedTimes(2)
-    expect(vi.mocked(console.warn).mock.calls[1]?.[1]).toBe(objectCause)
+    expect(vi.mocked(console.warn).mock.calls[1]?.[2]).toBe(objectCause)
+  })
+
+  it('does not treat the formatted message as a format string', () => {
+    const cause = new Error('boom')
+    const errs = defineDiagnostics({
+      codes: { X_1: { why: 'failed %d times' } },
+      reporters: [createConsoleReporter()],
+    })
+    errs.X_1({ cause })
+    expect('[X_1] failed %d times').toHaveBeenWarned()
+    const [format, message, printedCause] = vi.mocked(console.warn).mock.calls[0]!
+    expect(format).toBe('%s')
+    expect(message).toBe('[X_1] failed %d times')
+    expect(printedCause).toBe(cause)
   })
 })
 

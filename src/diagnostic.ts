@@ -158,7 +158,7 @@ export interface ConsoleReporterOptions {
 /**
  * Creates a console reporter that renders each diagnostic with `formatter` and
  * prints the result via `console[method]`. Any `cause` attached to the
- * diagnostic is passed through as a second argument so `console[method]`
+ * diagnostic is forwarded as an additional argument so `console[method]`
  * renders it natively. Both default sensibly (`'warn'` and {@link formatDiagnostic});
  * `method` can also be overridden per call through the reporter options.
  */
@@ -173,7 +173,9 @@ export function createConsoleReporter({
     if (diagnostic.cause === undefined) {
       console[method](message)
     } else {
-      console[method](message, diagnostic.cause)
+      // `%s` keeps `message` verbatim; otherwise `console[method]` treats it as
+      // a format string and consumes the cause as a substitution value.
+      console[method]('%s', message, diagnostic.cause)
     }
   }
 }
