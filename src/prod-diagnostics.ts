@@ -1,10 +1,11 @@
 import type {
   AnyDiagnosticReporter,
   DiagnosticCallParams,
+  DiagnosticCodes,
   DiagnosticDefinition,
   Diagnostics,
 } from './diagnostic'
-import { deriveDocs, Diagnostic } from './diagnostic'
+import { deriveDocs, Diagnostic, isDiagnostic } from './diagnostic'
 
 /**
  * Options for {@link defineProdDiagnostics}. A lean subset of
@@ -48,7 +49,7 @@ export interface DefineProdDiagnosticsOptions<
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineProdDiagnostics<
-  const Codes extends Record<string, DiagnosticDefinition> = Record<string, DiagnosticDefinition>,
+  const Codes extends DiagnosticCodes = Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[],
 >(options: DefineProdDiagnosticsOptions<Reporters> = {}): Diagnostics<Codes, Reporters, undefined> {
   const { docsBase, reporters = [] } = options
@@ -57,6 +58,7 @@ export function defineProdDiagnostics<
     get(_target, code) {
       // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
       if (typeof code !== 'string') return undefined
+      if (code === 'is') return isDiagnostic
 
       const handle = (
         params: DiagnosticCallParams & Record<string, unknown> = {},

@@ -223,7 +223,7 @@ describe('defineDiagnostics: return types', () => {
 
   it('rejects access to undefined codes at the type level', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
+    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X' | 'is'>()
   })
 
   it('infers resolved data for each code', () => {
@@ -281,5 +281,75 @@ describe('defineDiagnostics: return types', () => {
       }
     >
     expectTypeOf(defineProdDiagnostics<Codes>().X({ actual: 42 }).data).toEqualTypeOf<undefined>()
+  })
+})
+
+describe('diagnostics.is', () => {
+  const codes = {
+    A: { why: 'a', data: (p: { n: number }) => ({ n: p.n }) },
+    B: { why: 'b' },
+  }
+  const errs = defineDiagnostics({ codes })
+  const error: unknown = null
+
+  it('narrows to the data of the given code', () => {
+    if (errs.is(error, 'A')) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }>>()
+    }
+    if (errs.is(error, 'B')) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+  })
+
+  it('narrows to the data union of the registry without a code', () => {
+    if (errs.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+  })
+
+  it('rejects codes outside the registry', () => {
+    // @ts-expect-error: unknown code
+    errs.is(error, 'C')
+  })
+
+  it('does not expose `is` as a handle', () => {
+    expectTypeOf(errs.is).returns.toEqualTypeOf<boolean>()
+  })
+
+  it('rejects a code named `is`', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: `is` is reserved
+        is: { why: 'msg' },
+      },
+    })
+    // @ts-expect-error: `is` is reserved
+    defineProdDiagnostics<{ is: { why: string } }>()
+  })
+
+  it('narrows data to undefined for the prod registry', () => {
+    const prod = defineProdDiagnostics<typeof codes>()
+    if (prod.is(error, 'A')) {
+      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    }
+    const anyProd = defineProdDiagnostics()
+    if (anyProd.is(error, 'ANY')) {
+      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    }
+  })
+
+  it('is callable on a dev/prod ternary', () => {
+    const either =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics<typeof codes>()
+        : defineDiagnostics({ codes })
+    if (either.is(error, 'A')) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    if (either.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    // @ts-expect-error: unknown code
+    either.is(error, 'C')
   })
 })
