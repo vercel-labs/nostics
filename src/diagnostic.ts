@@ -281,6 +281,24 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
 }
 
 /**
+ * Code map accepted by {@link defineDiagnostics}. `is` is reserved for
+ * {@link Diagnostics.is}.
+ *
+ * @internal
+ */
+export type DiagnosticCodes = Record<string, DiagnosticDefinition> & { is?: never }
+
+/**
+ * Data of the diagnostics built for `Code`: `DataOverride` when set, else the
+ * data inferred from the code definition.
+ *
+ * @internal
+ */
+type CodeDataOf<Codes, Code extends keyof Codes, DataOverride> = [DataOverride] extends [never]
+  ? InferCodeData<Codes[Code]>
+  : DataOverride
+
+/**
  * Return type of {@link defineDiagnostics}.
  */
 export type Diagnostics<
@@ -288,10 +306,24 @@ export type Diagnostics<
   Reporters extends readonly AnyDiagnosticReporter[],
   DataOverride = never,
 > = {
+  /**
+   * Checks if `error` is a {@link Diagnostic} with `code` and narrows its
+   * `data`. Use `instanceof Diagnostic` to check for any diagnostic.
+   *
+   * @example
+   * ```ts
+   * if (diagnostics.is(error, 'MATH_E001')) error.data
+   * ```
+   */
+  is<Code extends keyof Codes>(
+    error: unknown,
+    code: Code,
+  ): error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
+} & {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>,
-    [DataOverride] extends [never] ? InferCodeData<Codes[Code]> : DataOverride
+    CodeDataOf<Codes, Code, DataOverride>
   >
 }
 
@@ -396,13 +428,23 @@ export function deriveDocs(
 }
 
 /**
+ * Runtime of {@link Diagnostics.is}, shared by every registry. It only compares
+ * the code, so it also matches diagnostics from a dev or prod registry.
+ *
+ * @internal
+ */
+export function isDiagnostic(error: unknown, code: string): boolean {
+  return error instanceof Diagnostic && error.code === code
+}
+
+/**
  * Creates a typed diagnostics object from a set of code definitions. Each
  * code becomes a callable {@link DiagnosticHandle}: invoke to report, or
  * `throw` the result to raise. No `new` required, no proxy.
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
-  const Codes extends Record<string, DiagnosticDefinition>,
+  const Codes extends DiagnosticCodes,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
@@ -435,8 +477,10 @@ export function defineDiagnostics<
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
 
-    result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]
+    ;(result as Record<string, unknown>)[code] = handle
   }
+
+  result.is = isDiagnostic as Diagnostics<Codes, Reporters>['is']
 
   return result
 }

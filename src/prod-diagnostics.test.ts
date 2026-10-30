@@ -87,6 +87,23 @@ describe('defineProdDiagnostics', () => {
     })
   })
 
+  describe('is', () => {
+    const errs = defineProdDiagnostics()
+
+    it('matches a diagnostic by code', () => {
+      expect(errs.is(errs.A(), 'A')).toBe(true)
+      expect(errs.is(errs.B(), 'A')).toBe(false)
+    })
+
+    it('does not create a handle nor run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineProdDiagnostics({ reporters: [reporter] })
+      expect(reported.is(new Error('x'), 'A')).toBe(false)
+      expect(reported.is(reported.A(), 'A')).toBe(true)
+      expect(reporter).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('ignores non-string property access', () => {
     const errs = defineProdDiagnostics()
     // e.g. promise unwrapping / serialization probes must not produce handles

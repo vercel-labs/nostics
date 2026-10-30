@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
 import { formatDiagnostic } from './formatters/plain'
+import { defineProdDiagnostics } from './prod-diagnostics'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
 function reporterWithPriority(diagnostic: Diagnostic, options: { priority: number }): void {
@@ -282,6 +283,35 @@ describe('defineDiagnostics', () => {
     expect(a).not.toBe(b)
     expect(a).toBeInstanceOf(Diagnostic)
     expect(b).toBeInstanceOf(Diagnostic)
+  })
+
+  describe('is', () => {
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+
+    it('matches a diagnostic by code', () => {
+      expect(errs.is(errs.A(), 'A')).toBe(true)
+      expect(errs.is(errs.B(), 'A')).toBe(false)
+    })
+
+    it('rejects non-diagnostics', () => {
+      for (const value of [new Error('A'), null, 'A', { code: 'A' }]) {
+        expect(errs.is(value, 'A')).toBe(false)
+      }
+      expect(errs.is(new Diagnostic({ code: 'B', why: 'b' }), 'A')).toBe(false)
+    })
+
+    it('matches diagnostics from a prod registry', () => {
+      const prod = defineProdDiagnostics()
+      expect(errs.is(prod.A(), 'A')).toBe(true)
+      expect(errs.is(prod.A(), 'B')).toBe(false)
+    })
+
+    it('does not run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineDiagnostics({ codes: { A: { why: 'a' } }, reporters: [reporter] })
+      expect(reported.is(new Error('x'), 'A')).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe('per-code name', () => {
