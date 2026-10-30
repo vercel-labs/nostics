@@ -301,10 +301,11 @@ describe('diagnostics.is', () => {
     }
   })
 
-  it('narrows to the data union of the registry without a code', () => {
-    if (errs.is(error)) {
-      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
-    }
+  it('requires a code', () => {
+    // @ts-expect-error: missing code
+    errs.is(error)
+    // @ts-expect-error: missing code
+    defineProdDiagnostics<typeof codes>().is(error)
   })
 
   it('rejects codes outside the registry', () => {
@@ -344,9 +345,6 @@ describe('diagnostics.is', () => {
         ? defineProdDiagnostics<typeof codes>()
         : defineDiagnostics({ codes })
     if (either.is(error, 'A')) {
-      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
-    }
-    if (either.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
     }
     // @ts-expect-error: unknown code

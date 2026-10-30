@@ -307,21 +307,20 @@ export type Diagnostics<
   DataOverride = never,
 > = {
   /**
-   * Checks if `error` is a {@link Diagnostic} with `code`, or any
-   * {@link Diagnostic} when `code` is omitted, and narrows its `data`.
+   * Checks if `error` is a {@link Diagnostic} with `code` and narrows its
+   * `data`. Use `instanceof Diagnostic` to check for any diagnostic.
    *
    * @example
    * ```ts
    * if (diagnostics.is(error, 'MATH_E001')) error.data
    * ```
    */
-  // one generic signature (no overloads) keeps a dev/prod ternary callable
-  is<Code extends keyof Codes = keyof Codes>(
+  is<Code extends keyof Codes>(
     error: unknown,
-    code?: Code,
+    code: Code,
   ): error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
 } & {
-  [Code in keyof Codes as Code extends 'is' ? never : Code]: DiagnosticHandle<
+  [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>,
     CodeDataOf<Codes, Code, DataOverride>
@@ -434,8 +433,8 @@ export function deriveDocs(
  *
  * @internal
  */
-export function isDiagnostic(error: unknown, code?: string): boolean {
-  return error instanceof Diagnostic && (code === undefined || error.code === code)
+export function isDiagnostic(error: unknown, code: string): boolean {
+  return error instanceof Diagnostic && error.code === code
 }
 
 /**

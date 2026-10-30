@@ -293,14 +293,8 @@ describe('defineDiagnostics', () => {
       expect(errs.is(errs.B(), 'A')).toBe(false)
     })
 
-    it('matches any diagnostic without a code', () => {
-      expect(errs.is(errs.A())).toBe(true)
-      expect(errs.is(new Diagnostic({ code: 'OTHER', why: 'x' }))).toBe(true)
-    })
-
     it('rejects non-diagnostics', () => {
       for (const value of [new Error('A'), null, 'A', { code: 'A' }]) {
-        expect(errs.is(value)).toBe(false)
         expect(errs.is(value, 'A')).toBe(false)
       }
       expect(errs.is(new Diagnostic({ code: 'B', why: 'b' }), 'A')).toBe(false)

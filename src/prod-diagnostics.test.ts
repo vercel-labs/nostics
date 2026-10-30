@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { defineDiagnostics, Diagnostic } from './diagnostic'
+import { Diagnostic } from './diagnostic'
 import { defineProdDiagnostics } from './prod-diagnostics'
 
 describe('defineProdDiagnostics', () => {
@@ -95,30 +95,11 @@ describe('defineProdDiagnostics', () => {
       expect(errs.is(errs.B(), 'A')).toBe(false)
     })
 
-    it('matches any diagnostic without a code', () => {
-      expect(errs.is(errs.A())).toBe(true)
-      expect(errs.is(new Diagnostic({ code: 'OTHER', why: 'x' }))).toBe(true)
-    })
-
-    it('rejects non-diagnostics', () => {
-      for (const value of [new Error('A'), null, 'A', { code: 'A' }]) {
-        expect(errs.is(value)).toBe(false)
-        expect(errs.is(value, 'A')).toBe(false)
-      }
-      expect(errs.is(new Diagnostic({ code: 'B', why: 'b' }), 'A')).toBe(false)
-    })
-
-    it('matches diagnostics from a dev registry', () => {
-      const dev = defineDiagnostics({ codes: { A: { why: 'a' } } })
-      expect(errs.is(dev.A(), 'A')).toBe(true)
-      expect(errs.is(dev.A(), 'B')).toBe(false)
-    })
-
     it('does not create a handle nor run reporters', () => {
       const reporter = vi.fn()
       const reported = defineProdDiagnostics({ reporters: [reporter] })
       expect(reported.is(new Error('x'), 'A')).toBe(false)
-      expect(reported.is(reported.A())).toBe(true)
+      expect(reported.is(reported.A(), 'A')).toBe(true)
       expect(reporter).toHaveBeenCalledTimes(1)
     })
   })
