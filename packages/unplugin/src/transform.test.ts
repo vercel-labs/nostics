@@ -503,6 +503,32 @@ process.env.NODE_ENV !== "production" && (condition ? diagnostics.E1() : diagnos
     })
   })
 
+  describe('is type guard', () => {
+    it('does not wrap a guard that gates recovery code', () => {
+      expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
+diagnostics.is(e, 'E1') && f(e)`)
+    })
+
+    it('does not wrap an if condition using the guard', () => {
+      expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
+if (diagnostics.is(e, 'E1')) f(e)`)
+    })
+
+    it('does not wrap a guard stored in a variable', () => {
+      expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
+const ok = diagnostics.is(e, 'E1')`)
+    })
+
+    it('still wraps a report gated by the guard', () => {
+      expectCallSiteTransform(
+        `import { diagnostics } from './diagnostics'
+diagnostics.is(e, 'E1') || diagnostics.E1()`,
+        `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && (diagnostics.is(e, 'E1') || diagnostics.E1())`,
+      )
+    })
+  })
+
   describe('value-passing patterns', () => {
     it('does not wrap variable declaration', () => {
       const input = `import { diagnostics } from './diagnostics'
