@@ -315,10 +315,13 @@ export type Diagnostics<
    * if (diagnostics.is(error, 'MATH_E001')) error.data
    * ```
    */
-  is<Code extends keyof Codes>(
-    error: unknown,
-    code: Code,
-  ): error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
+  is: string extends keyof Codes
+    ? // non-generic so a dev/prod ternary union stays callable
+      (error: unknown, code: string) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>>
+    : <Code extends keyof Codes>(
+        error: unknown,
+        code: Code,
+      ) => error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
 } & {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,

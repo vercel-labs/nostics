@@ -350,4 +350,20 @@ describe('diagnostics.is', () => {
     // @ts-expect-error: unknown code
     either.is(error, 'C')
   })
+
+  it('is type safe on an untyped prod registry ternary', () => {
+    const docsBase = (code: string) => `https://example.com/${code}`
+    const either =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics({ docsBase })
+        : defineDiagnostics({ docsBase, reporters: [createConsoleReporter()], codes })
+    if (either.is(error, 'A')) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    if (either.is(error, 'B')) {
+      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    }
+    // @ts-expect-error: unknown code
+    either.is(error, 'C')
+  })
 })
