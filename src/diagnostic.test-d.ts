@@ -301,6 +301,15 @@ describe('diagnostics.is', () => {
     }
   })
 
+  it('narrows to a union when given several codes', () => {
+    if (errs.is(error, 'A', 'B')) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    // @ts-expect-error: unknown code
+    errs.is(error, 'A', 'C')
+  })
+
   it('requires a code', () => {
     // @ts-expect-error: missing code
     errs.is(error)
@@ -363,7 +372,15 @@ describe('diagnostics.is', () => {
     if (either.is(error, 'B')) {
       expectTypeOf(error.data).toEqualTypeOf<undefined>()
     }
+    if (either.is(error, 'A', 'B')) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    if (defineProdDiagnostics().is(error, 'A', 'B')) {
+      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    }
     // @ts-expect-error: unknown code
     either.is(error, 'C')
+    // @ts-expect-error: unknown code
+    either.is(error, 'A', 'C')
   })
 })

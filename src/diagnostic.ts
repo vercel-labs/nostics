@@ -299,6 +299,15 @@ type CodeDataOf<Codes, Code extends keyof Codes, DataOverride> = [DataOverride] 
   : DataOverride
 
 /**
+ * Union of the diagnostics built for each code in `Code`.
+ *
+ * @internal
+ */
+type DiagnosticOf<Codes, Code extends keyof Codes, DataOverride> = Code extends unknown
+  ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
+  : never
+
+/**
  * Return type of {@link defineDiagnostics}.
  */
 export type Diagnostics<
@@ -307,21 +316,25 @@ export type Diagnostics<
   DataOverride = never,
 > = {
   /**
-   * Checks if `error` is a {@link Diagnostic} with `code` and narrows its
-   * `data`. Use `instanceof Diagnostic` to check for any diagnostic.
+   * Checks if `error` is a {@link Diagnostic} with one of `codes` and narrows
+   * its `data`. Use `instanceof Diagnostic` to check for any diagnostic.
    *
    * @example
    * ```ts
    * if (diagnostics.is(error, 'MATH_E001')) error.data
+   * if (diagnostics.is(error, 'MATH_E001', 'MATH_E002')) error.data
    * ```
    */
   is: string extends keyof Codes
     ? // non-generic so a dev/prod ternary union stays callable
-      (error: unknown, code: string) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>>
+      (
+        error: unknown,
+        ...codes: [string, ...string[]]
+      ) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>>
     : <Code extends keyof Codes>(
         error: unknown,
-        code: Code,
-      ) => error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
+        ...codes: [Code, ...Code[]]
+      ) => error is DiagnosticOf<Codes, Code, DataOverride>
 } & {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
@@ -436,8 +449,8 @@ export function deriveDocs(
  *
  * @internal
  */
-export function isDiagnostic(error: unknown, code: string): boolean {
-  return error instanceof Diagnostic && error.code === code
+export function isDiagnostic(error: unknown, ...codes: string[]): boolean {
+  return error instanceof Diagnostic && codes.includes(error.code)
 }
 
 /**

@@ -93,6 +93,8 @@ describe('defineProdDiagnostics', () => {
     it('matches a diagnostic by code', () => {
       expect(errs.is(errs.A(), 'A')).toBe(true)
       expect(errs.is(errs.B(), 'A')).toBe(false)
+      expect(errs.is(errs.B(), 'A', 'B')).toBe(true)
+      expect(errs.is(errs.C(), 'A', 'B')).toBe(false)
     })
 
     it('does not create a handle nor run reporters', () => {

@@ -51,7 +51,7 @@ export type DiagnosticInit<Data = undefined> = DiagnosticInitBase & ([Data] exte
 });
 export type DiagnosticReporter<ReporterOpts extends object = object, Data = any> = (_: Diagnostic<Data>, _: ReporterOpts) => void;
 export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[], DataOverride = never> = {
-  is: string extends keyof Codes ? (error: unknown, code: string) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>> : <Code extends keyof Codes>(error: unknown, code: Code) => error is Diagnostic<CodeDataOf<Codes, Code, DataOverride>>;
+  is: string extends keyof Codes ? (error: unknown, ...codes: [string, ...string[]]) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>> : <Code extends keyof Codes>(error: unknown, ...codes: [Code, ...Code[]]) => error is DiagnosticOf<Codes, Code, DataOverride>;
 } & { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, CodeDataOf<Codes, Code, DataOverride>>; };
 // #endregion
 

@@ -8,7 +8,7 @@ license: MIT
 
 Every error condition becomes a typed `Diagnostic` (extends `Error`) with a stable code, docs URL, and actionable `fix`. Serializable via `toJSON()`.
 
-`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `diagnostics.is(err, 'CODE')` (or `err instanceof Diagnostic` for any diagnostic), send `toJSON()` across process boundaries.
+`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `diagnostics.is(err, 'CODE')` (several codes: `diagnostics.is(err, 'A', 'B')`) (or `err instanceof Diagnostic` for any diagnostic), send `toJSON()` across process boundaries.
 
 ## defineDiagnostics
 

@@ -293,6 +293,16 @@ describe('defineDiagnostics', () => {
       expect(errs.is(errs.B(), 'A')).toBe(false)
     })
 
+    it('matches any of several codes', () => {
+      const withC = defineDiagnostics({
+        codes: { A: { why: 'a' }, B: { why: 'b' }, C: { why: 'c' } },
+      })
+      expect(withC.is(withC.A(), 'A', 'B')).toBe(true)
+      expect(withC.is(withC.B(), 'A', 'B')).toBe(true)
+      expect(withC.is(withC.C(), 'A', 'B')).toBe(false)
+      expect(withC.is(new Error('A'), 'A', 'B')).toBe(false)
+    })
+
     it('rejects non-diagnostics', () => {
       for (const value of [new Error('A'), null, 'A', { code: 'A' }]) {
         expect(errs.is(value, 'A')).toBe(false)
