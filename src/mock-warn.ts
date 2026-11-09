@@ -21,7 +21,7 @@ declare module 'vitest' {
 }
 
 function matchMessage(args: any[], received: string | RegExp): boolean {
-  const msg = String(args[0])
+  const msg = args.map(String).join(' ')
   return typeof received === 'string' ? msg.includes(received) : received.test(msg)
 }
 
@@ -76,10 +76,10 @@ function createMockConsoleMethod(method: 'warn' | 'error'): void {
   afterEach(() => {
     const assertedArray = Array.from(asserted)
     const unassertedLogs = mockInstance.mock.calls
-      .map((args) => String(args[0]))
       .filter(
-        (msg) => !assertedArray.some(([_key, assertedMsg]) => matchMessage([msg], assertedMsg)),
+        (args) => !assertedArray.some(([_key, assertedMsg]) => matchMessage(args, assertedMsg)),
       )
+      .map((args) => args.map(String).join(' '))
 
     mockInstance.mockRestore()
 
