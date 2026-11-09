@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Diagnostic } from './diagnostic'
+import { defineDiagnostics, Diagnostic } from './diagnostic'
 import { defineProdDiagnostics } from './prod-diagnostics'
 
 describe('defineProdDiagnostics', () => {
@@ -90,30 +90,26 @@ describe('defineProdDiagnostics', () => {
   describe('is', () => {
     const errs = defineProdDiagnostics()
 
-    it('matches a diagnostic by code', () => {
-      expect(errs.is(errs.A(), 'A')).toBe(true)
-      expect(errs.is(errs.B(), 'A')).toBe(false)
-      expect(errs.is(errs.B(), 'A', 'B')).toBe(true)
-      expect(errs.is(errs.C(), 'A', 'B')).toBe(false)
+    it('matches diagnostics of its own code across accesses', () => {
+      expect(errs.A.is(errs.A())).toBe(true)
+      expect(errs.A.is(errs.B())).toBe(false)
     })
 
-    it('matches any code without codes', () => {
-      expect(errs.is(errs.A())).toBe(true)
-    })
-
-    it('rejects anything not created by this registry', () => {
-      for (const value of [new Error('A'), null, defineProdDiagnostics().A()]) {
-        expect(errs.is(value)).toBe(false)
-        expect(errs.is(value, 'A')).toBe(false)
+    it('rejects anything that is not a diagnostic of its code', () => {
+      for (const value of [new Error('A'), null, { code: 'A' }]) {
+        expect(errs.A.is(value)).toBe(false)
       }
     })
 
-    it('does not create a handle nor run reporters', () => {
+    it('matches a dev diagnostic with the same code', () => {
+      expect(errs.A.is(defineDiagnostics({ codes: { A: { why: 'a' } } }).A())).toBe(true)
+    })
+
+    it('does not run reporters', () => {
       const reporter = vi.fn()
       const reported = defineProdDiagnostics({ reporters: [reporter] })
-      expect(reported.is(new Error('x'), 'A')).toBe(false)
-      expect(reported.is(reported.A(), 'A')).toBe(true)
-      expect(reporter).toHaveBeenCalledTimes(1)
+      expect(reported.A.is(new Error('x'))).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
     })
   })
 

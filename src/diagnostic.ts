@@ -278,34 +278,28 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
    * or thrown with `throw`.
    */
   (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>
+
+  /**
+   * Checks if `error` is a diagnostic created by this handle and narrows its
+   * `data`. Does not run reporters. Safe to pass unbound, e.g.
+   * `errors.filter(diagnostics.MATH_E001.is)`.
+   *
+   * @example
+   * ```ts
+   * if (diagnostics.MATH_E001.is(error)) error.data
+   * ```
+   */
+  is: (error: unknown) => error is Diagnostic<Data>
 }
 
 /**
- * Code map accepted by {@link defineDiagnostics}. `is` is reserved for
- * {@link Diagnostics.is}.
- *
- * @internal
+ * Default `DataOverride` of {@link Diagnostics}: infer data from the codes. Not
+ * `never`: `never` is assignable to `undefined`, so a dev/prod ternary union
+ * would reduce to the prod registry and lose the dev data types.
  */
-export type DiagnosticCodes = Record<string, DiagnosticDefinition> & { is?: never }
-
-/**
- * Data of the diagnostics built for `Code`: `DataOverride` when set, else the
- * data inferred from the code definition.
- *
- * @internal
- */
-type CodeDataOf<Codes, Code extends keyof Codes, DataOverride> = [DataOverride] extends [never]
-  ? InferCodeData<Codes[Code]>
-  : DataOverride
-
-/**
- * Union of the diagnostics built for each code in `Code`.
- *
- * @internal
- */
-type DiagnosticOf<Codes, Code extends keyof Codes, DataOverride> = Code extends unknown
-  ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>>
-  : never
+export interface InferCodesData {
+  readonly '~inferCodesData': true
+}
 
 /**
  * Return type of {@link defineDiagnostics}.
@@ -313,35 +307,12 @@ type DiagnosticOf<Codes, Code extends keyof Codes, DataOverride> = Code extends 
 export type Diagnostics<
   Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
-  DataOverride = never,
+  DataOverride = InferCodesData,
 > = {
-  /**
-   * Checks if `error` is a {@link Diagnostic} with one of `codes` and narrows
-   * its `data`. Without codes, checks if this registry created `error`. Use
-   * `instanceof Diagnostic` to check for any diagnostic.
-   *
-   * @example
-   * ```ts
-   * if (diagnostics.is(error)) error.code
-   * if (diagnostics.is(error, 'MATH_E001')) error.data
-   * if (diagnostics.is(error, 'MATH_E001', 'MATH_E002')) error.data
-   * ```
-   */
-  is: string extends keyof Codes
-    ? // non-generic so a dev/prod ternary union stays callable
-      (
-        error: unknown,
-        ...codes: string[]
-      ) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>>
-    : <Code extends keyof Codes = keyof Codes>(
-        error: unknown,
-        ...codes: Code[]
-      ) => error is DiagnosticOf<Codes, Code, DataOverride>
-} & {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>,
-    CodeDataOf<Codes, Code, DataOverride>
+    [DataOverride] extends [InferCodesData] ? InferCodeData<Codes[Code]> : DataOverride
   >
 }
 
@@ -446,15 +417,15 @@ export function deriveDocs(
 }
 
 /**
- * Runtime of {@link Diagnostics.is}: matches diagnostics tagged with the
- * registry `id` and, when given, one of `codes`.
+ * Runtime of {@link DiagnosticHandle.is}: matches diagnostics with `code`.
+ * Codes are expected to be unique across registries.
  *
  * @internal
  */
-export function createIs(id: symbol) {
-  return (error: unknown, ...codes: string[]): boolean =>
-    error instanceof Diagnostic && id in error && (!codes[0] || codes.includes(error.code))
-}
+export const createIs =
+  (code: string) =>
+  (error: unknown): error is Diagnostic<any> =>
+    error instanceof Diagnostic && error.code === code
 
 /**
  * Creates a typed diagnostics object from a set of code definitions. Each
@@ -463,13 +434,11 @@ export function createIs(id: symbol) {
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
-  const Codes extends DiagnosticCodes,
+  const Codes extends Record<string, DiagnosticDefinition>,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   const result = {} as Diagnostics<Codes, Reporters>
-  // allows detecting diagnostics specifically created by this registry inside `is()`
-  const id = Symbol()
 
   const { docsBase } = options
 
@@ -494,15 +463,13 @@ export function defineDiagnostics<
         },
         handle,
       )
-      ;(diagnostic as any)[id] = 1
       for (const reporter of reporters) reporter(diagnostic, reporterOptions)
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
+    handle.is = createIs(code)
 
-    ;(result as Record<string, unknown>)[code] = handle
+    result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]
   }
-
-  result.is = createIs(id) as Diagnostics<Codes, Reporters>['is']
 
   return result
 }

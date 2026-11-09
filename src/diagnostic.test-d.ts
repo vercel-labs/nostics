@@ -228,7 +228,7 @@ describe('defineDiagnostics: return types', () => {
 
   it('rejects access to undefined codes at the type level', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X' | 'is'>()
+    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
   })
 
   it('infers resolved data for each code', () => {
@@ -289,7 +289,7 @@ describe('defineDiagnostics: return types', () => {
   })
 })
 
-describe('diagnostics.is', () => {
+describe('handle.is', () => {
   const codes = {
     A: { why: 'a', data: (p: { n: number }) => ({ n: p.n }) },
     B: { why: 'b' },
@@ -297,64 +297,37 @@ describe('diagnostics.is', () => {
   const errs = defineDiagnostics({ codes })
   const error: unknown = null
 
-  it('narrows to the data of the given code', () => {
-    if (errs.is(error, 'A')) {
+  it('narrows to the data of its code', () => {
+    if (errs.A.is(error)) {
       expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }>>()
     }
-    if (errs.is(error, 'B')) {
+    if (errs.B.is(error)) {
       expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
     }
   })
 
-  it('narrows to a union when given several codes', () => {
-    if (errs.is(error, 'A', 'B')) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
+  it('narrows a union of guards', () => {
+    if (errs.A.is(error) || errs.B.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
     }
-    // @ts-expect-error: unknown code
-    errs.is(error, 'A', 'C')
   })
 
-  it('narrows to any code of the registry without codes', () => {
-    if (errs.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
-    }
-    if (defineProdDiagnostics<typeof codes>().is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
-    }
-    if (defineProdDiagnostics().is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
-    }
+  it('narrows in array filters', () => {
+    expectTypeOf([error].filter(errs.A.is)).toEqualTypeOf<Diagnostic<{ n: number }>[]>()
   })
 
-  it('rejects codes outside the registry', () => {
-    // @ts-expect-error: unknown code
-    errs.is(error, 'C')
-  })
-
-  it('does not expose `is` as a handle', () => {
-    expectTypeOf(errs.is).returns.toEqualTypeOf<boolean>()
-  })
-
-  it('rejects a code named `is`', () => {
-    defineDiagnostics({
-      codes: {
-        // @ts-expect-error: `is` is reserved
-        is: { why: 'msg' },
-      },
-    })
-    // @ts-expect-error: `is` is reserved
-    defineProdDiagnostics<{ is: { why: string } }>()
+  it('allows a code named `is`', () => {
+    const named = defineDiagnostics({ codes: { is: { why: 'msg' } } })
+    expectTypeOf(named.is()).toEqualTypeOf<Diagnostic<undefined>>()
+    expectTypeOf(named.is.is).guards.toEqualTypeOf<Diagnostic<undefined>>()
   })
 
   it('narrows data to undefined for the prod registry', () => {
-    const prod = defineProdDiagnostics<typeof codes>()
-    if (prod.is(error, 'A')) {
-      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    if (defineProdDiagnostics<typeof codes>().A.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
     }
-    const anyProd = defineProdDiagnostics()
-    if (anyProd.is(error, 'ANY')) {
-      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    if (defineProdDiagnostics().ANY.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
     }
   })
 
@@ -363,40 +336,23 @@ describe('diagnostics.is', () => {
       process.env.NODE_ENV === 'production'
         ? defineProdDiagnostics<typeof codes>()
         : defineDiagnostics({ codes })
-    if (either.is(error, 'A')) {
+    if (either.A.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
     }
-    if (either.is(error)) {
-      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
-    }
-    // @ts-expect-error: unknown code
-    either.is(error, 'C')
+    expectTypeOf(either.A({ n: 1 }).data).toEqualTypeOf<{ n: number } | undefined>()
   })
 
-  it('is type safe on an untyped prod registry ternary', () => {
+  it('is callable on an untyped prod registry ternary', () => {
     const docsBase = (code: string) => `https://example.com/${code}`
     const either =
       process.env.NODE_ENV === 'production'
         ? defineProdDiagnostics({ docsBase })
         : defineDiagnostics({ docsBase, reporters: [createConsoleReporter()], codes })
-    if (either.is(error, 'A')) {
+    if (either.A.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
     }
-    if (either.is(error, 'B')) {
+    if (either.B.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<undefined>()
     }
-    if (either.is(error, 'A', 'B')) {
-      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
-    }
-    if (either.is(error)) {
-      expectTypeOf(error).toExtend<Diagnostic<unknown>>()
-    }
-    if (defineProdDiagnostics().is(error, 'A', 'B')) {
-      expectTypeOf(error.data).toEqualTypeOf<undefined>()
-    }
-    // @ts-expect-error: unknown code
-    either.is(error, 'C')
-    // @ts-expect-error: unknown code
-    either.is(error, 'A', 'C')
   })
 })

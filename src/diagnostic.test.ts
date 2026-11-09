@@ -285,40 +285,35 @@ describe('defineDiagnostics', () => {
   })
 
   describe('is', () => {
-    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' }, C: { why: 'c' } } })
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
 
-    it('matches by code', () => {
-      expect(errs.is(errs.A(), 'A')).toBe(true)
-      expect(errs.is(errs.B(), 'A')).toBe(false)
-      expect(errs.is(errs.B(), 'A', 'B')).toBe(true)
-      expect(errs.is(errs.C(), 'A', 'B')).toBe(false)
+    it('matches diagnostics of its own code', () => {
+      expect(errs.A.is(errs.A())).toBe(true)
+      expect(errs.A.is(errs.B())).toBe(false)
+      expect(errs.B.is(errs.B())).toBe(true)
     })
 
-    it('matches any code without codes', () => {
-      expect(errs.is(errs.A())).toBe(true)
-      expect(errs.is(errs.B())).toBe(true)
-    })
-
-    it('rejects anything not created by this registry', () => {
-      const other = defineDiagnostics({ codes: { A: { why: 'a' } } })
-      for (const value of [
-        new Error('A'),
-        null,
-        'A',
-        { code: 'A' },
-        { ...errs.A() },
-        new Diagnostic({ code: 'A', why: 'a' }),
-        other.A(),
-      ]) {
-        expect(errs.is(value)).toBe(false)
-        expect(errs.is(value, 'A')).toBe(false)
+    it('rejects anything that is not a diagnostic of its code', () => {
+      for (const value of [new Error('A'), null, undefined, 'A', { code: 'A' }, { ...errs.A() }]) {
+        expect(errs.A.is(value)).toBe(false)
       }
+    })
+
+    it('matches a diagnostic with the same code from anywhere', () => {
+      const other = defineDiagnostics({ codes: { A: { why: 'other' } } })
+      expect(errs.A.is(other.A())).toBe(true)
+      expect(errs.A.is(new Diagnostic({ code: 'A', why: 'a' }))).toBe(true)
+    })
+
+    it('works unbound', () => {
+      const a = errs.A()
+      expect([a, errs.B(), new Error('x')].filter(errs.A.is)).toEqual([a])
     })
 
     it('does not run reporters', () => {
       const reporter = vi.fn()
       const reported = defineDiagnostics({ codes: { A: { why: 'a' } }, reporters: [reporter] })
-      expect(reported.is(new Error('x'), 'A')).toBe(false)
+      expect(reported.A.is(new Error('x'))).toBe(false)
       expect(reporter).toHaveBeenCalledTimes(0)
     })
   })

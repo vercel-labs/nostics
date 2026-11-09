@@ -506,25 +506,34 @@ process.env.NODE_ENV !== "production" && (condition ? diagnostics.E1() : diagnos
   describe('is type guard', () => {
     it('does not wrap a guard that gates recovery code', () => {
       expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
-diagnostics.is(e, 'E1') && f(e)`)
+diagnostics.E1.is(e) && f(e)`)
     })
 
     it('does not wrap an if condition using the guard', () => {
       expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
-if (diagnostics.is(e, 'E1')) f(e)`)
+if (diagnostics.E1.is(e)) f(e)`)
     })
 
-    it('does not wrap a guard stored in a variable', () => {
+    it('does not wrap a computed code guard', () => {
       expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
-const ok = diagnostics.is(e, 'E1')`)
+diagnostics['E1'].is(e) && f(e)`)
     })
 
     it('still wraps a report gated by the guard', () => {
       expectCallSiteTransform(
         `import { diagnostics } from './diagnostics'
-diagnostics.is(e, 'E1') || diagnostics.E1()`,
+diagnostics.E1.is(e) || diagnostics.E1()`,
         `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== "production" && (diagnostics.is(e, 'E1') || diagnostics.E1())`,
+process.env.NODE_ENV !== "production" && (diagnostics.E1.is(e) || diagnostics.E1())`,
+      )
+    })
+
+    it('wraps a report of a code named `is`', () => {
+      expectCallSiteTransform(
+        `import { diagnostics } from './diagnostics'
+diagnostics.is()`,
+        `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && diagnostics.is()`,
       )
     })
   })
