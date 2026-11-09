@@ -299,12 +299,6 @@ describe('defineDiagnostics', () => {
       }
     })
 
-    it('matches a diagnostic with the same code from anywhere', () => {
-      const other = defineDiagnostics({ codes: { A: { why: 'other' } } })
-      expect(errs.A.is(other.A())).toBe(true)
-      expect(errs.A.is(new Diagnostic({ code: 'A', why: 'a' }))).toBe(true)
-    })
-
     it('works unbound', () => {
       const a = errs.A()
       expect([a, errs.B(), new Error('x')].filter(errs.A.is)).toEqual([a])
@@ -315,6 +309,35 @@ describe('defineDiagnostics', () => {
       const reported = defineDiagnostics({ codes: { A: { why: 'a' } }, reporters: [reporter] })
       expect(reported.A.is(new Error('x'))).toBe(false)
       expect(reporter).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('registry is', () => {
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+
+    it('matches any diagnostic created by this registry', () => {
+      expect(errs.is(errs.A())).toBe(true)
+      expect(errs.is(errs.B())).toBe(true)
+    })
+
+    it('rejects anything not created by this registry', () => {
+      const other = defineDiagnostics({ codes: { A: { why: 'a' } } })
+      for (const value of [
+        new Error('A'),
+        null,
+        'A',
+        { code: 'A' },
+        { ...errs.A() },
+        new Diagnostic({ code: 'A', why: 'a' }),
+        other.A(),
+      ]) {
+        expect(errs.is(value)).toBe(false)
+      }
+    })
+
+    it('works unbound', () => {
+      const a = errs.A()
+      expect([a, new Error('x')].filter(errs.is)).toEqual([a])
     })
   })
 

@@ -528,13 +528,9 @@ process.env.NODE_ENV !== "production" && (diagnostics.E1.is(e) || diagnostics.E1
       )
     })
 
-    it('wraps a report of a code named `is`', () => {
-      expectCallSiteTransform(
-        `import { diagnostics } from './diagnostics'
-diagnostics.is()`,
-        `import { diagnostics } from './diagnostics'
-process.env.NODE_ENV !== "production" && diagnostics.is()`,
-      )
+    it('does not wrap the registry guard', () => {
+      expectCallSiteUnchanged(`import { diagnostics } from './diagnostics'
+diagnostics.is(e) && f(e)`)
     })
   })
 

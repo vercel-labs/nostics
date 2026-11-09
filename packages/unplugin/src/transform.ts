@@ -523,13 +523,8 @@ function expressionUsesTrackedVar(
 
   // Member expression: check the object (root of the chain)
   if (node.type === 'MemberExpression') {
-    // `diagnostics.CODE.is()` is a type guard, not a report: keep it in prod
-    if (
-      !node.computed &&
-      node.object.type === 'MemberExpression' &&
-      node.property.type === 'Identifier' &&
-      node.property.name === 'is'
-    ) {
+    // `diagnostics.is()` and `diagnostics.CODE.is()` are type guards, not reports: keep them in prod
+    if (!node.computed && node.property.type === 'Identifier' && node.property.name === 'is') {
       return false
     }
     return expressionUsesTrackedVar(node.object, trackedVars, shadowedVars)

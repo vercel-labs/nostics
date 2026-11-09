@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { defineDiagnostics, Diagnostic } from './diagnostic'
+import { Diagnostic } from './diagnostic'
 import { defineProdDiagnostics } from './prod-diagnostics'
 
 describe('defineProdDiagnostics', () => {
@@ -101,14 +101,37 @@ describe('defineProdDiagnostics', () => {
       }
     })
 
-    it('matches a dev diagnostic with the same code', () => {
-      expect(errs.A.is(defineDiagnostics({ codes: { A: { why: 'a' } } }).A())).toBe(true)
+    it('does not run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineProdDiagnostics({ reporters: [reporter] })
+      expect(reported.A.is(new Error('x'))).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('registry is', () => {
+    const errs = defineProdDiagnostics()
+
+    it('matches any diagnostic created by this registry', () => {
+      expect(errs.is(errs.A())).toBe(true)
+      expect(errs.is(errs.B())).toBe(true)
+    })
+
+    it('rejects anything not created by this registry', () => {
+      for (const value of [
+        new Error('A'),
+        null,
+        new Diagnostic({ code: 'A', why: '' }),
+        defineProdDiagnostics().A(),
+      ]) {
+        expect(errs.is(value)).toBe(false)
+      }
     })
 
     it('does not run reporters', () => {
       const reporter = vi.fn()
       const reported = defineProdDiagnostics({ reporters: [reporter] })
-      expect(reported.A.is(new Error('x'))).toBe(false)
+      expect(reported.is(new Error('x'))).toBe(false)
       expect(reporter).toHaveBeenCalledTimes(0)
     })
   })
