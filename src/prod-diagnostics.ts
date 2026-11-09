@@ -5,7 +5,7 @@ import type {
   DiagnosticDefinition,
   Diagnostics,
 } from './diagnostic'
-import { deriveDocs, Diagnostic, isDiagnostic } from './diagnostic'
+import { createIs, deriveDocs, Diagnostic } from './diagnostic'
 
 /**
  * Options for {@link defineProdDiagnostics}. A lean subset of
@@ -53,12 +53,14 @@ export function defineProdDiagnostics<
   const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[],
 >(options: DefineProdDiagnosticsOptions<Reporters> = {}): Diagnostics<Codes, Reporters, undefined> {
   const { docsBase, reporters = [] } = options
+  const id = Symbol()
+  const is = createIs(id)
 
   return new Proxy({} as Diagnostics<Codes, Reporters, undefined>, {
     get(_target, code) {
       // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
       if (typeof code !== 'string') return undefined
-      if (code === 'is') return isDiagnostic
+      if (code === 'is') return is
 
       const handle = (
         params: DiagnosticCallParams & Record<string, unknown> = {},
@@ -77,6 +79,7 @@ export function defineProdDiagnostics<
           },
           handle,
         )
+        ;(diagnostic as any)[id] = 1
         for (const reporter of reporters) reporter(diagnostic, reporterOptions)
         return diagnostic
       }

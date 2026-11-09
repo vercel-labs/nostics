@@ -97,6 +97,17 @@ describe('defineProdDiagnostics', () => {
       expect(errs.is(errs.C(), 'A', 'B')).toBe(false)
     })
 
+    it('matches any code without codes', () => {
+      expect(errs.is(errs.A())).toBe(true)
+    })
+
+    it('rejects anything not created by this registry', () => {
+      for (const value of [new Error('A'), null, defineProdDiagnostics().A()]) {
+        expect(errs.is(value)).toBe(false)
+        expect(errs.is(value, 'A')).toBe(false)
+      }
+    })
+
     it('does not create a handle nor run reporters', () => {
       const reporter = vi.fn()
       const reported = defineProdDiagnostics({ reporters: [reporter] })

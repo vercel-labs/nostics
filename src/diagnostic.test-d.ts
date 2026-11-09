@@ -1,4 +1,9 @@
-import type { Diagnostic, DiagnosticCallParams, DiagnosticReporter } from './diagnostic'
+import type {
+  Diagnostic,
+  DiagnosticCallParams,
+  DiagnosticDefinition,
+  DiagnosticReporter,
+} from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { createConsoleReporter, defineDiagnostics } from './diagnostic'
 import { defineProdDiagnostics } from './prod-diagnostics'
@@ -288,7 +293,7 @@ describe('diagnostics.is', () => {
   const codes = {
     A: { why: 'a', data: (p: { n: number }) => ({ n: p.n }) },
     B: { why: 'b' },
-  }
+  } satisfies Record<string, DiagnosticDefinition>
   const errs = defineDiagnostics({ codes })
   const error: unknown = null
 
@@ -310,11 +315,16 @@ describe('diagnostics.is', () => {
     errs.is(error, 'A', 'C')
   })
 
-  it('requires a code', () => {
-    // @ts-expect-error: missing code
-    errs.is(error)
-    // @ts-expect-error: missing code
-    defineProdDiagnostics<typeof codes>().is(error)
+  it('narrows to any code of the registry without codes', () => {
+    if (errs.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
+    }
+    if (defineProdDiagnostics<typeof codes>().is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+    if (defineProdDiagnostics().is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
   })
 
   it('rejects codes outside the registry', () => {
@@ -356,6 +366,9 @@ describe('diagnostics.is', () => {
     if (either.is(error, 'A')) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
     }
+    if (either.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
     // @ts-expect-error: unknown code
     either.is(error, 'C')
   })
@@ -374,6 +387,9 @@ describe('diagnostics.is', () => {
     }
     if (either.is(error, 'A', 'B')) {
       expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    if (either.is(error)) {
+      expectTypeOf(error).toExtend<Diagnostic<unknown>>()
     }
     if (defineProdDiagnostics().is(error, 'A', 'B')) {
       expectTypeOf(error.data).toEqualTypeOf<undefined>()

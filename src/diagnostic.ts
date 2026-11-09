@@ -317,10 +317,12 @@ export type Diagnostics<
 > = {
   /**
    * Checks if `error` is a {@link Diagnostic} with one of `codes` and narrows
-   * its `data`. Use `instanceof Diagnostic` to check for any diagnostic.
+   * its `data`. Without codes, checks if this registry created `error`. Use
+   * `instanceof Diagnostic` to check for any diagnostic.
    *
    * @example
    * ```ts
+   * if (diagnostics.is(error)) error.code
    * if (diagnostics.is(error, 'MATH_E001')) error.data
    * if (diagnostics.is(error, 'MATH_E001', 'MATH_E002')) error.data
    * ```
@@ -329,11 +331,11 @@ export type Diagnostics<
     ? // non-generic so a dev/prod ternary union stays callable
       (
         error: unknown,
-        ...codes: [string, ...string[]]
+        ...codes: string[]
       ) => error is Diagnostic<CodeDataOf<Codes, string, DataOverride>>
-    : <Code extends keyof Codes>(
+    : <Code extends keyof Codes = keyof Codes>(
         error: unknown,
-        ...codes: [Code, ...Code[]]
+        ...codes: Code[]
       ) => error is DiagnosticOf<Codes, Code, DataOverride>
 } & {
   [Code in keyof Codes]: DiagnosticHandle<
@@ -444,13 +446,14 @@ export function deriveDocs(
 }
 
 /**
- * Runtime of {@link Diagnostics.is}, shared by every registry. It only compares
- * the code, so it also matches diagnostics from a dev or prod registry.
+ * Runtime of {@link Diagnostics.is}: matches diagnostics tagged with the
+ * registry `id` and, when given, one of `codes`.
  *
  * @internal
  */
-export function isDiagnostic(error: unknown, ...codes: string[]): boolean {
-  return error instanceof Diagnostic && codes.includes(error.code)
+export function createIs(id: symbol) {
+  return (error: unknown, ...codes: string[]): boolean =>
+    error instanceof Diagnostic && id in error && (!codes[0] || codes.includes(error.code))
 }
 
 /**
@@ -465,6 +468,8 @@ export function defineDiagnostics<
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   const result = {} as Diagnostics<Codes, Reporters>
+  // allows detecting diagnostics specifically created by this registry inside `is()`
+  const id = Symbol()
 
   const { docsBase } = options
 
@@ -489,6 +494,7 @@ export function defineDiagnostics<
         },
         handle,
       )
+      ;(diagnostic as any)[id] = 1
       for (const reporter of reporters) reporter(diagnostic, reporterOptions)
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
@@ -496,7 +502,7 @@ export function defineDiagnostics<
     ;(result as Record<string, unknown>)[code] = handle
   }
 
-  result.is = isDiagnostic as Diagnostics<Codes, Reporters>['is']
+  result.is = createIs(id) as Diagnostics<Codes, Reporters>['is']
 
   return result
 }

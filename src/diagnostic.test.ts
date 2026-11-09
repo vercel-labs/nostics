@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
 import { formatDiagnostic } from './formatters/plain'
-import { defineProdDiagnostics } from './prod-diagnostics'
 import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 
 function reporterWithPriority(diagnostic: Diagnostic, options: { priority: number }): void {
@@ -286,34 +285,34 @@ describe('defineDiagnostics', () => {
   })
 
   describe('is', () => {
-    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' }, C: { why: 'c' } } })
 
-    it('matches a diagnostic by code', () => {
+    it('matches by code', () => {
       expect(errs.is(errs.A(), 'A')).toBe(true)
       expect(errs.is(errs.B(), 'A')).toBe(false)
+      expect(errs.is(errs.B(), 'A', 'B')).toBe(true)
+      expect(errs.is(errs.C(), 'A', 'B')).toBe(false)
     })
 
-    it('matches any of several codes', () => {
-      const withC = defineDiagnostics({
-        codes: { A: { why: 'a' }, B: { why: 'b' }, C: { why: 'c' } },
-      })
-      expect(withC.is(withC.A(), 'A', 'B')).toBe(true)
-      expect(withC.is(withC.B(), 'A', 'B')).toBe(true)
-      expect(withC.is(withC.C(), 'A', 'B')).toBe(false)
-      expect(withC.is(new Error('A'), 'A', 'B')).toBe(false)
+    it('matches any code without codes', () => {
+      expect(errs.is(errs.A())).toBe(true)
+      expect(errs.is(errs.B())).toBe(true)
     })
 
-    it('rejects non-diagnostics', () => {
-      for (const value of [new Error('A'), null, 'A', { code: 'A' }]) {
+    it('rejects anything not created by this registry', () => {
+      const other = defineDiagnostics({ codes: { A: { why: 'a' } } })
+      for (const value of [
+        new Error('A'),
+        null,
+        'A',
+        { code: 'A' },
+        { ...errs.A() },
+        new Diagnostic({ code: 'A', why: 'a' }),
+        other.A(),
+      ]) {
+        expect(errs.is(value)).toBe(false)
         expect(errs.is(value, 'A')).toBe(false)
       }
-      expect(errs.is(new Diagnostic({ code: 'B', why: 'b' }), 'A')).toBe(false)
-    })
-
-    it('matches diagnostics from a prod registry', () => {
-      const prod = defineProdDiagnostics()
-      expect(errs.is(prod.A(), 'A')).toBe(true)
-      expect(errs.is(prod.A(), 'B')).toBe(false)
     })
 
     it('does not run reporters', () => {
