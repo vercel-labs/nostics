@@ -489,7 +489,11 @@ export function defineDiagnostics<
   const reporters = options.reporters ?? []
   // tags diagnostics so `is()` only matches the ones of this registry
   const id = Symbol()
-  const result = { is: createRegistryIs(id) } as Diagnostics<Codes, Reporters>
+  // non-enumerable: `Object.keys(diagnostics)` lists only codes
+  const result = Object.defineProperty({}, 'is', { value: createRegistryIs(id) }) as Diagnostics<
+    Codes,
+    Reporters
+  >
 
   const { docsBase } = options
 

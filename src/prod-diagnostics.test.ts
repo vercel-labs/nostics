@@ -134,6 +134,22 @@ describe('defineProdDiagnostics', () => {
       expect(reported.is(new Error('x'))).toBe(false)
       expect(reporter).toHaveBeenCalledTimes(0)
     })
+
+    it('is not enumerated as a code', () => {
+      expect(Object.keys(errs)).toEqual([])
+      expect(Object.entries(errs)).toEqual([])
+      const keys: string[] = []
+      for (const key in errs) keys.push(key)
+      expect(keys).toEqual([])
+      expect({ ...errs }).toEqual({})
+      expect(JSON.stringify(errs)).toBe('{}')
+    })
+
+    it('is still reachable like on defineDiagnostics', () => {
+      expect('is' in errs).toBe(true)
+      expect(Object.getOwnPropertyDescriptor(errs, 'is')).toMatchObject({ enumerable: false })
+      expect(errs.is(errs.A())).toBe(true)
+    })
   })
 
   it('ignores non-string property access', () => {

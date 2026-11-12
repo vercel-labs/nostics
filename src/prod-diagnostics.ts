@@ -56,10 +56,13 @@ export function defineProdDiagnostics<
   const id = Symbol()
   const is = createRegistryIs(id)
 
-  return new Proxy({} as Diagnostics<Codes, Reporters, undefined>, {
+  // non-enumerable `is`, like `defineDiagnostics()`
+  const target = Object.defineProperty({}, 'is', { value: is })
+
+  return new Proxy(target as Diagnostics<Codes, Reporters, undefined>, {
     get(_target, code) {
-      // ignore symbol / non-string probes (e.g. `then`, `Symbol.toPrimitive`)
-      if (typeof code !== 'string') return undefined
+      // ignore symbol probes (e.g. `Symbol.toPrimitive`) and `JSON.stringify`
+      if (typeof code !== 'string' || code === 'toJSON') return undefined
       if (code === 'is') return is
 
       const handle = (

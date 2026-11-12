@@ -398,6 +398,22 @@ describe('defineDiagnostics', () => {
       const a = errs.A()
       expect([a, new Error('x')].filter(errs.is)).toEqual([a])
     })
+
+    it('is not enumerated as a code', () => {
+      expect(Object.keys(errs)).toEqual(['A', 'B'])
+      expect(Object.entries(errs).map(([code]) => code)).toEqual(['A', 'B'])
+      const keys: string[] = []
+      for (const key in errs) keys.push(key)
+      expect(keys).toEqual(['A', 'B'])
+      expect(Object.keys({ ...errs })).toEqual(['A', 'B'])
+      expect(JSON.parse(JSON.stringify(errs))).toEqual({})
+    })
+
+    it('is still reachable', () => {
+      expect('is' in errs).toBe(true)
+      expect({ ...errs }).not.toHaveProperty('is')
+      expect(errs.is(errs.A())).toBe(true)
+    })
   })
 
   describe('per-code name', () => {
