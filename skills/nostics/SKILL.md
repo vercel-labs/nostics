@@ -8,7 +8,7 @@ license: MIT
 
 Every error condition becomes a typed `Diagnostic` (extends `Error`) with a stable code, docs URL, and actionable `fix`. Serializable via `toJSON()`.
 
-`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `diagnostics.CODE.is(err)` (any code of the registry: `diagnostics.is(err)`, any diagnostic: `err instanceof Diagnostic`), send `toJSON()` across process boundaries.
+`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `diagnostics.CODE.is(err)` (any code of the registry: `diagnostics.is(err)`, any diagnostic: `err instanceof Diagnostic`), send `toJSON()` across process boundaries. For the union of codes of a registry, use `type DiagnosticCode = InferDiagnosticCodes<typeof diagnostics>` (not `keyof typeof diagnostics`, which contains `is`). After `diagnostics.is(err)`, `err.code` is already that union: do not cast it.
 
 ## defineDiagnostics
 
