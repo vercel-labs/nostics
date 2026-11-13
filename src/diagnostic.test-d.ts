@@ -3,6 +3,7 @@ import type {
   DiagnosticCallParams,
   DiagnosticDefinition,
   DiagnosticReporter,
+  InferDiagnosticCodes,
 } from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { createConsoleReporter, defineDiagnostics } from './diagnostic'
@@ -27,7 +28,7 @@ describe('defineDiagnostics: reporter options inference', () => {
         },
       },
     })
-    expectTypeOf(errs.X()).toEqualTypeOf<Diagnostic>()
+    expectTypeOf(errs.X()).toEqualTypeOf<Diagnostic<undefined, 'X'>>()
     expectTypeOf(errs.X).parameters.toEqualTypeOf<[params?: DiagnosticCallParams | undefined]>()
   })
 
@@ -222,8 +223,8 @@ describe('defineDiagnostics: per-code docs', () => {
 describe('defineDiagnostics: return types', () => {
   it('the handle is callable and returns Diagnostic', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-    expectTypeOf(errs.X()).toEqualTypeOf<Diagnostic>()
-    expectTypeOf(errs.X).returns.toEqualTypeOf<Diagnostic>()
+    expectTypeOf(errs.X()).toEqualTypeOf<Diagnostic<undefined, 'X'>>()
+    expectTypeOf(errs.X).returns.toEqualTypeOf<Diagnostic<undefined, 'X'>>()
   })
 
   it('rejects access to undefined codes at the type level', () => {
@@ -299,10 +300,10 @@ describe('handle.is', () => {
 
   it('narrows to the data of its code', () => {
     if (errs.A.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }>>()
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }, 'A'>>()
     }
     if (errs.B.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined, 'B'>>()
     }
   })
 
@@ -313,15 +314,17 @@ describe('handle.is', () => {
   })
 
   it('narrows in array filters', () => {
-    expectTypeOf([error].filter(errs.A.is)).toEqualTypeOf<Diagnostic<{ n: number }>[]>()
+    expectTypeOf([error].filter(errs.A.is)).toEqualTypeOf<Diagnostic<{ n: number }, 'A'>[]>()
   })
 
   it('narrows to any code of the registry', () => {
     if (errs.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
+      expectTypeOf(error).toEqualTypeOf<
+        Diagnostic<{ n: number }, 'A'> | Diagnostic<undefined, 'B'>
+      >()
     }
     if (defineProdDiagnostics<typeof codes>().is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined, 'A'> | Diagnostic<undefined, 'B'>>()
     }
     if (defineProdDiagnostics().is(error)) {
       expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
@@ -330,7 +333,7 @@ describe('handle.is', () => {
 
   it('narrows data to undefined for the prod registry', () => {
     if (defineProdDiagnostics<typeof codes>().A.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined, 'A'>>()
     }
     if (defineProdDiagnostics().ANY.is(error)) {
       expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
@@ -363,5 +366,89 @@ describe('handle.is', () => {
     if (either.B.is(error)) {
       expectTypeOf(error.data).toEqualTypeOf<undefined>()
     }
+  })
+})
+
+describe('InferDiagnosticCodes', () => {
+  const codes = {
+    A: { why: 'a', data: (p: { n: number }) => ({ n: p.n }) },
+    B: { why: 'b' },
+  } satisfies Record<string, DiagnosticDefinition>
+  const error: unknown = null
+
+  it('gives the codes of a dev registry without is', () => {
+    const errs = defineDiagnostics({ codes })
+    expectTypeOf<InferDiagnosticCodes<typeof errs>>().toEqualTypeOf<'A' | 'B'>()
+  })
+
+  it('gives the codes of a typed prod registry', () => {
+    const errs = defineProdDiagnostics<typeof codes>()
+    expectTypeOf<InferDiagnosticCodes<typeof errs>>().toEqualTypeOf<'A' | 'B'>()
+  })
+
+  it('gives string for an untyped prod registry', () => {
+    const errs = defineProdDiagnostics()
+    expectTypeOf<InferDiagnosticCodes<typeof errs>>().toEqualTypeOf<string>()
+  })
+
+  it('gives the codes of a dev/prod ternary', () => {
+    const typed =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics<typeof codes>()
+        : defineDiagnostics({ codes })
+    expectTypeOf<InferDiagnosticCodes<typeof typed>>().toEqualTypeOf<'A' | 'B'>()
+
+    const untyped =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics()
+        : defineDiagnostics({ codes, reporters: [createConsoleReporter()] })
+    expectTypeOf<InferDiagnosticCodes<typeof untyped>>().toEqualTypeOf<'A' | 'B'>()
+  })
+
+  it('gives never for a registry with no codes', () => {
+    const errs = defineDiagnostics({ codes: {} })
+    expectTypeOf<InferDiagnosticCodes<typeof errs>>().toEqualTypeOf<never>()
+  })
+
+  it('rejects a non registry', () => {
+    // @ts-expect-error: not a registry
+    expectTypeOf<InferDiagnosticCodes<typeof codes>>()
+  })
+
+  it('types code on narrowed diagnostics', () => {
+    const errs = defineDiagnostics({ codes })
+    if (errs.is(error)) {
+      expectTypeOf(error.code).toEqualTypeOf<'A' | 'B'>()
+      expectTypeOf(error.name).toEqualTypeOf<'A' | 'B'>()
+      if (error.code === 'A') {
+        expectTypeOf(error.data).toEqualTypeOf<{ n: number }>()
+      }
+    }
+    if (errs.A.is(error)) {
+      expectTypeOf(error.code).toEqualTypeOf<'A'>()
+    }
+    expectTypeOf(errs.B().code).toEqualTypeOf<'B'>()
+    if (defineProdDiagnostics<typeof codes>().is(error)) {
+      expectTypeOf(error.code).toEqualTypeOf<'A' | 'B'>()
+    }
+    if (defineProdDiagnostics().is(error)) {
+      expectTypeOf(error.code).toEqualTypeOf<string>()
+    }
+  })
+
+  it('types code on a narrowed dev/prod ternary', () => {
+    const either =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics<typeof codes>()
+        : defineDiagnostics({ codes })
+    if (either.is(error)) {
+      expectTypeOf(error.code).toEqualTypeOf<InferDiagnosticCodes<typeof either>>()
+    }
+  })
+
+  it('keeps code assignable to a plain Diagnostic', () => {
+    const errs = defineDiagnostics({ codes })
+    expectTypeOf(errs.A({ n: 1 })).toExtend<Diagnostic<{ n: number }>>()
+    expectTypeOf(errs.B()).toExtend<Diagnostic>()
   })
 })

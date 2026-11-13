@@ -25,9 +25,9 @@ export interface DiagnosticDefinition<P = any, Data extends Record<string, unkno
   docs?: string | false;
   data?: ValueOrFn<Data, P>;
 }
-export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
-  (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>;
-  is: (_: unknown) => error is Diagnostic<Data>;
+export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined, Code extends string = string> {
+  (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data, Code>;
+  is: (_: unknown) => error is Diagnostic<Data, Code>;
 }
 export interface DiagnosticJSON<Data = unknown> {
   name: string;
@@ -48,7 +48,7 @@ export interface InferCodesData {
 export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
 export type AnyDiagnosticReporter = (_: Diagnostic<any>, _: any) => void;
 export type ConsoleMethod = "log" | "error" | "warn";
-export type DiagnosticInit<Data = undefined> = DiagnosticInitBase & ([Data] extends [undefined] ? {
+export type DiagnosticInit<Data = undefined, Code extends string = string> = DiagnosticInitBase<Code> & ([Data] extends [undefined] ? {
   data?: undefined;
 } : {
   data: Data;
@@ -56,19 +56,22 @@ export type DiagnosticInit<Data = undefined> = DiagnosticInitBase & ([Data] exte
 export type DiagnosticReporter<ReporterOpts extends object = object, Data = any> = (_: Diagnostic<Data>, _: ReporterOpts) => void;
 export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[], DataOverride = InferCodesData> = {
   is: (_: unknown) => error is DiagnosticOf<Codes, DataOverride>;
-} & { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, CodeDataOf<Codes, Code, DataOverride>>; };
+} & { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, CodeDataOf<Codes, Code, DataOverride>, Code & string>; };
+export type InferDiagnosticCodes<Registry extends {
+  is: (error: unknown) => boolean;
+}> = Exclude<keyof Registry, "is"> & string;
 // #endregion
 
 // #region Classes
-export declare class Diagnostic<Data = undefined> extends Error {
-  name: string;
-  code: string;
+export declare class Diagnostic<Data = undefined, Code extends string = string> extends Error {
+  name: Code;
+  code: Code;
   docs?: string;
   fix?: string;
   sources?: string[];
   data: Data;
   get why(): string;
-  constructor(_: DiagnosticInit<Data>, _?: StackTraceFrame);
+  constructor(_: DiagnosticInit<Data, Code>, _?: StackTraceFrame);
   toJSON(): DiagnosticJSON<Data>;
 }
 // #endregion

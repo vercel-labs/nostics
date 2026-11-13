@@ -13,6 +13,7 @@ export type {
   DiagnosticReporter,
   Diagnostics,
   InferCodesData,
+  InferDiagnosticCodes,
 } from './diagnostic'
 
 export { formatDiagnostic } from './formatters/plain'

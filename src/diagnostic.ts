@@ -68,11 +68,11 @@ export interface DiagnosticCallParams {
   sources?: string[]
 }
 
-interface DiagnosticInitBase extends DiagnosticCallParams {
+interface DiagnosticInitBase<Code extends string> extends DiagnosticCallParams {
   /**
    * The diagnostic code, e.g. `MATH_E001`. Appear as {@link Diagnostic.name}.
    */
-  code: string
+  code: Code
 
   /**
    * The actual error message: why this failed.
@@ -96,8 +96,10 @@ interface DiagnosticInitBase extends DiagnosticCallParams {
  * field: it becomes the {@link Diagnostic.message}. The remaining fields are
  * optional metadata that reporters and consumers can render or forward.
  */
-export type DiagnosticInit<Data = undefined> = DiagnosticInitBase &
-  ([Data] extends [undefined] ? { data?: undefined } : { data: Data })
+export type DiagnosticInit<
+  Data = undefined,
+  Code extends string = string,
+> = DiagnosticInitBase<Code> & ([Data] extends [undefined] ? { data?: undefined } : { data: Data })
 
 /**
  * Serializable representation returned by {@link Diagnostic.toJSON}.
@@ -279,13 +281,18 @@ type ActionArgs<Params, ReporterOpts> = keyof ReporterOpts extends never
  * throw diagnostics.MATH_E001({ name: 'x' })     // throw
  * ```
  */
-export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
+export interface DiagnosticHandle<
+  Params,
+  ReporterOpts,
+  Data = undefined,
+  Code extends string = string,
+> {
   /**
    * Builds the diagnostic, runs every reporter, and returns the diagnostic
    * instance. The returned diagnostic can be inspected, attached as `cause`,
    * or thrown with `throw`.
    */
-  (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>
+  (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data, Code>
 
   /**
    * Checks if `error` is a diagnostic created by this handle and narrows its
@@ -297,7 +304,7 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
    * if (diagnostics.MATH_E001.is(error)) error.data
    * ```
    */
-  is: (error: unknown) => error is Diagnostic<Data>
+  is: (error: unknown) => error is Diagnostic<Data, Code>
 }
 
 /**
@@ -333,11 +340,9 @@ type CodeDataOf<Codes, Code extends keyof Codes, DataOverride> = [DataOverride] 
  *
  * @internal
  */
-type DiagnosticOf<
-  Codes,
-  DataOverride,
-  Code extends keyof Codes = keyof Codes,
-> = Code extends unknown ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>> : never
+type DiagnosticOf<Codes, DataOverride, Code extends keyof Codes = keyof Codes> = Code extends string
+  ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>, Code>
+  : never
 
 /**
  * Return type of {@link defineDiagnostics}.
@@ -362,9 +367,26 @@ export type Diagnostics<
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>,
-    CodeDataOf<Codes, Code, DataOverride>
+    CodeDataOf<Codes, Code, DataOverride>,
+    Code & string
   >
 }
+
+/**
+ * Union of the codes of a registry returned by {@link defineDiagnostics} or
+ * {@link defineProdDiagnostics}, without `is`. Also works on a dev/prod
+ * ternary of both. Use it instead of `keyof typeof diagnostics`.
+ *
+ * @example
+ * ```ts
+ * type DiagnosticCode = InferDiagnosticCodes<typeof diagnostics>
+ * ```
+ */
+export type InferDiagnosticCodes<Registry extends { is: (error: unknown) => boolean }> = Exclude<
+  keyof Registry,
+  'is'
+> &
+  string
 
 type StackTraceFrame =
   | ((...args: never[]) => unknown)
@@ -374,14 +396,14 @@ const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: StackTraceFrame) => void }
 ).captureStackTrace
 
-export class Diagnostic<Data = undefined> extends Error {
-  declare name: string
+export class Diagnostic<Data = undefined, Code extends string = string> extends Error {
+  declare name: Code
 
   /**
    * The diagnostic code, e.g. `MATH_E001`.
    * Also appears as the `name` property.
    */
-  declare code: string
+  declare code: Code
 
   /**
    * URL to extended documentation for this diagnostic code.
@@ -421,7 +443,7 @@ export class Diagnostic<Data = undefined> extends Error {
    * `defineDiagnostics` passes its action method to strip its own frames too.
    * Ignored on engines without `Error.captureStackTrace`.
    */
-  constructor(init: DiagnosticInit<Data>, captureFrom: StackTraceFrame = Diagnostic) {
+  constructor(init: DiagnosticInit<Data, Code>, captureFrom: StackTraceFrame = Diagnostic) {
     super(init.why, { cause: init.cause })
     this.code = this.name = init.code
     this.docs = init.docs
