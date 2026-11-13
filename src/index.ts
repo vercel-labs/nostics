@@ -12,6 +12,7 @@ export type {
   DiagnosticJSON,
   DiagnosticReporter,
   Diagnostics,
+  InferCodesData,
 } from './diagnostic'
 
 export { formatDiagnostic } from './formatters/plain'

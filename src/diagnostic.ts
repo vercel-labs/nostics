@@ -286,7 +286,58 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
    * or thrown with `throw`.
    */
   (...args: ActionArgs<Params, ReporterOpts>): Diagnostic<Data>
+
+  /**
+   * Checks if `error` is a diagnostic created by this handle and narrows its
+   * `data`. Does not run reporters. Safe to pass unbound, e.g.
+   * `errors.filter(diagnostics.MATH_E001.is)`.
+   *
+   * @example
+   * ```ts
+   * if (diagnostics.MATH_E001.is(error)) error.data
+   * ```
+   */
+  is: (error: unknown) => error is Diagnostic<Data>
 }
+
+/**
+ * Default `DataOverride` of {@link Diagnostics}: infer data from the codes. Not
+ * `never`: `never` is assignable to `undefined`, so a dev/prod ternary union
+ * would reduce to the prod registry and lose the dev data types.
+ */
+export interface InferCodesData {
+  readonly '~inferCodesData': true
+}
+
+/**
+ * Code map accepted by {@link defineDiagnostics}. `is` is reserved for
+ * {@link Diagnostics.is}.
+ *
+ * @internal
+ */
+export type DiagnosticCodes = Record<string, DiagnosticDefinition> & { is?: never }
+
+/**
+ * Data of the diagnostics built for `Code`.
+ *
+ * @internal
+ */
+type CodeDataOf<Codes, Code extends keyof Codes, DataOverride> = [DataOverride] extends [
+  InferCodesData,
+]
+  ? InferCodeData<Codes[Code]>
+  : DataOverride
+
+/**
+ * Union of the diagnostics built for each code of `Codes`.
+ *
+ * @internal
+ */
+type DiagnosticOf<
+  Codes,
+  DataOverride,
+  Code extends keyof Codes = keyof Codes,
+> = Code extends unknown ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>> : never
 
 /**
  * Return type of {@link defineDiagnostics}.
@@ -294,12 +345,24 @@ export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined> {
 export type Diagnostics<
   Codes extends Record<string, DiagnosticDefinition>,
   Reporters extends readonly AnyDiagnosticReporter[],
-  DataOverride = never,
+  DataOverride = InferCodesData,
 > = {
+  /**
+   * Checks if this registry created `error` and narrows its `data` to the data
+   * of any of its codes. Use `diagnostics.CODE.is(error)` for one code and
+   * `instanceof Diagnostic` for any diagnostic.
+   *
+   * @example
+   * ```ts
+   * if (diagnostics.is(error)) error.code
+   * ```
+   */
+  is: (error: unknown) => error is DiagnosticOf<Codes, DataOverride>
+} & {
   [Code in keyof Codes]: DiagnosticHandle<
     InferCodeParams<Codes[Code]>,
     Prettify<ExtractReportersOptions<Reporters>>,
-    [DataOverride] extends [never] ? InferCodeData<Codes[Code]> : DataOverride
+    CodeDataOf<Codes, Code, DataOverride>
   >
 }
 
@@ -404,17 +467,29 @@ export function deriveDocs(
 }
 
 /**
+ * Runtime of {@link Diagnostics.is}: matches diagnostics tagged with `id`.
+ *
+ * @internal
+ */
+export const createRegistryIs =
+  (id: symbol) =>
+  (error: unknown): error is Diagnostic<any> =>
+    error instanceof Diagnostic && id in error
+
+/**
  * Creates a typed diagnostics object from a set of code definitions. Each
  * code becomes a callable {@link DiagnosticHandle}: invoke to report, or
  * `throw` the result to raise. No `new` required, no proxy.
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
-  const Codes extends Record<string, DiagnosticDefinition>,
+  const Codes extends DiagnosticCodes,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
-  const result = {} as Diagnostics<Codes, Reporters>
+  // tags diagnostics so `is()` only matches the ones of this registry
+  const id = Symbol()
+  const result = { is: createRegistryIs(id) } as Diagnostics<Codes, Reporters>
 
   const { docsBase } = options
 
@@ -439,11 +514,13 @@ export function defineDiagnostics<
         },
         handle,
       )
+      ;(diagnostic as any)[id] = 1
       for (const reporter of reporters) reporter(diagnostic, reporterOptions)
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
+    handle.is = (err: unknown) => result.is(err) && err.code === code
 
-    result[code] = handle as unknown as Diagnostics<Codes, Reporters>[typeof code]
+    ;(result as Record<string, unknown>)[code] = handle
   }
 
   return result

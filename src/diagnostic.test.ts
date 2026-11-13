@@ -343,6 +343,63 @@ describe('defineDiagnostics', () => {
     expect(b).toBeInstanceOf(Diagnostic)
   })
 
+  describe('is', () => {
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+
+    it('matches diagnostics of its own code', () => {
+      expect(errs.A.is(errs.A())).toBe(true)
+      expect(errs.A.is(errs.B())).toBe(false)
+      expect(errs.B.is(errs.B())).toBe(true)
+    })
+
+    it('rejects anything that is not a diagnostic of its code', () => {
+      for (const value of [new Error('A'), null, undefined, 'A', { code: 'A' }, { ...errs.A() }]) {
+        expect(errs.A.is(value)).toBe(false)
+      }
+    })
+
+    it('works unbound', () => {
+      const a = errs.A()
+      expect([a, errs.B(), new Error('x')].filter(errs.A.is)).toEqual([a])
+    })
+
+    it('does not run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineDiagnostics({ codes: { A: { why: 'a' } }, reporters: [reporter] })
+      expect(reported.A.is(new Error('x'))).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('registry is', () => {
+    const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
+
+    it('matches any diagnostic created by this registry', () => {
+      expect(errs.is(errs.A())).toBe(true)
+      expect(errs.is(errs.B())).toBe(true)
+    })
+
+    it('rejects anything not created by this registry', () => {
+      const other = defineDiagnostics({ codes: { A: { why: 'a' } } })
+      for (const value of [
+        new Error('A'),
+        null,
+        'A',
+        { code: 'A' },
+        { ...errs.A() },
+        new Diagnostic({ code: 'A', why: 'a' }),
+        other.A(),
+      ]) {
+        expect(errs.is(value)).toBe(false)
+      }
+    })
+
+    it('works unbound', () => {
+      const a = errs.A()
+      expect([a, new Error('x')].filter(errs.is)).toEqual([a])
+    })
+  })
+
   describe('per-code name', () => {
     it('sets the diagnostic code as the instance `name`', () => {
       const errs = defineDiagnostics({ codes: { NUXT_E033: { why: 'msg' } } })

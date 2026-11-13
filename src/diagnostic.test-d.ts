@@ -1,4 +1,9 @@
-import type { Diagnostic, DiagnosticCallParams, DiagnosticReporter } from './diagnostic'
+import type {
+  Diagnostic,
+  DiagnosticCallParams,
+  DiagnosticDefinition,
+  DiagnosticReporter,
+} from './diagnostic'
 import { describe, expectTypeOf, it } from 'vitest'
 import { createConsoleReporter, defineDiagnostics } from './diagnostic'
 import { defineProdDiagnostics } from './prod-diagnostics'
@@ -223,7 +228,7 @@ describe('defineDiagnostics: return types', () => {
 
   it('rejects access to undefined codes at the type level', () => {
     const errs = defineDiagnostics({ codes: { X: { why: 'msg' } } })
-    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X'>()
+    expectTypeOf<keyof typeof errs>().toEqualTypeOf<'X' | 'is'>()
   })
 
   it('infers resolved data for each code', () => {
@@ -281,5 +286,82 @@ describe('defineDiagnostics: return types', () => {
       }
     >
     expectTypeOf(defineProdDiagnostics<Codes>().X({ actual: 42 }).data).toEqualTypeOf<undefined>()
+  })
+})
+
+describe('handle.is', () => {
+  const codes = {
+    A: { why: 'a', data: (p: { n: number }) => ({ n: p.n }) },
+    B: { why: 'b' },
+  } satisfies Record<string, DiagnosticDefinition>
+  const errs = defineDiagnostics({ codes })
+  const error: unknown = null
+
+  it('narrows to the data of its code', () => {
+    if (errs.A.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }>>()
+    }
+    if (errs.B.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+  })
+
+  it('narrows a union of guards', () => {
+    if (errs.A.is(error) || errs.B.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+  })
+
+  it('narrows in array filters', () => {
+    expectTypeOf([error].filter(errs.A.is)).toEqualTypeOf<Diagnostic<{ n: number }>[]>()
+  })
+
+  it('narrows to any code of the registry', () => {
+    if (errs.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<{ n: number }> | Diagnostic<undefined>>()
+    }
+    if (defineProdDiagnostics<typeof codes>().is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+    if (defineProdDiagnostics().is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+  })
+
+  it('narrows data to undefined for the prod registry', () => {
+    if (defineProdDiagnostics<typeof codes>().A.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+    if (defineProdDiagnostics().ANY.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<Diagnostic<undefined>>()
+    }
+  })
+
+  it('is callable on a dev/prod ternary', () => {
+    const either =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics<typeof codes>()
+        : defineDiagnostics({ codes })
+    if (either.A.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    expectTypeOf(either.A({ n: 1 }).data).toEqualTypeOf<{ n: number } | undefined>()
+    if (either.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+  })
+
+  it('is callable on an untyped prod registry ternary', () => {
+    const docsBase = (code: string) => `https://example.com/${code}`
+    const either =
+      process.env.NODE_ENV === 'production'
+        ? defineProdDiagnostics({ docsBase })
+        : defineDiagnostics({ docsBase, reporters: [createConsoleReporter()], codes })
+    if (either.A.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<{ n: number } | undefined>()
+    }
+    if (either.B.is(error)) {
+      expectTypeOf(error.data).toEqualTypeOf<undefined>()
+    }
   })
 })

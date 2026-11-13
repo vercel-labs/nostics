@@ -87,6 +87,55 @@ describe('defineProdDiagnostics', () => {
     })
   })
 
+  describe('is', () => {
+    const errs = defineProdDiagnostics()
+
+    it('matches diagnostics of its own code across accesses', () => {
+      expect(errs.A.is(errs.A())).toBe(true)
+      expect(errs.A.is(errs.B())).toBe(false)
+    })
+
+    it('rejects anything that is not a diagnostic of its code', () => {
+      for (const value of [new Error('A'), null, { code: 'A' }]) {
+        expect(errs.A.is(value)).toBe(false)
+      }
+    })
+
+    it('does not run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineProdDiagnostics({ reporters: [reporter] })
+      expect(reported.A.is(new Error('x'))).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('registry is', () => {
+    const errs = defineProdDiagnostics()
+
+    it('matches any diagnostic created by this registry', () => {
+      expect(errs.is(errs.A())).toBe(true)
+      expect(errs.is(errs.B())).toBe(true)
+    })
+
+    it('rejects anything not created by this registry', () => {
+      for (const value of [
+        new Error('A'),
+        null,
+        new Diagnostic({ code: 'A', why: '' }),
+        defineProdDiagnostics().A(),
+      ]) {
+        expect(errs.is(value)).toBe(false)
+      }
+    })
+
+    it('does not run reporters', () => {
+      const reporter = vi.fn()
+      const reported = defineProdDiagnostics({ reporters: [reporter] })
+      expect(reported.is(new Error('x'))).toBe(false)
+      expect(reporter).toHaveBeenCalledTimes(0)
+    })
+  })
+
   it('ignores non-string property access', () => {
     const errs = defineProdDiagnostics()
     // e.g. promise unwrapping / serialization probes must not produce handles
