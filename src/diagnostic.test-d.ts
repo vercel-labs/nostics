@@ -1,4 +1,5 @@
 import type {
+  ConsoleMethod,
   Diagnostic,
   DiagnosticCallParams,
   DiagnosticDefinition,
@@ -50,6 +51,12 @@ describe('defineDiagnostics: reporter options inference', () => {
       throw errs.X()
     }
     throw errs.X(undefined, { method: 'warn' })
+  })
+
+  it('console reporter can be called without options', () => {
+    const report = createConsoleReporter()
+    report(defineDiagnostics({ codes: { X: { why: 'msg' } } }).X())
+    expectTypeOf(report).parameter(1).toEqualTypeOf<{ method?: ConsoleMethod } | undefined>()
   })
 
   it('options is required when any reporter has a required field', () => {
