@@ -44,6 +44,11 @@ type AstChild = Node | AstChild[] | string | number | boolean | bigint | null | 
 const CONDITION = 'process.env.NODE_ENV !== "production"'
 
 /**
+ * Root exports whose call result is a diagnostics object to track.
+ */
+const DIAGNOSTICS_FACTORIES = new Set(['defineDiagnostics', 'mergeDiagnostics'])
+
+/**
  * Side-effect-free factory exports (from `nostics` or its subpaths): calling
  * them only builds and returns a value. Marking their call sites pure lets the
  * bundler drop them along with the `defineDiagnostics()` definition that holds
@@ -59,7 +64,7 @@ const PURE_FACTORIES = new Set([
 
 /**
  * Transforms code that imports from `nostics`:
- * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` call expressions
+ * - Adds `\/*#__PURE__*\/` to `defineDiagnostics()` and `mergeDiagnostics()` call expressions
  * - Adds `\/*#__PURE__*\/` to calls of known pure factories (e.g. `createConsoleReporter()`),
  *   whether imported from `nostics` or one of its subpaths
  * - Prepends `process.env.NODE_ENV !== 'production' &&` to expression statements using diagnostics variables
@@ -94,7 +99,7 @@ export function transform(
       if (spec.type === 'ImportSpecifier') {
         const importedName =
           spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
-        if (isRoot && importedName === 'defineDiagnostics') {
+        if (isRoot && DIAGNOSTICS_FACTORIES.has(importedName)) {
           defineDiagnosticsImports.add(spec.local.name)
         } else if (PURE_FACTORIES.has(importedName)) {
           pureFactoryImports.add(spec.local.name)
@@ -257,7 +262,7 @@ function analyzeModule(
         if (spec.type === 'ImportSpecifier') {
           const importedName =
             spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value
-          if (importedName === 'defineDiagnostics') {
+          if (DIAGNOSTICS_FACTORIES.has(importedName)) {
             defineDiagnosticsImports.add(spec.local.name)
           }
         }

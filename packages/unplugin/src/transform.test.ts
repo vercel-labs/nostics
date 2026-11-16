@@ -1,4 +1,6 @@
 import type { TrackedExportsMap, TransformOptions } from './transform'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { transform } from './transform'
@@ -134,6 +136,32 @@ process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
       expectDefinitionTransform(input, expected)
     })
+
+    it('tracks and annotates a mergeDiagnostics call', () => {
+      const input = `import { mergeDiagnostics } from 'nostics'
+import { a, b } from './catalogs'
+export const diagnostics = mergeDiagnostics(a, b)
+diagnostics.E1()`
+
+      const expected = `import { mergeDiagnostics } from 'nostics'
+import { a, b } from './catalogs'
+export const diagnostics = /*#__PURE__*/ mergeDiagnostics(a, b)
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      expectDefinitionTransform(input, expected)
+    })
+
+    it('tracks a NODE_ENV ternary with mergeDiagnostics in the dev branch', () => {
+      const input = `import { defineProdDiagnostics, mergeDiagnostics } from 'nostics'
+export const diagnostics = process.env.NODE_ENV === 'production' ? defineProdDiagnostics({ docsBase }) : mergeDiagnostics(a, b)
+diagnostics.E1()`
+
+      const expected = `import { defineProdDiagnostics, mergeDiagnostics } from 'nostics'
+export const diagnostics = process.env.NODE_ENV === 'production' ? /*#__PURE__*/ defineProdDiagnostics({ docsBase }) : /*#__PURE__*/ mergeDiagnostics(a, b)
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      expectDefinitionTransform(input, expected)
+    })
   })
 
   describe('cross-file tracking', () => {
@@ -195,6 +223,25 @@ process.env.NODE_ENV !== "production" && diagnostics.E1()`
       const result = transform(input, CALLSITE_ID, undefined, trackedExportsMap)
       expect(result).toBeDefined()
       expect(result!.code).toBe(expected)
+    })
+
+    it('tracks a mergeDiagnostics export across a relative import', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'nostics-'))
+      writeFileSync(
+        join(dir, 'diagnostics.ts'),
+        `import { mergeDiagnostics } from 'nostics'
+import { a, b } from './catalogs'
+export const diagnostics = mergeDiagnostics(a, b)`,
+      )
+
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      const result = transform(input, join(dir, 'main.ts'), undefined, new Map())
+      expect(result?.code).toBe(expected)
     })
 
     it('tracks renamed relative imports', () => {
