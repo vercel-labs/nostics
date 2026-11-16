@@ -1,5 +1,5 @@
 import type { TrackedExportsMap, TransformOptions } from './transform'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -240,6 +240,26 @@ diagnostics.E1()`
       const expected = `import { diagnostics } from './diagnostics'
 process.env.NODE_ENV !== "production" && diagnostics.E1()`
 
+      const result = transform(input, join(dir, 'main.ts'), undefined, new Map())
+      expect(result?.code).toBe(expected)
+    })
+
+    it('tracks a relative import that resolves to a directory index file', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'nostics-'))
+      mkdirSync(join(dir, 'diagnostics'))
+      writeFileSync(
+        join(dir, 'diagnostics', 'index.ts'),
+        `import { defineDiagnostics } from 'nostics'
+export const diagnostics = defineDiagnostics({ codes: {} })`,
+      )
+
+      const input = `import { diagnostics } from './diagnostics'
+diagnostics.E1()`
+
+      const expected = `import { diagnostics } from './diagnostics'
+process.env.NODE_ENV !== "production" && diagnostics.E1()`
+
+      // the directory must not shadow its own index file
       const result = transform(input, join(dir, 'main.ts'), undefined, new Map())
       expect(result?.code).toBe(expected)
     })
