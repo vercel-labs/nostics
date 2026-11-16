@@ -142,7 +142,7 @@ In prod: `name` is the accessed code, `docs` comes from `docsBase`, `why` is the
 - **`why` is the diagnosis, `fix` is the remedy.** Both are printed, so do not repeat text between them. If the source has one sentence with both, split it. If the remedy needs a value, make `fix` a function. Give a `fix` whenever the solution is known.
 - Put runtime values in typed param functions, not in string concatenation at the call site.
 - Tests assert the code (`.name`, or `[CODE]` in reporter output), not the message.
-- Split large catalogs by domain (`diagnostics/build.ts`, `runtime.ts`, ...), with a shared `docsBase` and separate code ranges. `group.is(err)` then checks one domain. To export one object with every code, use `mergeDiagnostics(build, runtime)`: same handles, and its `is()` matches any domain. It takes only `defineDiagnostics()` registries: with `defineProdDiagnostics`, put it in the dev branch of the ternary. Do not spread catalogs (`{ ...a, ...b }` drops `is`).
+- Split large catalogs by domain (`diagnostics/build.ts`, `runtime.ts`, ...), with a shared `docsBase` and separate code ranges. `group.is(err)` then checks one domain. To export one object with every code, use `mergeDiagnostics(build, runtime)`: same handles, and its `is()` matches any domain. It takes only `defineDiagnostics()` registries. Do not spread catalogs (`{ ...a, ...b }` drops `is`).
 
 ## References
 

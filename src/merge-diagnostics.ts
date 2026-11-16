@@ -29,8 +29,8 @@ type GuardOf<Registry> = Registry extends { is: (error: unknown) => error is inf
  * Merges several {@link defineDiagnostics} registries into one with every code.
  * The handles are the same functions as in the source registries. `is()`
  * matches a diagnostic of any of them. On a duplicate code, the last registry
- * wins. Dev only: in production, select a {@link defineProdDiagnostics} with
- * a `NODE_ENV` ternary instead.
+ * wins. For catalogs that ship in production too, so it rejects
+ * {@link defineProdDiagnostics} registries.
  *
  * @example
  * ```ts
