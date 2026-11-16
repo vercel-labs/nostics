@@ -76,6 +76,14 @@ throw diagnostics.NUXT_B5001({
 
 Calling a handle reports the diagnostic and returns a `Diagnostic`. Throwing the return value raises it. The params are inferred from your `why` and `fix` functions.
 
+Split a large catalog by domain and export one object with every code with `mergeDiagnostics()`. Its `is()` matches a diagnostic of any merged catalog:
+
+```ts
+import { mergeDiagnostics } from 'nostics'
+
+export const diagnostics = mergeDiagnostics(buildDiagnostics, runtimeDiagnostics)
+```
+
 ## Claude Code plugin
 
 Install the plugin to give Claude skills for your diagnostic catalog:

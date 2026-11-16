@@ -18,6 +18,8 @@ export type {
 
 export { formatDiagnostic } from './formatters/plain'
 
+export { mergeDiagnostics } from './merge-diagnostics'
+
 export { defineProdDiagnostics } from './prod-diagnostics'
 
 export type { DefineProdDiagnosticsOptions } from './prod-diagnostics'

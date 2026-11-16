@@ -47,6 +47,6 @@ nuxt-og-image via Docus (zeroRuntime, takumi). Landing template: `docs/app/compo
 
 This repo also contains a Claude Plugin
 
-- `.claude-plugin/plugin.json`: update version when applying changes
+- `.claude-plugin/plugin.json`: DO NOT update version, it's automated
 - `hooks/`: Claude Code hooks
 - `skills/`: Agent skills
