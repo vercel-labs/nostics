@@ -7,10 +7,15 @@ import type { DiagnosticReporter } from '../diagnostic'
 /* @__NO_SIDE_EFFECTS__ */
 export function createFetchReporter(url: string): DiagnosticReporter {
   return (diagnostic) => {
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(diagnostic),
-    }).catch(() => {})
+    try {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(diagnostic),
+      }).catch(() => {})
+    } catch {
+      // `JSON.stringify()` throws on circular or BigInt data; reporting must
+      // never throw into user code
+    }
   }
 }

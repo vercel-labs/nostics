@@ -45,4 +45,16 @@ describe('createFetchReporter', () => {
 
     expect(() => diagnostics.E1()).not.toThrow()
   })
+
+  it('swallows a payload JSON cannot serialize', () => {
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+    const diagnostics = defineDiagnostics({
+      codes: { E1: { why: 'msg', data: circular } },
+      reporters: [createFetchReporter('https://example.test/report')],
+    })
+
+    expect(() => diagnostics.E1()).not.toThrow()
+    expect(fetchMock).toHaveBeenCalledTimes(0)
+  })
 })
