@@ -6,13 +6,13 @@ license: MIT
 
 # nostics
 
-Every error condition becomes a typed `Diagnostic` (extends `Error`) with a stable code, docs URL, and actionable `fix`. Serializable via `toJSON()`.
+Each error condition becomes a typed `Diagnostic` (extends `Error`) with a stable code, a docs URL, and an actionable `fix`.
 
-`Diagnostic`: `name` (the code), `message`/`why` (interpolated text), `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `toJSON()`. Throw it, catch it with `diagnostics.CODE.is(err)` (any code of the registry: `diagnostics.is(err)`, any diagnostic: `err instanceof Diagnostic`), send `toJSON()` across process boundaries. For the union of codes of a registry, use `type DiagnosticCode = InferDiagnosticCodes<typeof diagnostics>` (not `keyof typeof diagnostics`, which contains `is`). After `diagnostics.is(err)`, `err.code` is already that union: do not cast it.
+`Diagnostic` fields: `name` and `code` (the code), `message`/`why`, `fix?`, `docs?`, `sources?` (`'file:line:column'`), `cause?`, `data?`, `toJSON()` (to send across process boundaries).
 
 ## defineDiagnostics
 
-Returns one callable handle per code. Calling a handle builds a fresh `Diagnostic`, fires every reporter in order, and returns it. `throw` the return value to raise (reporters still run, so a thrown diagnostic also reports).
+Returns one callable handle per code. A call builds a new `Diagnostic`, runs all reporters in order, and returns it. `throw` the result to raise (the reporters still run).
 
 ```ts
 import { createConsoleReporter, defineDiagnostics } from 'nostics'
@@ -29,63 +29,64 @@ const diagnostics = /*#__PURE__*/ defineDiagnostics({
       why: (p: { src: string }) => `Invalid plugin "${p.src}". src option is required.`,
       fix: 'Pass a string path or an object with a `src` to `addPlugin()`.',
     },
-    NUXT_W9001: { why: 'message', docs: false }, // per-code: string overrides docsBase, false opts out
+    NUXT_R9001: { why: 'message', docs: false },
   },
 })
 ```
 
-- **`docsBase`** `string | (code) => string | undefined`: string appends `/${code.toLowerCase()}`; function returns the full URL (or `undefined` to omit).
-- **`codes`**: each definition needs `why` (`string | (params) => string`, the only required field, becomes `Error.message`); optional `fix` (`string | (params) => string`), `docs` (`string | false`), and `data` (`object | (params) => object`). Each code's resolved `data` is typed and included in `toJSON()`.
-- **`reporters`**: fired on every call; optional. Their `options` types are intersected; required reporter options become required at the call site. Omit it (or pass `[]`) for a catalog whose codes are only ever `throw`n: the thrown `Diagnostic` already carries the message, so a console reporter would print it once and surface it again from the uncaught error, a visible duplicate. Keep report-only warnings and fatal throws in separate catalogs when one needs a reporter and the other does not.
-- **Param inference**: params from `why`, `fix`, and `data` are intersected and required at the call site. If `why` needs `{ src }` and `fix` needs `{ date }`, the call requires `{ src, date }`.
+- **`docsBase`** `string | (code) => string | undefined`: a string gets `/${code.toLowerCase()}` appended; a function returns the full URL (or `undefined` for no URL).
+- **`codes`**: `why` is required and becomes `Error.message`. Optional: `fix`, `docs` (a string overrides `docsBase`, `false` opts out), `data` (typed, included in `toJSON()`). `why`, `fix`, and `data` accept a string/object or a `(params) => ...` function.
+- **Params**: the params of `why`, `fix`, and `data` are intersected and required at the call site (`why` needs `{ src }`, `fix` needs `{ date }`: the call needs `{ src, date }`).
+- **`reporters`** (optional): run on each call. Their option types are intersected and become the second call-site argument. A catalog whose codes are only thrown needs no reporters: a console reporter prints the message, then the uncaught error shows it again. Keep report-only warnings and thrown errors in separate catalogs.
 
 ## Call sites
 
 ```ts
-diagnostics.NUXT_B1001() // no params: report only
-diagnostics.NUXT_B2011({ src: '/plugins/bad.ts' }) // params first
-diagnostics.NUXT_B2011({
-  src,
-  cause: originalError,
-  sources: ['nuxt.config.ts:42:3'],
-}) // runtime fields merge in
+diagnostics.NUXT_B1001() // report
+diagnostics.NUXT_B2011({ src, cause: err, sources: ['nuxt.config.ts:42:3'] })
 diagnostics.NUXT_B2011({ src }, { method: 'error' }) // reporter options second
-throw diagnostics.NUXT_B2011({ src }) // raise
+throw diagnostics.NUXT_B2011({ src }) // report and raise
 ```
 
-`cause`/`sources` go in the params object; `sources` matters most for build/config diagnostics where the JS stack points inside the library. Catch with `if (diagnostics.NUXT_B2011.is(err))` (narrows `.data` to that code), `diagnostics.is(err)` (any diagnostic of this registry), or `if (err instanceof Diagnostic)` (any diagnostic), then read `.name`, `.message`, `.fix`, `.docs`, and `.data`. Do not write `err.code === '...'` guards or your own `isDiagnostic` helpers.
+`cause` and `sources` go in the params object. Pass `cause` when you re-raise, and `sources` when the JS stack points inside the library (build/config errors).
 
-Definition data is not present in `defineProdDiagnostics()`. Its `.data` is `undefined`. A dev/prod ternary therefore types `.data` as the code's data type or `undefined`.
+To catch:
+
+- `diagnostics.NUXT_B2011.is(err)`: one code, narrows `.data`.
+- `diagnostics.is(err)`: any code of the registry. `err.code` is then the union of codes: do not cast it.
+- `err instanceof Diagnostic`: any diagnostic.
+
+Do not write `err.code === '...'` guards or your own `isDiagnostic` helpers. For the code union type, use `InferDiagnosticCodes<typeof diagnostics>`, not `keyof typeof diagnostics` (it includes `is`).
 
 ## Reporters
 
-`(diagnostic: Diagnostic, options?: Opts) => void`. Declaring a required `options` type makes the second call-site argument required and typed.
+`(diagnostic: Diagnostic, options?: Opts) => void`. A required `options` type makes the second call-site argument required.
 
-| Reporter                          | Import                    | Description                                                                                                                                                                            |
-| --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createConsoleReporter(options?)` | `nostics`                 | `console[method](formatter(d))`. `method` defaults `'warn'` (`'log'\|'warn'\|'error'`), `formatter` defaults `formatDiagnostic`; both via options, `method` also overridable per call. |
-| `createFetchReporter(url)`        | `nostics/reporters/fetch` | POSTs diagnostic JSON to the URL; failures swallowed.                                                                                                                                  |
-| `createFileReporter(options?)`    | `nostics/reporters/node`  | Appends NDJSON to a local file (default `.nostics.log`).                                                                                                                               |
-| `createDevReporter()`             | `nostics/reporters/dev`   | Sends `toJSON()` to the Vite dev server via `import.meta.hot.send()`.                                                                                                                  |
+| Reporter                          | Import                    | Description                                                                                                                                     |
+| --------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createConsoleReporter(options?)` | `nostics`                 | `console[method](formatter(d))`. `method`: `'log'\|'warn'\|'error'` (default `'warn'`, also per call). `formatter`: default `formatDiagnostic`. |
+| `createFetchReporter(url)`        | `nostics/reporters/fetch` | POSTs the diagnostic JSON to the URL. Ignores failures.                                                                                         |
+| `createFileReporter(options?)`    | `nostics/reporters/node`  | Appends NDJSON to a file (default `.nostics.log`).                                                                                              |
+| `createDevReporter()`             | `nostics/reporters/dev`   | Sends `toJSON()` to the Vite dev server with `import.meta.hot.send()`.                                                                          |
 
 ```ts
 import type { DiagnosticReporter } from 'nostics'
 const sentryReporter: DiagnosticReporter = (d) =>
   sentry.captureMessage(d.message, { tags: { code: d.name } })
+// makes `diagnostics.X({...}, { priority: 1 })` required
 const audited: DiagnosticReporter<{ priority: number }> = (d, o) =>
   audit.log({ name: d.name, priority: o.priority })
-// → audited makes diagnostics.X({...}, { priority: 1 }) required and type-checked.
 ```
 
 ## Formatters
 
-| Formatter               | Import                    | Description                                                                                                |
-| ----------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `formatDiagnostic`      | `nostics`                 | Plain unicode-decorated string (built-in reporters use it).                                                |
-| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colorized; accepts a `Colors` interface (`red`/`yellow`/`cyan`/`gray`/`bold`/`dim`, each `(s) => string`). |
-| `jsonFormatter`         | `nostics/formatters/json` | `JSON.stringify(diagnostic)` via `toJSON()`.                                                               |
+| Formatter               | Import                    | Description                                                                                    |
+| ----------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `formatDiagnostic`      | `nostics`                 | Plain unicode string. The built-in reporters use it.                                           |
+| `ansiFormatter(colors)` | `nostics/formatters/ansi` | Colored. Takes a `Colors` object (`red`/`yellow`/`cyan`/`gray`/`bold`/`dim`, `(s) => string`). |
+| `jsonFormatter`         | `nostics/formatters/json` | `JSON.stringify(diagnostic)`.                                                                  |
 
-`formatDiagnostic` output, detail order fixed `fix` → `sources` → `see`, missing fields omitted:
+`formatDiagnostic` output (order `fix`, `sources`, `see`; missing fields are not shown):
 
 ```
 [NUXT_B2011] Invalid plugin `/plugins/bad.ts`. src option is required.
@@ -94,13 +95,12 @@ const audited: DiagnosticReporter<{ priority: number }> = (d, o) =>
 ╰▶ see: https://nuxt.com/e/b2011
 ```
 
-## Vite plugins (`@nostics/unplugin`, dev dependency)
+## Build plugins (`@nostics/unplugin`, dev dependency)
 
-`@nostics/unplugin/strip-transform` (library authors, build optimization) and `@nostics/unplugin/dev-server-collector` (app developers, dev-time collection). Both unplugin-based: `.vite()`, `.webpack()`, `.rollup()`, etc.
+unplugin-based: `.vite()`, `.webpack()`, `.rollup()`, `.rolldown()`, etc.
 
-- **`nosticsStrip`** marks `defineDiagnostics()` `/*#__PURE__*/` and wraps bare diagnostic expression statements with a `NODE_ENV` guard so they tree-shake out of production. Option `packageName?` (default `'nostics'`). Throws/returns/assignments stay (they are behavior). For tracking: relative imports, export the catalog directly, no factory wrappers or deep barrels.
-  - The plugin is optional. The same production output happens with no build transform if the catalog is annotated by hand: put `/*#__PURE__*/` before `defineDiagnostics(` and before each reporter factory call inside it (as in every example here), and dev-guard each report-only call site (`process.env.NODE_ENV !== 'production' && diagnostics.CODE(p)`). Always write the annotations in source; reach for the plugin when report-only call sites are unguarded and you want stripping without touching them.
-- **`nosticsCollector`** listens for `createDevReporter()` diagnostics over the Vite WebSocket and writes them as NDJSON via `createFileReporter`. Vite-only. Options `logFile?` (default `.nostics.log`), `debug?` (default `!!process.env.DEBUG`).
+- **`nosticsStrip`** (`@nostics/unplugin/strip-transform`, for library authors): marks `defineDiagnostics()` as `/*#__PURE__*/` and wraps bare diagnostic calls in a `NODE_ENV` guard, so they are removed from production. `throw`/`return`/assigned diagnostics stay. Option `packageName?` (default `'nostics'`). To be tracked, the catalog must be exported directly and imported with a relative path (no factory wrappers, no deep barrels).
+- **`nosticsCollector`** (`@nostics/unplugin/dev-server-collector`, for app developers, Vite only): receives `createDevReporter()` diagnostics over the Vite WebSocket and writes them as NDJSON. Options `logFile?` (default `.nostics.log`), `debug?` (default `!!process.env.DEBUG`).
 
 ```ts
 // vite.config.ts
@@ -110,7 +110,7 @@ export default defineConfig({
   plugins: [nosticsStrip.vite(), nosticsCollector.vite()],
 })
 
-// src/diagnostics.ts — pair the collector with createDevReporter()
+// src/diagnostics.ts
 import { createConsoleReporter, defineDiagnostics } from 'nostics'
 import { createDevReporter } from 'nostics/reporters/dev'
 export const diagnostics = /*#__PURE__*/ defineDiagnostics({
@@ -121,35 +121,30 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
 
 ## Production builds
 
-- **Report-only** diagnostics (bare `diagnostics.X()`) should disappear: `nosticsStrip` or hand annotations drop them, then the unused catalog tree-shakes.
-- **Surviving** diagnostics (`throw`/`return`/assigned/argument) stay, and each keeps the _whole_ catalog reachable, so every `why`/`fix` ships. Not every library throws in production: if yours only reports, stripping is enough, stop here.
+- **Report-only** calls (bare `diagnostics.X()`) must be removed. Always write `/*#__PURE__*/` before `defineDiagnostics(` and before each reporter factory in it. Then either guard each report-only call (`process.env.NODE_ENV !== 'production' && diagnostics.X(p)`) or let `nosticsStrip` do it. The unused catalog then tree-shakes.
+- **Surviving** calls (`throw`/`return`/assigned/argument) keep the full catalog in the bundle, with all `why`/`fix` text. If the library only reports, stop here.
 
-When a library _does_ `throw` in production, pick `defineProdDiagnostics` at definition time with a `NODE_ENV` ternary, so a consumer bundler drops the dev branch (all catalog text):
+If the library throws in production, select `defineProdDiagnostics` with a `NODE_ENV` ternary. The consumer bundler then removes the dev branch:
 
 ```ts
 import { defineDiagnostics, defineProdDiagnostics } from 'nostics'
 export const diagnostics =
   process.env.NODE_ENV === 'production'
     ? /*#__PURE__*/ defineProdDiagnostics({ docsBase })
-    : /*#__PURE__*/ defineDiagnostics({
-        docsBase,
-        reporters: [/* ... */],
-        codes: {/* text */},
-      })
+    : /*#__PURE__*/ defineDiagnostics({ docsBase, reporters: [/* ... */], codes: {/* ... */} })
 ```
 
-The accessed code becomes the instance `name`, `docs` still derives from `docsBase`, `why` points to the docs URL when one exists (empty otherwise), no `why`/`fix` text ships. No `reporters` by default (so a surviving `throw` doesn't also log and then resurface as the uncaught error); pass `reporters` to keep prod telemetry. `nosticsStrip` tracks this ternary like a direct catalog export.
+In prod: `name` is the accessed code, `docs` comes from `docsBase`, `why` is the docs URL (or empty), there is no `why`/`fix` text, and `.data` is `undefined` (so the ternary types `.data` as `Data | undefined`). No reporters by default; pass `reporters` for prod telemetry. `nosticsStrip` tracks this ternary like a direct export.
 
 ## Conventions
 
-- **Codes** are stable, fully-qualified `PREFIX_XNNNN` (`B` build, `R` runtime, `C` config, `D` deprecation). Never reuse or reassign a published code.
-- In tests, assert the diagnostic code, not its message or formatted text. Check `.name` on a thrown `Diagnostic` or `[CODE]` in reporter output.
-- Always provide `why`; provide `fix` whenever the solution is known (the most actionable field for humans and agents). Use parameterized templates for runtime values, not string concatenation outside the factory.
-- **`why` is the diagnosis, `fix` is the remedy — split them, don't overlap them.** `why` states only what is wrong; `fix` states only what to do. The reporter prints both, so any wording that appears in both is dead weight. When a single source sentence carries both (`"A hash must start with '#'. Prefix it with '#'."`), cut it in two — diagnosis to `why`, remedy to `fix` — rather than pasting the whole thing into `why` and echoing it in `fix`. `fix` accepts a param function too (`(p) => ...`), so move value-bearing remedies (`use "#${p.hash}"`) into it instead of leaving them in `why`.
-- Pass `cause` when re-raising; pass `sources` when the JS stack doesn't reflect the user's source.
-- Split large catalogs by domain (`diagnostics/build.ts`, `runtime.ts`, `config.ts`, re-exported from `index.ts`), each `defineDiagnostics()` sharing `docsBase` with its own code range.
+- **Codes**: `PREFIX_XNNNN`. `X` is the area, not the severity: `B` build, `R` runtime, `C` config, `D` deprecation. Never rename or reuse a published code.
+- **`why` is the diagnosis, `fix` is the remedy.** Both are printed, so do not repeat text between them. If the source has one sentence with both, split it. If the remedy needs a value, make `fix` a function. Give a `fix` whenever the solution is known.
+- Put runtime values in typed param functions, not in string concatenation at the call site.
+- Tests assert the code (`.name`, or `[CODE]` in reporter output), not the message.
+- Split large catalogs by domain (`diagnostics/build.ts`, `runtime.ts`, ...), with a shared `docsBase` and separate code ranges.
 
 ## References
 
-- **Migrating an existing library** to nostics (replacing `console.warn`/`console.error`/`warn()`/thrown `Error`s with diagnostic codes, without changing runtime behavior): follow `references/migration.md` start to finish.
-- Building the error-code documentation site (page template, deployment, agent optimization): `references/documentation-site.md`.
+- `references/migration.md`: migrate a library's `console.warn`/`console.error`/`warn()`/thrown `Error`s to diagnostics without a change in behavior. Follow it start to finish.
+- `references/documentation-site.md`: the error-code docs site (page template, deployment, sync with code).
