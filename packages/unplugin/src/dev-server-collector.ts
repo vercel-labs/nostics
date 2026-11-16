@@ -1,4 +1,3 @@
-import type { FileReporterOptions } from 'nostics/reporters/node'
 import type { UnpluginInstance } from 'unplugin'
 import { existsSync, writeFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
@@ -47,11 +46,7 @@ export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefi
   createUnplugin((options) => {
     const logFile = options?.logFile ?? '.nostics.log'
     const debug = options?.debug ?? !!process.env.DEBUG
-    const reporterOptions: FileReporterOptions = {
-      logFile,
-      excludeStackFrames: options?.excludeStackFrames,
-    }
-    const reporter = createFileReporter(reporterOptions)
+    const excludeStackFrames = options?.excludeStackFrames
 
     return {
       name: 'nostics:collector',
@@ -63,6 +58,10 @@ export const nosticsCollector: UnpluginInstance<NosticsCollectorOptions | undefi
             if (debug) server.config.logger.info(`[nostics] ${args.join(' ')}`)
           }
           const resolvedLogFile = resolve(server.config.root, logFile)
+          // `createFileReporter()` appends relative to `process.cwd()`, so give
+          // it the absolute path resolved against the Vite root. Otherwise the
+          // announced file stays empty and diagnostics land elsewhere.
+          const reporter = createFileReporter({ logFile: resolvedLogFile, excludeStackFrames })
           if (!existsSync(resolvedLogFile)) {
             writeFileSync(resolvedLogFile, '')
           }
