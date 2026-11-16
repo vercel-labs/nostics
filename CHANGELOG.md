@@ -1,3 +1,19 @@
+# [1.4.0](https://github.com/vercel-labs/nostics/compare/v1.3.0...v1.4.0) (2026-11-16)
+
+### Bug Fixes
+
+- make registry is guard non-enumerable ([#34](https://github.com/vercel-labs/nostics/issues/34)) ([9de861b](https://github.com/vercel-labs/nostics/commit/9de861b7b14621db92ae1f4cec025b93682e3070))
+- print diagnostic cause in console reporter ([#32](https://github.com/vercel-labs/nostics/issues/32)) ([991b346](https://github.com/vercel-labs/nostics/commit/991b34617ce3a2168178273053e255d4c3e7c689))
+
+### Features
+
+- add diagnostics.is type guard ([#33](https://github.com/vercel-labs/nostics/issues/33)) ([a989895](https://github.com/vercel-labs/nostics/commit/a9898956ab74c554d54bf4808407f4eb42f4e603))
+- add InferDiagnosticCodes and type diagnostic code as a literal ([#35](https://github.com/vercel-labs/nostics/issues/35)) ([c07f72c](https://github.com/vercel-labs/nostics/commit/c07f72c56c585593ee68fc1e32415bf15aba32dd))
+
+### Performance Improvements
+
+- smaller bundle ([a69c9d6](https://github.com/vercel-labs/nostics/commit/a69c9d641055491cb83c648ba38e3d346050b4e3))
+
 # [1.3.0](https://github.com/vercel-labs/nostics/compare/v1.2.0...v1.3.0) (2026-09-21)
 
 ### Features

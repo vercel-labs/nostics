@@ -1,3 +1,9 @@
+# [1.2.0](https://github.com/vercel-labs/nostics/compare/%40nostics%2Funplugin%401.1.1...%40nostics%2Funplugin%401.2.0) (2026-11-16)
+
+### Features
+
+- add diagnostics.is type guard ([#33](https://github.com/vercel-labs/nostics/issues/33)) ([a989895](https://github.com/vercel-labs/nostics/commit/a9898956ab74c554d54bf4808407f4eb42f4e603))
+
 ## [1.1.1](https://github.com/vercel-labs/nostics/compare/%40nostics%2Funplugin%401.1.0...%40nostics%2Funplugin%401.1.1) (2026-09-21)
 
 ### Features
