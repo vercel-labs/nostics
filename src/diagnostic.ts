@@ -168,7 +168,10 @@ export interface ConsoleReporterOptions {
 export function createConsoleReporter({
   method: defaultMethod = 'warn',
   formatter = formatDiagnostic,
-}: ConsoleReporterOptions = {}): DiagnosticReporter<{ method?: ConsoleMethod }> {
+}: ConsoleReporterOptions = {}): (
+  diagnostic: Diagnostic<any>,
+  options?: { method?: ConsoleMethod },
+) => void {
   return (diagnostic, { method = defaultMethod } = {}) => {
     const message = formatter(diagnostic)
     // eslint-disable-next-line no-console -- this reporter writes to the configured console method
