@@ -344,6 +344,15 @@ type DiagnosticOf<Codes, DataOverride, Code extends keyof Codes = keyof Codes> =
   ? Diagnostic<CodeDataOf<Codes, Code, DataOverride>, Code>
   : never
 
+declare const prodBrand: unique symbol
+
+/**
+ * Type-only marker of a {@link defineProdDiagnostics} registry.
+ *
+ * @internal
+ */
+export type ProdBrand = { readonly [prodBrand]?: true }
+
 /**
  * Return type of {@link defineDiagnostics}.
  */
@@ -370,7 +379,7 @@ export type Diagnostics<
     CodeDataOf<Codes, Code, DataOverride>,
     Code & string
   >
-}
+} & ([DataOverride] extends [InferCodesData] ? unknown : ProdBrand)
 
 /**
  * Union of the codes of a registry returned by {@link defineDiagnostics} or

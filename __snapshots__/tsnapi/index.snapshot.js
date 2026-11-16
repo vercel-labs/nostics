@@ -14,4 +14,5 @@ export function createConsoleReporter(_) {}
 export function defineDiagnostics(_) {}
 export function defineProdDiagnostics(_) {}
 export function formatDiagnostic(_) {}
+export function mergeDiagnostics(..._) {}
 // #endregion

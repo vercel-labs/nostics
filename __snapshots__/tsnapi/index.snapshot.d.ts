@@ -56,7 +56,7 @@ export type DiagnosticInit<Data = undefined, Code extends string = string> = Dia
 export type DiagnosticReporter<ReporterOpts extends object = object, Data = any> = (_: Diagnostic<Data>, _: ReporterOpts) => void;
 export type Diagnostics<Codes extends Record<string, DiagnosticDefinition>, Reporters extends readonly AnyDiagnosticReporter[], DataOverride = InferCodesData> = {
   is: (_: unknown) => error is DiagnosticOf<Codes, DataOverride>;
-} & { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, CodeDataOf<Codes, Code, DataOverride>, Code & string>; };
+} & { [Code in keyof Codes]: DiagnosticHandle<InferCodeParams<Codes[Code]>, Prettify<ExtractReportersOptions<Reporters>>, CodeDataOf<Codes, Code, DataOverride>, Code & string>; } & ([DataOverride] extends [InferCodesData] ? unknown : ProdBrand);
 export type InferDiagnosticCodes<Registry extends {
   is: (error: unknown) => boolean;
 }> = Exclude<keyof Registry, "is"> & string;
@@ -83,4 +83,17 @@ export declare function createConsoleReporter({ method: defaultMethod, formatter
 export declare function defineDiagnostics<const Codes extends DiagnosticCodes, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
 export declare function defineProdDiagnostics<const Codes extends DiagnosticCodes = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters, undefined>;
 export declare function formatDiagnostic(_: Diagnostic<unknown>): string;
+export declare function mergeDiagnostics<const Registries extends readonly DevDiagnostics[]>(..._: Registries): MergeCodes<Registries> & {
+  is: (_: unknown) => error is GuardOf<Registries[number]>;
+};
+// #endregion
+
+// #region Referenced (internal)
+type DevDiagnostics = {
+  is: (_: unknown) => error is Diagnostic<any>;
+} & { [Key in keyof ProdBrand]?: never; };
+type GuardOf<Registry> = Registry extends {
+  is: (error: unknown) => error is infer D;
+} ? D : never;
+type MergeCodes<Registries> = Registries extends readonly [infer First, ...infer Rest] ? { [Code in Exclude<keyof First, "is">]: First[Code]; } & MergeCodes<Rest> : unknown;
 // #endregion
