@@ -1,5 +1,6 @@
 {
   "name": "docs",
+  "type": "module",
   "scripts": {
     "dev": "nuxt dev",
     "dev:prepare": "nuxt prepare",
