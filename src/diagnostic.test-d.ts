@@ -419,7 +419,7 @@ describe('InferDiagnosticCodes', () => {
     const errs = defineDiagnostics({ codes })
     if (errs.is(error)) {
       expectTypeOf(error.code).toEqualTypeOf<'A' | 'B'>()
-      expectTypeOf(error.name).toEqualTypeOf<'A' | 'B'>()
+      expectTypeOf(error.name).toEqualTypeOf<string>()
       if (error.code === 'A') {
         expectTypeOf(error.data).toEqualTypeOf<{ n: number }>()
       }
@@ -434,6 +434,12 @@ describe('InferDiagnosticCodes', () => {
     if (defineProdDiagnostics().is(error)) {
       expectTypeOf(error.code).toEqualTypeOf<string>()
     }
+  })
+
+  it('lets name follow Error conventions while code stays literal', () => {
+    const aborted = defineDiagnostics({ codes }).B()
+    aborted.name = 'AbortError'
+    expectTypeOf(aborted.code).toEqualTypeOf<'B'>()
   })
 
   it('types code on a narrowed dev/prod ternary', () => {

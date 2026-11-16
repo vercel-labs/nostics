@@ -64,7 +64,6 @@ export type InferDiagnosticCodes<Registry extends {
 
 // #region Classes
 export declare class Diagnostic<Data = undefined, Code extends string = string> extends Error {
-  name: Code;
   code: Code;
   docs?: string;
   fix?: string;

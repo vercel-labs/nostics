@@ -397,11 +397,10 @@ const captureStackTrace = (
 ).captureStackTrace
 
 export class Diagnostic<Data = undefined, Code extends string = string> extends Error {
-  declare name: Code
-
   /**
-   * The diagnostic code, e.g. `MATH_E001`.
-   * Also appears as the `name` property.
+   * The diagnostic code, e.g. `MATH_E001`. It is also the initial `name`.
+   * Narrow on `code`: `name` stays a `string`, like on any `Error`, so it can
+   * follow conventions such as `error.name = 'AbortError'`.
    */
   declare code: Code
 
