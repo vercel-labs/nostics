@@ -53,11 +53,16 @@ describe('createFileReporter', () => {
       reporters: [createFileReporter({ logFile })],
     })
 
-    diagnostics.DB_CONNECT_FAILED({ cause: new Error('ECONNREFUSED 127.0.0.1:5432') })
+    diagnostics.DB_CONNECT_FAILED({
+      cause: Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5432'), {
+        code: 'ECONNREFUSED',
+      }),
+    })
 
     expect(JSON.parse(readFileSync(logFile, 'utf8')).cause).toMatchObject({
       name: 'Error',
-      message: 'ECONNREFUSED 127.0.0.1:5432',
+      message: 'connect ECONNREFUSED 127.0.0.1:5432',
+      code: 'ECONNREFUSED',
     })
   })
 
