@@ -47,6 +47,20 @@ describe('createFileReporter', () => {
     })
   })
 
+  it('keeps the message of an Error cause', () => {
+    const diagnostics = defineDiagnostics({
+      codes: { DB_CONNECT_FAILED: { why: 'Could not connect' } },
+      reporters: [createFileReporter({ logFile })],
+    })
+
+    diagnostics.DB_CONNECT_FAILED({ cause: new Error('ECONNREFUSED 127.0.0.1:5432') })
+
+    expect(JSON.parse(readFileSync(logFile, 'utf8')).cause).toMatchObject({
+      name: 'Error',
+      message: 'ECONNREFUSED 127.0.0.1:5432',
+    })
+  })
+
   it('uses the default file name when no option is provided', () => {
     const reporter = createFileReporter()
     expect(typeof reporter).toBe('function')
