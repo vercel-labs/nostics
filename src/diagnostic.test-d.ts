@@ -133,6 +133,21 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ wrong: true })
   })
 
+  it('accepts untyped params', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        X: {
+          why: (p) => {
+            expectTypeOf(p).toBeUnknown()
+            return 'msg'
+          },
+        },
+      },
+    })
+    errs.X({ name: 'me' })
+    errs.X({ count: 1, ok: true })
+  })
+
   it('inherits params from fix when why is static', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'static', fix: (p: { module: string }) => p.module } },
