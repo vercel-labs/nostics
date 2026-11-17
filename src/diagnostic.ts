@@ -202,9 +202,9 @@ export function createConsoleReporter({
 // brackets avoid distributing, so `never` (all-static) gives `unknown`, not `never`
 type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
   ? unknown
-  : // untyped params are `unknown`, and `unknown & DiagnosticCallParams` would reject any extra key
+  : // untyped params: `unknown & DiagnosticCallParams` rejects extra keys, `any` values accept interfaces
     IsUnknown<UnionToIntersection<ExtractFnParam<Def[keyof Def]>>> extends true
-    ? Record<string, unknown>
+    ? Record<string, any>
     : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
 
 /**
