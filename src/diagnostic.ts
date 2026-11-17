@@ -500,7 +500,16 @@ export class Diagnostic<Data = undefined, Code extends string = string> extends 
       fix: this.fix,
       docs: this.docs,
       sources: this.sources,
-      cause: this.cause,
+      // JSON.stringify skips name, message, and stack because they are not enumerable
+      cause:
+        this.cause instanceof Error && !('toJSON' in this.cause)
+          ? {
+              ...this.cause,
+              name: this.cause.name,
+              message: this.cause.message,
+              stack: this.cause.stack,
+            }
+          : this.cause,
       data: this.data,
       stack: this.stack,
     }

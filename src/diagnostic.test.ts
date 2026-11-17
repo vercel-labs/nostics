@@ -77,7 +77,7 @@ describe('diagnostic', () => {
         why: 'boom',
         fix: 'restart',
         docs: undefined,
-        cause: original,
+        cause: { name: 'Error', message: 'orig', stack: original.stack },
         sources: ['a.ts:1:1'],
         stack: d.stack, // stack is included but we don't assert on the exact value
       })
