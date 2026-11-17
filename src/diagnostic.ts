@@ -335,28 +335,15 @@ export interface InferCodesData {
 export type DiagnosticCodes = Record<string, DiagnosticDefinition> & { is?: never }
 
 /**
- * Param names taken by the call-site fields of {@link DiagnosticCallParams}.
+ * {@link DiagnosticCallParams} names used by the params of any code.
  *
  * @internal
  */
-type ReservedParamName = keyof DiagnosticCallParams
-
-/**
- * Replaces each function field of a code definition whose params use a
- * {@link ReservedParamName} with an error message type, so the definition
- * fails to type check.
- *
- * @internal
- */
-type CheckReservedParams<Def> = {
-  [Field in keyof Def]: Def[Field] extends (params: infer P) => any
-    ? IsAny<P> extends true
-      ? Def[Field]
-      : [Extract<keyof P, ReservedParamName>] extends [never]
-        ? Def[Field]
-        : `'${Extract<keyof P, ReservedParamName>}' is a reserved param name, rename it`
-    : Def[Field]
-}
+type ReservedParamsOf<Codes> = {
+  [Code in keyof Codes]: IsAny<InferCodeParams<Codes[Code]>> extends true
+    ? never
+    : Extract<keyof InferCodeParams<Codes[Code]>, keyof DiagnosticCallParams>
+}[keyof Codes]
 
 /**
  * Data of the diagnostics built for `Code`.
@@ -552,7 +539,7 @@ export function defineDiagnostics<
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(
   options: DefineDiagnosticsOptions<Codes, Reporters> & {
-    codes: { [Code in keyof Codes]: CheckReservedParams<Codes[Code]> }
+    [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`
   },
 ): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
