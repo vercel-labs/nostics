@@ -430,7 +430,19 @@ const captureStackTrace = (
   Error as { captureStackTrace?: (target: object, frame: StackTraceFrame) => void }
 ).captureStackTrace
 
+// Symbol.for so every copy of nostics, in any realm, shares the brand.
+const diagnosticBrand = Symbol.for('nostics.diagnostic')
+
 export class Diagnostic<Data = undefined, Code extends string = string> extends Error {
+  /**
+   * Matches diagnostics built by any copy of nostics. Subclasses keep the default check.
+   */
+  static [Symbol.hasInstance](value: unknown): boolean {
+    return this === Diagnostic
+      ? typeof value === 'object' && value !== null && diagnosticBrand in value
+      : Function.prototype[Symbol.hasInstance].call(this, value)
+  }
+
   declare name: Code
 
   /**
@@ -484,6 +496,7 @@ export class Diagnostic<Data = undefined, Code extends string = string> extends 
     this.fix = init.fix
     this.sources = init.sources
     this.data = init.data as Data
+    Object.defineProperty(this, diagnosticBrand, { value: true })
     // V8-only API, but also implemented pretty much everywhere. Worst case
     // scenario, we fall back to the stack `Error` captures by default, which
     // includes a couple of extra internal frames but is still usable.

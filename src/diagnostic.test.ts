@@ -371,6 +371,14 @@ describe('defineDiagnostics', () => {
     })
   })
 
+  it('matches diagnostics from another copy of nostics with instanceof', async () => {
+    vi.resetModules()
+    const copy = await import('./diagnostic')
+    expect(copy.Diagnostic).not.toBe(Diagnostic)
+    expect(copy.defineDiagnostics({ codes: { A: { why: 'a' } } }).A()).toBeInstanceOf(Diagnostic)
+    expect(new Error('a')).not.toBeInstanceOf(Diagnostic)
+  })
+
   describe('registry is', () => {
     const errs = defineDiagnostics({ codes: { A: { why: 'a' }, B: { why: 'b' } } })
 

@@ -3,6 +3,7 @@
  */
 // #region Classes
 export class Diagnostic extends Error {
+  static [Symbol.hasInstance](_) {}
   get why() {}
   constructor(_, _) {}
   toJSON() {}
