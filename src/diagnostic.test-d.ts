@@ -154,6 +154,21 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ cause: new Error('orig') })
   })
 
+  it('rejects the reserved param names cause and sources', () => {
+    // @ts-expect-error: sources is reserved
+    defineDiagnostics({ codes: { X: { why: (p: { sources: string }) => p.sources } } })
+    // @ts-expect-error: cause is reserved
+    defineDiagnostics({
+      codes: { X: { why: 'static', fix: (p: { cause?: unknown }) => String(p.cause) } },
+    })
+    // @ts-expect-error: cause is reserved
+    defineDiagnostics({ codes: { X: { why: 'static', data: (p: { cause: string }) => p } } })
+  })
+
+  it('accepts untyped params', () => {
+    defineDiagnostics({ codes: { X: { why: (p) => String(p.name) } } })
+  })
+
   it('intersects params across multiple function fields', () => {
     const errs = defineDiagnostics({
       codes: {
