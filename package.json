@@ -2,7 +2,7 @@
   "name": "nostics",
   "type": "module",
   "version": "1.4.0",
-  "packageManager": "pnpm@12.5.1",
+  "packageManager": "pnpm@12.21.0",
   "description": "Structured diagnostic code library",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "contributors": [
