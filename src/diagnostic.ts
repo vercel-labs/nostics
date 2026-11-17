@@ -16,7 +16,7 @@ import { toValueWithArgs } from './utils'
  * are intentionally omitted: they're only meaningful at the call site.
  */
 export interface DiagnosticDefinition<
-  P = any,
+  P = unknown,
   Data extends Record<string, unknown> = Record<string, unknown>,
 > {
   /**
@@ -199,9 +199,13 @@ export function createConsoleReporter({
  *
  * @internal
  */
+// brackets avoid distributing, so `never` (all-static) gives `unknown`, not `never`
 type InferCodeParams<Def> = [ExtractFnParam<Def[keyof Def]>] extends [never]
   ? unknown
-  : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
+  : // untyped params: `unknown & DiagnosticCallParams` rejects extra keys, `any` values accept interfaces
+    IsUnknown<UnionToIntersection<ExtractFnParam<Def[keyof Def]>>> extends true
+    ? Record<string, any>
+    : UnionToIntersection<ExtractFnParam<Def[keyof Def]>>
 
 /**
  * Resolves the data stored by a code definition. Codes without data return a

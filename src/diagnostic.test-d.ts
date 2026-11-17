@@ -133,6 +133,29 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ wrong: true })
   })
 
+  it('accepts untyped params', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        X: {
+          why: (p) => {
+            expectTypeOf(p).toBeUnknown()
+            return 'msg'
+          },
+        },
+      },
+    })
+    errs.X({ name: 'me' })
+    errs.X({ count: 1, ok: true })
+    interface Info {
+      name: string
+    }
+    const info: Info = { name: 'me' }
+    errs.X(info)
+    defineProdDiagnostics().X(info)
+    // @ts-expect-error: sources stays typed
+    errs.X({ sources: 1 })
+  })
+
   it('inherits params from fix when why is static', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'static', fix: (p: { module: string }) => p.module } },
@@ -163,10 +186,6 @@ describe('defineDiagnostics: params inference', () => {
     })
     // @ts-expect-error: cause is reserved
     defineDiagnostics({ codes: { X: { why: 'static', data: (p: { cause: string }) => p } } })
-  })
-
-  it('accepts untyped params', () => {
-    defineDiagnostics({ codes: { X: { why: (p) => String(p.name) } } })
   })
 
   it('intersects params across multiple function fields', () => {

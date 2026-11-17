@@ -18,7 +18,9 @@ export function toValueWithArgs<T, Args extends any[]>(
  *
  * @internal
  */
-export type ValueOrFn<T, P = any> = T | ((params: P) => T)
+// method params are bivariant (strictFunctionTypes skips them), so `P = unknown` accepts annotated params
+// `['fn']` takes the method out as a plain function type and keeps the bivariance
+export type ValueOrFn<T, P = any> = T | { fn(params: P): T }['fn']
 
 /**
  * Extracts the param type from a single-arg function, or `never` for

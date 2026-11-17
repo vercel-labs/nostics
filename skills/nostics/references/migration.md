@@ -55,12 +55,12 @@ export const diagnostics = /*#__PURE__*/ defineDiagnostics({
   // before:  warn(`A \`hash\` should start with "#". Replace "${hash}" with "#${hash}".`)
 
   // ❌ the remedy is in why and again in fix
-  { why: (p) => `A \`hash\` should start with "#". Replace "${p.hash}" with "#${p.hash}".`,
+  { why: (p: { hash: string }) => `A \`hash\` should start with "#". Replace "${p.hash}" with "#${p.hash}".`,
     fix: 'Prefix the hash with "#".' }
 
   // ✅
-  { why: (p) => `A \`hash\` should start with "#" but received "${p.hash}".`,
-    fix: (p) => `Prepend "#": use "#${p.hash}".` }
+  { why: (p: { hash: string }) => `A \`hash\` should start with "#" but received "${p.hash}".`,
+    fix: (p: { hash: string }) => `Prepend "#": use "#${p.hash}".` }
   ```
 
 - Do not lose extra `console.warn` arguments: an error becomes `cause`; data goes into `why` (e.g. `JSON.stringify(p.value)`).

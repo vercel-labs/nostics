@@ -19,7 +19,7 @@ export interface DiagnosticCallParams {
   cause?: unknown;
   sources?: string[];
 }
-export interface DiagnosticDefinition<P = any, Data extends Record<string, unknown> = Record<string, unknown>> {
+export interface DiagnosticDefinition<P = unknown, Data extends Record<string, unknown> = Record<string, unknown>> {
   why: ValueOrFn<string, P>;
   fix?: ValueOrFn<string, P>;
   docs?: string | false;
@@ -45,7 +45,9 @@ export interface InferCodesData {
 // #endregion
 
 // #region Types
-export type _ValueOrFn<T, P = any> = T | ((_: P) => T);
+export type _ValueOrFn<T, P = any> = T | {
+  fn(params: P): T;
+}["fn"];
 export type AnyDiagnosticReporter = (_: Diagnostic<any>, _: any) => void;
 export type ConsoleMethod = "log" | "error" | "warn";
 export type DiagnosticInit<Data = undefined, Code extends string = string> = DiagnosticInitBase<Code> & ([Data] extends [undefined] ? {
