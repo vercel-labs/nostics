@@ -9,7 +9,7 @@ import type {
   Statement,
   VariableDeclaration,
 } from 'oxc-parser'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import MagicString from 'magic-string'
 import { parseSync } from 'oxc-parser'
@@ -208,12 +208,25 @@ function expressionNeedsParens(node: Expression): boolean {
 
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs']
 
+/**
+ * True when `path` exists and is a file. A directory must not be treated as a
+ * resolved module, otherwise `./diagnostics` resolves to the folder instead of
+ * the `index` file it contains.
+ */
+function isFile(path: string): boolean {
+  try {
+    return statSync(path).isFile()
+  } catch {
+    return false
+  }
+}
+
 function resolveModulePath(source: string, importer: string): string | undefined {
   const dir = dirname(importer)
   const base = join(dir, source)
 
   // Try exact path (for imports with extension)
-  if (existsSync(base)) return base
+  if (isFile(base)) return base
 
   // Try with extensions
   for (const ext of EXTENSIONS) {
