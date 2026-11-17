@@ -1,4 +1,11 @@
-import type { ExtractFnParam, IsUnknown, Prettify, UnionToIntersection, ValueOrFn } from './utils'
+import type {
+  ExtractFnParam,
+  IsAny,
+  IsUnknown,
+  Prettify,
+  UnionToIntersection,
+  ValueOrFn,
+} from './utils'
 import { formatDiagnostic } from './formatters/plain'
 import { toValueWithArgs } from './utils'
 
@@ -328,6 +335,30 @@ export interface InferCodesData {
 export type DiagnosticCodes = Record<string, DiagnosticDefinition> & { is?: never }
 
 /**
+ * Param names taken by the call-site fields of {@link DiagnosticCallParams}.
+ *
+ * @internal
+ */
+type ReservedParamName = keyof DiagnosticCallParams
+
+/**
+ * Replaces each function field of a code definition whose params use a
+ * {@link ReservedParamName} with an error message type, so the definition
+ * fails to type check.
+ *
+ * @internal
+ */
+type CheckReservedParams<Def> = {
+  [Field in keyof Def]: Def[Field] extends (params: infer P) => any
+    ? IsAny<P> extends true
+      ? Def[Field]
+      : [Extract<keyof P, ReservedParamName>] extends [never]
+        ? Def[Field]
+        : `'${Extract<keyof P, ReservedParamName>}' is a reserved param name, rename it`
+    : Def[Field]
+}
+
+/**
  * Data of the diagnostics built for `Code`.
  *
  * @internal
@@ -519,7 +550,11 @@ export const createRegistryIs =
 export function defineDiagnostics<
   const Codes extends DiagnosticCodes,
   const Reporters extends readonly AnyDiagnosticReporter[],
->(options: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters> {
+>(
+  options: DefineDiagnosticsOptions<Codes, Reporters> & {
+    codes: { [Code in keyof Codes]: CheckReservedParams<Codes[Code]> }
+  },
+): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   // tags diagnostics so `is()` only matches the ones of this registry
   const id = Symbol()

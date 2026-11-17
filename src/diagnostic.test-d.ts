@@ -154,6 +154,33 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ cause: new Error('orig') })
   })
 
+  it('rejects the reserved param names cause and sources', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: sources is reserved
+        A: { why: (p: { sources: string }) => p.sources },
+        // @ts-expect-error: cause is reserved
+        B: { why: 'static', fix: (p: { cause?: unknown }) => String(p.cause) },
+        // @ts-expect-error: cause is reserved
+        C: { why: 'static', data: (p: { cause: string; name: string }) => p },
+        D: { why: (p: { name: string }) => p.name },
+      },
+    })
+  })
+
+  it('keeps the valid codes typed next to a code with a reserved param', () => {
+    const errs = defineDiagnostics({
+      codes: {
+        // @ts-expect-error: sources is reserved
+        A: { why: (p: { sources: string }) => p.sources },
+        B: { why: (p: { name: string }) => p.name },
+      },
+    })
+    errs.B({ name: 'me' })
+    // @ts-expect-error: name is required
+    errs.B()
+  })
+
   it('intersects params across multiple function fields', () => {
     const errs = defineDiagnostics({
       codes: {

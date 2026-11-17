@@ -80,7 +80,9 @@ export declare class Diagnostic<Data = undefined, Code extends string = string> 
 export declare function createConsoleReporter({ method: defaultMethod, formatter }?: ConsoleReporterOptions): (_: Diagnostic<any>, _?: {
   method?: ConsoleMethod;
 }) => void;
-export declare function defineDiagnostics<const Codes extends DiagnosticCodes, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters>): Diagnostics<Codes, Reporters>;
+export declare function defineDiagnostics<const Codes extends DiagnosticCodes, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters> & {
+  codes: { [Code in keyof Codes]: CheckReservedParams<Codes[Code]>; };
+}): Diagnostics<Codes, Reporters>;
 export declare function defineProdDiagnostics<const Codes extends DiagnosticCodes = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters, undefined>;
 export declare function formatDiagnostic(_: Diagnostic<unknown>): string;
 export declare function mergeDiagnostics<const Registries extends readonly DevDiagnostics[]>(..._: Registries): MergeCodes<Registries> & {
