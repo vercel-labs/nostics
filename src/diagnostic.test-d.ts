@@ -59,6 +59,52 @@ describe('defineDiagnostics: reporter options inference', () => {
     expectTypeOf(report).parameter(1).toEqualTypeOf<{ method?: ConsoleMethod } | undefined>()
   })
 
+  it('per-code `report` is typed from the reporters and keeps call sites', () => {
+    const errs = defineDiagnostics({
+      reporters: [createConsoleReporter(), reporterWithPriority],
+      codes: {
+        A: { why: (_p: { n: number }) => 'a', report: { method: 'error' } },
+        B: { why: 'b', report: { priority: 1 } },
+        C: { why: 'c' },
+      },
+    })
+    expectTypeOf(errs.A).parameters.toEqualTypeOf<
+      [
+        params: { n: number } & DiagnosticCallParams,
+        reporterOptions: { method?: ConsoleMethod; priority: number },
+      ]
+    >()
+    expectTypeOf(errs.C).parameters.toEqualTypeOf<
+      [
+        params: DiagnosticCallParams | undefined,
+        reporterOptions: { method?: ConsoleMethod; priority: number },
+      ]
+    >()
+  })
+
+  it('rejects a `report` that does not match the reporters', () => {
+    defineDiagnostics({
+      reporters: [createConsoleReporter()],
+      codes: {
+        // @ts-expect-error: not a console method
+        A: { why: 'a', report: { method: 'info' } },
+      },
+    })
+    defineDiagnostics({
+      reporters: [createConsoleReporter()],
+      codes: {
+        // @ts-expect-error: no reporter has this option
+        A: { why: 'a', report: { nope: 1 } },
+      },
+    })
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: no reporters, so no options
+        A: { why: 'a', report: { method: 'error' } },
+      },
+    })
+  })
+
   it('options is required when any reporter has a required field', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'msg' } },

@@ -53,6 +53,19 @@ export interface DiagnosticDefinition<
    * derive the data from the same params object as `why` and `fix`.
    */
   data?: ValueOrFn<Data, P>
+
+  /**
+   * Default reporter options for this code, typed from the `reporters`.
+   * Options passed at the call site override them. Ignored by
+   * {@link defineProdDiagnostics}, which has no catalog.
+   *
+   * @example
+   * ```ts
+   * // printed with `console.error` by `createConsoleReporter()`
+   * report: { method: 'error' }
+   * ```
+   */
+  report?: object
 }
 
 /**
@@ -350,6 +363,18 @@ type ReservedParamsOf<Codes> = {
 }[keyof Codes]
 
 /**
+ * Requires each code's `report` to only use keys of the reporters' options
+ * (excess keys become `never`).
+ *
+ * @internal
+ */
+type CheckedReportOf<Codes, ReporterOpts> = {
+  [Code in keyof Codes]: Codes[Code] extends { report: infer Report }
+    ? { report: Partial<ReporterOpts> & Record<Exclude<keyof Report, keyof ReporterOpts>, never> }
+    : unknown
+}
+
+/**
  * Data of the diagnostics built for `Code`.
  *
  * @internal
@@ -544,7 +569,7 @@ export function defineDiagnostics<
 >(
   options: DefineDiagnosticsOptions<Codes, Reporters> & {
     [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`
-  },
+  } & { codes: CheckedReportOf<Codes, ExtractReportersOptions<Reporters>> },
 ): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   // tags diagnostics so `is()` only matches the ones of this registry
@@ -564,8 +589,10 @@ export function defineDiagnostics<
 
     const handle = (
       params: DiagnosticCallParams & Record<string, unknown> = {},
-      reporterOptions: any = {},
+      reporterOptions?: object,
     ): Diagnostic => {
+      // call-site options override the per-code defaults
+      reporterOptions = { ...def.report, ...reporterOptions }
       const diagnostic = new Diagnostic(
         {
           code,

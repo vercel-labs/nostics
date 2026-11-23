@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Diagnostic } from './diagnostic'
+import { createConsoleReporter, defineDiagnostics, Diagnostic } from './diagnostic'
+import { mockConsoleError, mockConsoleWarn } from './mock-warn'
 import { defineProdDiagnostics } from './prod-diagnostics'
+
+mockConsoleWarn()
+mockConsoleError()
 
 describe('defineProdDiagnostics', () => {
   it('returns a Diagnostic for any accessed code', () => {
@@ -156,5 +160,26 @@ describe('defineProdDiagnostics', () => {
     const errs = defineProdDiagnostics()
     // e.g. promise unwrapping / serialization probes must not produce handles
     expect((errs as Record<PropertyKey, unknown>)[Symbol.toPrimitive]).toBeUndefined()
+  })
+
+  describe('per-code `report` defaults', () => {
+    const reporters = [createConsoleReporter()] as const
+    const codes = { X_THROWN: { why: 'thrown', report: { method: 'error' } } } as const
+    const create = (prod: boolean) =>
+      prod
+        ? defineProdDiagnostics<typeof codes, typeof reporters>({ reporters })
+        : defineDiagnostics({ reporters, codes })
+
+    it('uses the reporter default in prod (no catalog)', () => {
+      create(false).X_THROWN()
+      create(true).X_THROWN()
+      expect('[X_THROWN] thrown').toHaveBeenErroredTimes(1)
+      expect('[X_THROWN]').toHaveBeenWarnedTimes(1)
+    })
+
+    it('keeps the call-site options in prod', () => {
+      create(true).X_THROWN(undefined, { method: 'error' })
+      expect('[X_THROWN]').toHaveBeenErrored()
+    })
   })
 })
