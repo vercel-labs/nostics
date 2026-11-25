@@ -67,6 +67,7 @@ export type InferDiagnosticCodes<Registry extends {
 
 // #region Classes
 export declare class Diagnostic<Data = undefined, Code extends string = string> extends Error {
+  static [Symbol.hasInstance](_: unknown): boolean;
   name: Code;
   code: Code;
   docs?: string;
