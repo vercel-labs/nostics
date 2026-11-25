@@ -24,6 +24,7 @@ export interface DiagnosticDefinition<P = unknown, Data extends Record<string, u
   fix?: ValueOrFn<string, P>;
   docs?: string | false;
   data?: ValueOrFn<Data, P>;
+  reporterOptions?: object;
 }
 export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined, Code extends string = string> {
   (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data, Code>;
@@ -82,7 +83,11 @@ export declare class Diagnostic<Data = undefined, Code extends string = string> 
 export declare function createConsoleReporter({ method: defaultMethod, formatter }?: ConsoleReporterOptions): (_: Diagnostic<any>, _?: {
   method?: ConsoleMethod;
 }) => void;
-export declare function defineDiagnostics<const Codes extends DiagnosticCodes, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters> & { [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`; }): Diagnostics<Codes, Reporters>;
+export declare function defineDiagnostics<const Codes extends CheckedDiagnosticCodes<ExtractReportersOptions<Reporters>>, const Reporters extends readonly AnyDiagnosticReporter[]>(_: DefineDiagnosticsOptions<Codes, Reporters> & { [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`; } & {
+  codes: {
+    is?: never;
+  };
+}): Diagnostics<Codes, Reporters>;
 export declare function defineProdDiagnostics<const Codes extends DiagnosticCodes = Record<string, DiagnosticDefinition>, const Reporters extends readonly AnyDiagnosticReporter[] = readonly AnyDiagnosticReporter[]>(_?: DefineProdDiagnosticsOptions<Reporters>): Diagnostics<Codes, Reporters, undefined>;
 export declare function formatDiagnostic(_: Diagnostic<unknown>): string;
 export declare function mergeDiagnostics<const Registries extends readonly DevDiagnostics[]>(..._: Registries): MergeCodes<Registries> & {

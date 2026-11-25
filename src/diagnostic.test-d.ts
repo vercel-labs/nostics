@@ -59,6 +59,66 @@ describe('defineDiagnostics: reporter options inference', () => {
     expectTypeOf(report).parameter(1).toEqualTypeOf<{ method?: ConsoleMethod } | undefined>()
   })
 
+  it('per-code `reporterOptions` does not make reporter options optional', () => {
+    const errs = defineDiagnostics({
+      reporters: [createConsoleReporter(), reporterWithPriority],
+      codes: {
+        A: { why: (_p: { n: number }) => 'a', reporterOptions: { method: 'error' } },
+        B: { why: 'b' },
+      },
+    })
+    expectTypeOf(errs.A).parameters.toEqualTypeOf<
+      [
+        params: { n: number } & DiagnosticCallParams,
+        reporterOptions: { method?: ConsoleMethod; priority: number },
+      ]
+    >()
+    expectTypeOf(errs.B).parameters.toEqualTypeOf<
+      [
+        params: DiagnosticCallParams | undefined,
+        reporterOptions: { method?: ConsoleMethod; priority: number },
+      ]
+    >()
+  })
+
+  it('rejects a `reporterOptions` that does not match the reporters', () => {
+    defineDiagnostics({
+      reporters: [createConsoleReporter()],
+      codes: {
+        A: {
+          why: 'a',
+          reporterOptions: {
+            // @ts-expect-error: not a console method
+            method: 'info',
+          },
+        },
+      },
+    })
+    defineDiagnostics({
+      reporters: [createConsoleReporter()],
+      codes: {
+        A: {
+          why: 'a',
+          reporterOptions: {
+            // @ts-expect-error: no reporter has this option
+            nope: 1,
+          },
+        },
+      },
+    })
+    defineDiagnostics({
+      codes: {
+        A: {
+          why: 'a',
+          // @ts-expect-error: no reporters, so no options
+          reporterOptions: {
+            method: 'error',
+          },
+        },
+      },
+    })
+  })
+
   it('options is required when any reporter has a required field', () => {
     const errs = defineDiagnostics({
       codes: { X: { why: 'msg' } },
@@ -226,6 +286,17 @@ describe('defineDiagnostics: params inference', () => {
     })
     errs.X({ who: 'me' })
     errs.X({ who: 'me' }, { method: 'warn' })
+  })
+})
+
+describe('defineDiagnostics: code names', () => {
+  it('rejects the reserved code name is', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: is is reserved
+        is: { why: 'a' },
+      },
+    })
   })
 })
 

@@ -35,9 +35,9 @@ const diagnostics = /*#__PURE__*/ defineDiagnostics({
 ```
 
 - **`docsBase`** `string | (code) => string | undefined`: a string gets `/${code.toLowerCase()}` appended; a function returns the full URL (or `undefined` for no URL).
-- **`codes`**: `why` is required and becomes `Error.message`. Optional: `fix`, `docs` (a string overrides `docsBase`, `false` opts out), `data` (typed, included in `toJSON()`). `why`, `fix`, and `data` accept a string/object or a `(params) => ...` function.
+- **`codes`**: `why` is required and becomes `Error.message`. Optional: `fix`, `docs` (a string overrides `docsBase`, `false` opts out), `data` (typed, included in `toJSON()`), `reporterOptions` (default reporter options for this code, typed from the reporters, e.g. `{ method: 'error' }`; the call site overrides it, prod ignores it). `why`, `fix`, and `data` accept a string/object or a `(params) => ...` function.
 - **Params**: the params of `why`, `fix`, and `data` are intersected and required at the call site (`why` needs `{ src }`, `fix` needs `{ date }`: the call needs `{ src, date }`).
-- **`reporters`** (optional): run on each call. Their option types are intersected and become the second call-site argument. A catalog whose codes are only thrown needs no reporters: a console reporter prints the message, then the uncaught error shows it again. Keep report-only warnings and thrown errors in separate catalogs.
+- **`reporters`** (optional): run on each call. Their option types are intersected and become the second call-site argument. A catalog whose codes are only thrown needs no reporters: a console reporter prints the message, then the uncaught error shows it again. When a catalog mixes report-only warnings and thrown errors, set `reporterOptions: { method: 'error' }` on the thrown codes (not `{ method: 'error' }` at each `throw` site).
 
 ## Call sites
 

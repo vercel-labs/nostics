@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Diagnostic } from './diagnostic'
+import { createConsoleReporter, Diagnostic } from './diagnostic'
+import { mockConsoleWarn } from './mock-warn'
 import { defineProdDiagnostics } from './prod-diagnostics'
+
+mockConsoleWarn()
 
 describe('defineProdDiagnostics', () => {
   it('returns a Diagnostic for any accessed code', () => {
@@ -156,5 +159,10 @@ describe('defineProdDiagnostics', () => {
     const errs = defineProdDiagnostics()
     // e.g. promise unwrapping / serialization probes must not produce handles
     expect((errs as Record<PropertyKey, unknown>)[Symbol.toPrimitive]).toBeUndefined()
+  })
+
+  it('uses only the call-site reporter options (no catalog)', () => {
+    defineProdDiagnostics({ reporters: [createConsoleReporter()] }).X()
+    expect('[X]').toHaveBeenWarned()
   })
 })

@@ -53,6 +53,19 @@ export interface DiagnosticDefinition<
    * derive the data from the same params object as `why` and `fix`.
    */
   data?: ValueOrFn<Data, P>
+
+  /**
+   * Default reporter options for this code, typed from the `reporters`.
+   * Options passed at the call site override them. Ignored by
+   * {@link defineProdDiagnostics}, which has no catalog.
+   *
+   * @example
+   * ```ts
+   * // printed with `console.error` by `createConsoleReporter()`
+   * reporterOptions: { method: 'error' }
+   * ```
+   */
+  reporterOptions?: object
 }
 
 /**
@@ -350,6 +363,31 @@ type ReservedParamsOf<Codes> = {
 }[keyof Codes]
 
 /**
+ * Type of `reporterOptions` in each code: the reporters' options, all optional. With no
+ * reporter options, `reporterOptions` is not allowed. Used as the constraint of `Codes`
+ * (not intersected with it), so errors show the expected option types.
+ *
+ * @internal
+ */
+type DefaultReporterOptions<ReporterOpts> = [keyof ReporterOpts] extends [never]
+  ? never
+  : Prettify<Partial<ReporterOpts>>
+
+/**
+ * {@link DiagnosticCodes} with each `reporterOptions` typed from the reporters' options.
+ * No `is?: never` here: an intersection turns off the excess key check of
+ * `reporterOptions`. {@link defineDiagnostics} reserves `is` in its param type.
+ *
+ * @internal
+ */
+type CheckedDiagnosticCodes<ReporterOpts> = Record<
+  string,
+  Omit<DiagnosticDefinition, 'reporterOptions'> & {
+    reporterOptions?: DefaultReporterOptions<ReporterOpts>
+  }
+>
+
+/**
  * Data of the diagnostics built for `Code`.
  *
  * @internal
@@ -548,12 +586,12 @@ export const createRegistryIs =
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
-  const Codes extends DiagnosticCodes,
+  const Codes extends CheckedDiagnosticCodes<ExtractReportersOptions<Reporters>>,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(
   options: DefineDiagnosticsOptions<Codes, Reporters> & {
     [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`
-  },
+  } & { codes: { is?: never } },
 ): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   // tags diagnostics so `is()` only matches the ones of this registry
@@ -573,8 +611,10 @@ export function defineDiagnostics<
 
     const handle = (
       params: DiagnosticCallParams & Record<string, unknown> = {},
-      reporterOptions: any = {},
+      reporterOptions?: object,
     ): Diagnostic => {
+      // call-site options override the per-code defaults
+      const mergedOptions = { ...def.reporterOptions, ...reporterOptions }
       const diagnostic = new Diagnostic(
         {
           code,
@@ -588,7 +628,7 @@ export function defineDiagnostics<
         handle,
       )
       ;(diagnostic as any)[id] = 1
-      for (const reporter of reporters) reporter(diagnostic, reporterOptions)
+      for (const reporter of reporters) reporter(diagnostic, mergedOptions)
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
     handle.is = (err: unknown) => result.is(err) && err.code === code
