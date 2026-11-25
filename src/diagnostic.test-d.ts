@@ -86,21 +86,36 @@ describe('defineDiagnostics: reporter options inference', () => {
     defineDiagnostics({
       reporters: [createConsoleReporter()],
       codes: {
-        // @ts-expect-error: not a console method
-        A: { why: 'a', report: { method: 'info' } },
+        A: {
+          why: 'a',
+          report: {
+            // @ts-expect-error: not a console method
+            method: 'info',
+          },
+        },
       },
     })
     defineDiagnostics({
       reporters: [createConsoleReporter()],
       codes: {
-        // @ts-expect-error: no reporter has this option
-        A: { why: 'a', report: { nope: 1 } },
+        A: {
+          why: 'a',
+          report: {
+            // @ts-expect-error: no reporter has this option
+            nope: 1,
+          },
+        },
       },
     })
     defineDiagnostics({
       codes: {
-        // @ts-expect-error: no reporters, so no options
-        A: { why: 'a', report: { method: 'error' } },
+        A: {
+          why: 'a',
+          // @ts-expect-error: no reporters, so no options
+          report: {
+            method: 'error',
+          },
+        },
       },
     })
   })
@@ -221,6 +236,15 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ name: 'me', cause: new Error('orig'), sources: ['a.ts:1:1'] })
     // @ts-expect-error: name is still required
     errs.X({ cause: new Error('orig') })
+  })
+
+  it('rejects the reserved code name is', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: is is reserved
+        is: { why: 'a' },
+      },
+    })
   })
 
   it('rejects the reserved param names cause and sources', () => {

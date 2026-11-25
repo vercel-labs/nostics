@@ -91,7 +91,7 @@ Branch `explore/reporter-severity` (local commit only, not pushed).
 
 - `src/diagnostic.ts`:
   - `DiagnosticDefinition.report?: object`.
-  - `defineDiagnostics()` checks each `report` against the reporter options (`CheckedReportOf`), and the handle merges `{ ...def.report, ...reporterOptions }`.
+  - `defineDiagnostics()` checks each `report` against the reporter options (the `CheckedDiagnosticCodes` constraint of `Codes`), and the handle merges `{ ...def.report, ...reporterOptions }`.
 - Tests (assert console output):
   - `src/diagnostic.test.ts`: a code with `report: { method: 'error' }` prints with `console.error`, a code without it with `console.warn`; the call site overrides the code default; options of other reporters are kept (merged, not replaced).
   - `src/prod-diagnostics.test.ts`: with one shared `reporters` in a dev/prod pair, dev prints the code with `console.error` and prod with the reporter default `console.warn`; call-site options still work in prod.

@@ -363,16 +363,27 @@ type ReservedParamsOf<Codes> = {
 }[keyof Codes]
 
 /**
- * Requires each code's `report` to only use keys of the reporters' options
- * (excess keys become `never`).
+ * Type of `report` in each code: the reporters' options, all optional. With no
+ * reporter options, `report` is not allowed. Used as the constraint of `Codes`
+ * (not intersected with it), so errors show the expected option types.
  *
  * @internal
  */
-type CheckedReportOf<Codes, ReporterOpts> = {
-  [Code in keyof Codes]: Codes[Code] extends { report: infer Report }
-    ? { report: Partial<ReporterOpts> & Record<Exclude<keyof Report, keyof ReporterOpts>, never> }
-    : unknown
-}
+type ReportOf<ReporterOpts> = [keyof ReporterOpts] extends [never]
+  ? never
+  : Prettify<Partial<ReporterOpts>>
+
+/**
+ * {@link DiagnosticCodes} with each `report` typed from the reporters' options.
+ * No `is?: never` here: an intersection turns off the excess key check of
+ * `report`. {@link defineDiagnostics} reserves `is` in its param type.
+ *
+ * @internal
+ */
+type CheckedDiagnosticCodes<ReporterOpts> = Record<
+  string,
+  Omit<DiagnosticDefinition, 'report'> & { report?: ReportOf<ReporterOpts> }
+>
 
 /**
  * Data of the diagnostics built for `Code`.
@@ -564,12 +575,12 @@ export const createRegistryIs =
  */
 /* @__NO_SIDE_EFFECTS__ */
 export function defineDiagnostics<
-  const Codes extends DiagnosticCodes,
+  const Codes extends CheckedDiagnosticCodes<ExtractReportersOptions<Reporters>>,
   const Reporters extends readonly AnyDiagnosticReporter[],
 >(
   options: DefineDiagnosticsOptions<Codes, Reporters> & {
     [Name in ReservedParamsOf<Codes>]: `'${Name}' is a reserved param name`
-  } & { codes: CheckedReportOf<Codes, ExtractReportersOptions<Reporters>> },
+  } & { codes: { is?: never } },
 ): Diagnostics<Codes, Reporters> {
   const reporters = options.reporters ?? []
   // tags diagnostics so `is()` only matches the ones of this registry
