@@ -62,10 +62,10 @@ export interface DiagnosticDefinition<
    * @example
    * ```ts
    * // printed with `console.error` by `createConsoleReporter()`
-   * report: { method: 'error' }
+   * reporterOptions: { method: 'error' }
    * ```
    */
-  report?: object
+  reporterOptions?: object
 }
 
 /**
@@ -363,26 +363,28 @@ type ReservedParamsOf<Codes> = {
 }[keyof Codes]
 
 /**
- * Type of `report` in each code: the reporters' options, all optional. With no
- * reporter options, `report` is not allowed. Used as the constraint of `Codes`
+ * Type of `reporterOptions` in each code: the reporters' options, all optional. With no
+ * reporter options, `reporterOptions` is not allowed. Used as the constraint of `Codes`
  * (not intersected with it), so errors show the expected option types.
  *
  * @internal
  */
-type ReportOf<ReporterOpts> = [keyof ReporterOpts] extends [never]
+type DefaultReporterOptions<ReporterOpts> = [keyof ReporterOpts] extends [never]
   ? never
   : Prettify<Partial<ReporterOpts>>
 
 /**
- * {@link DiagnosticCodes} with each `report` typed from the reporters' options.
+ * {@link DiagnosticCodes} with each `reporterOptions` typed from the reporters' options.
  * No `is?: never` here: an intersection turns off the excess key check of
- * `report`. {@link defineDiagnostics} reserves `is` in its param type.
+ * `reporterOptions`. {@link defineDiagnostics} reserves `is` in its param type.
  *
  * @internal
  */
 type CheckedDiagnosticCodes<ReporterOpts> = Record<
   string,
-  Omit<DiagnosticDefinition, 'report'> & { report?: ReportOf<ReporterOpts> }
+  Omit<DiagnosticDefinition, 'reporterOptions'> & {
+    reporterOptions?: DefaultReporterOptions<ReporterOpts>
+  }
 >
 
 /**
@@ -603,7 +605,7 @@ export function defineDiagnostics<
       reporterOptions?: object,
     ): Diagnostic => {
       // call-site options override the per-code defaults
-      reporterOptions = { ...def.report, ...reporterOptions }
+      const mergedOptions = { ...def.reporterOptions, ...reporterOptions }
       const diagnostic = new Diagnostic(
         {
           code,
@@ -617,7 +619,7 @@ export function defineDiagnostics<
         handle,
       )
       ;(diagnostic as any)[id] = 1
-      for (const reporter of reporters) reporter(diagnostic, reporterOptions)
+      for (const reporter of reporters) reporter(diagnostic, mergedOptions)
       return diagnostic as Diagnostic<InferCodeData<Codes[typeof code]>>
     }
     handle.is = (err: unknown) => result.is(err) && err.code === code

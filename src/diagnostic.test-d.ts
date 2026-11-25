@@ -59,13 +59,12 @@ describe('defineDiagnostics: reporter options inference', () => {
     expectTypeOf(report).parameter(1).toEqualTypeOf<{ method?: ConsoleMethod } | undefined>()
   })
 
-  it('per-code `report` is typed from the reporters and keeps call sites', () => {
+  it('per-code `reporterOptions` does not make reporter options optional', () => {
     const errs = defineDiagnostics({
       reporters: [createConsoleReporter(), reporterWithPriority],
       codes: {
-        A: { why: (_p: { n: number }) => 'a', report: { method: 'error' } },
-        B: { why: 'b', report: { priority: 1 } },
-        C: { why: 'c' },
+        A: { why: (_p: { n: number }) => 'a', reporterOptions: { method: 'error' } },
+        B: { why: 'b' },
       },
     })
     expectTypeOf(errs.A).parameters.toEqualTypeOf<
@@ -74,7 +73,7 @@ describe('defineDiagnostics: reporter options inference', () => {
         reporterOptions: { method?: ConsoleMethod; priority: number },
       ]
     >()
-    expectTypeOf(errs.C).parameters.toEqualTypeOf<
+    expectTypeOf(errs.B).parameters.toEqualTypeOf<
       [
         params: DiagnosticCallParams | undefined,
         reporterOptions: { method?: ConsoleMethod; priority: number },
@@ -82,13 +81,13 @@ describe('defineDiagnostics: reporter options inference', () => {
     >()
   })
 
-  it('rejects a `report` that does not match the reporters', () => {
+  it('rejects a `reporterOptions` that does not match the reporters', () => {
     defineDiagnostics({
       reporters: [createConsoleReporter()],
       codes: {
         A: {
           why: 'a',
-          report: {
+          reporterOptions: {
             // @ts-expect-error: not a console method
             method: 'info',
           },
@@ -100,7 +99,7 @@ describe('defineDiagnostics: reporter options inference', () => {
       codes: {
         A: {
           why: 'a',
-          report: {
+          reporterOptions: {
             // @ts-expect-error: no reporter has this option
             nope: 1,
           },
@@ -112,7 +111,7 @@ describe('defineDiagnostics: reporter options inference', () => {
         A: {
           why: 'a',
           // @ts-expect-error: no reporters, so no options
-          report: {
+          reporterOptions: {
             method: 'error',
           },
         },
@@ -238,15 +237,6 @@ describe('defineDiagnostics: params inference', () => {
     errs.X({ cause: new Error('orig') })
   })
 
-  it('rejects the reserved code name is', () => {
-    defineDiagnostics({
-      codes: {
-        // @ts-expect-error: is is reserved
-        is: { why: 'a' },
-      },
-    })
-  })
-
   it('rejects the reserved param names cause and sources', () => {
     // @ts-expect-error: sources is reserved
     defineDiagnostics({ codes: { X: { why: (p: { sources: string }) => p.sources } } })
@@ -296,6 +286,17 @@ describe('defineDiagnostics: params inference', () => {
     })
     errs.X({ who: 'me' })
     errs.X({ who: 'me' }, { method: 'warn' })
+  })
+})
+
+describe('defineDiagnostics: code names', () => {
+  it('rejects the reserved code name is', () => {
+    defineDiagnostics({
+      codes: {
+        // @ts-expect-error: is is reserved
+        is: { why: 'a' },
+      },
+    })
   })
 })
 

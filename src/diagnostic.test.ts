@@ -259,35 +259,33 @@ describe('createConsoleReporter', () => {
     expect('[X_1] boom').toHaveBeenErrored()
   })
 
-  describe('per-code `report` defaults', () => {
+  describe('per-code `reporterOptions`', () => {
     const errs = defineDiagnostics({
       reporters: [createConsoleReporter()],
       codes: {
-        X_THROWN: { why: 'thrown', report: { method: 'error' } },
-        X_REPORTED: { why: 'reported' },
+        X_ERROR: { why: 'error', reporterOptions: { method: 'error' } },
+        X_WARN: { why: 'warn' },
       },
     })
 
-    it('prints with the method of the code', () => {
-      errs.X_REPORTED()
-      expect(() => {
-        throw errs.X_THROWN()
-      }).toThrow('thrown')
-      expect('[X_REPORTED] reported').toHaveBeenWarnedTimes(1)
-      expect('[X_THROWN] thrown').toHaveBeenErroredTimes(1)
-      expect('[X_THROWN]').not.toHaveBeenWarned()
+    it('uses the method of the code', () => {
+      errs.X_ERROR()
+      errs.X_WARN()
+      expect('[X_ERROR] error').toHaveBeenErroredTimes(1)
+      expect('[X_ERROR]').not.toHaveBeenWarned()
+      expect('[X_WARN] warn').toHaveBeenWarnedTimes(1)
     })
 
     it('lets the call site override the code default', () => {
-      errs.X_THROWN(undefined, { method: 'warn' })
-      expect('[X_THROWN] thrown').toHaveBeenWarned()
-      expect('[X_THROWN]').not.toHaveBeenErrored()
+      errs.X_ERROR(undefined, { method: 'warn' })
+      expect('[X_ERROR] error').toHaveBeenWarned()
+      expect('[X_ERROR]').not.toHaveBeenErrored()
     })
 
     it('keeps the call-site options of other reporters', () => {
       const withPriority = defineDiagnostics({
         reporters: [createConsoleReporter(), reporterWithPriority],
-        codes: { X_1: { why: 'boom', report: { method: 'error' } } },
+        codes: { X_1: { why: 'boom', reporterOptions: { method: 'error' } } },
       })
       withPriority.X_1(undefined, { priority: 3 })
       expect('[X_1] boom').toHaveBeenErroredTimes(1)

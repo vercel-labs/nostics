@@ -24,7 +24,7 @@ export interface DiagnosticDefinition<P = unknown, Data extends Record<string, u
   fix?: ValueOrFn<string, P>;
   docs?: string | false;
   data?: ValueOrFn<Data, P>;
-  report?: object;
+  reporterOptions?: object;
 }
 export interface DiagnosticHandle<Params, ReporterOpts, Data = undefined, Code extends string = string> {
   (..._: ActionArgs<Params, ReporterOpts>): Diagnostic<Data, Code>;
